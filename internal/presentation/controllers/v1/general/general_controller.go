@@ -1,6 +1,10 @@
 package general
 
-import "github.com/gin-gonic/gin"
+import (
+	"hona/backend/internal/presentation/controllers"
+
+	"github.com/gin-gonic/gin"
+)
 
 type GeneralController struct {
 }
@@ -15,7 +19,7 @@ func (gc *GeneralController) Login(ctx *gin.Context) {
 		Password string `json:"password" validate:"required"`
 	}
 
-	// TODO: Receive
+	controllers.Receive[loginParams](ctx)
 
 	// TODO: Call Service
 
