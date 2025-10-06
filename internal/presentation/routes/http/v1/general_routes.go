@@ -7,8 +7,10 @@ import (
 )
 
 func SetUpRoutes(v1 *gin.RouterGroup) {
+	gc := general.NewGeneralController()
+
 	auth := v1.Group("/auth")
 	{
-		auth.POST("/login", general.Login)
+		auth.POST("/login", gc.Login)
 	}
 }
