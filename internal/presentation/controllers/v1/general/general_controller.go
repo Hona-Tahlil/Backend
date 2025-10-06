@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// TODO: should have service
 type GeneralController struct {
 }
 
