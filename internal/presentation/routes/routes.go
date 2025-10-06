@@ -8,8 +8,10 @@ import (
 )
 
 func SetUpRoutes(ginEngine *gin.Engine) {
+	lm := middleware.NewLocalizationMiddleware()
 	rm := middleware.NewRecoveryMiddleware()
 
+	ginEngine.Use(lm.AddTranslator)
 	ginEngine.Use(rm.Recover)
 
 	v1 := ginEngine.Group("/v1")

@@ -1,14 +1,54 @@
 package controllers
 
-import "github.com/gin-gonic/gin"
+import (
+	"net/http"
+
+	"github.com/gin-gonic/gin"
+)
 
 type Message struct {
 	Text   string
 	Params []string
 }
 
-func Respond[T Message | []Message](ctx *gin.Context, statusCode int, messages T, data interface{}) {
-	// TODO: Get Translator
+type singleMessageResponse struct {
+	StatusCode int         `json:"statusCode"`
+	Message    string      `json:"message"`
+	Data       interface{} `json:"data"`
+}
 
-	// TODO: Implement
+type multipleMessageResponse struct {
+	StatusCode int               `json:"statusCode"`
+	Messages   map[string]string `json:"messages"`
+	Data       interface{}       `json:"data"`
+}
+
+func Respond[T Message | []Message](ctx *gin.Context, statusCode int, messages T, data interface{}) {
+	// TODO: get key from bootstrap context constants
+	translator := GetTranslator(ctx, "translator")
+
+	switch msg := any(messages).(type) {
+	case Message:
+		if msg.Text == "" {
+			msg.Text = http.StatusText(statusCode)
+		}
+		message, _ := translator.T(msg.Text, msg.Params...)
+		ctx.JSON(statusCode, singleMessageResponse{
+			StatusCode: statusCode,
+			Message:    message,
+			Data:       data,
+		})
+	case []Message:
+		mms := multipleMessageResponse{
+			StatusCode: statusCode,
+			Messages:   map[string]string{},
+			Data:       data,
+		}
+		for _, ms := range msg {
+			translatedTagValue, _ := translator.T(ms.Params[0])
+			translatedTag, _ := translator.T("errors."+ms.Text, translatedTagValue)
+			mms.Messages[ms.Text] = translatedTag
+		}
+		ctx.JSON(statusCode, mms)
+	}
 }
