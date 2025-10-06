@@ -37,6 +37,8 @@ func (rm *RecoveryMiddleware) Recover(ctx *gin.Context) {
 func (rm *RecoveryMiddleware) handleError(err error) ([]controllers.Message, int) {
 	if bindingErr, ok := err.(*exceptions.BindingError); ok {
 		return rm.handleBindingError(bindingErr)
+	} else if validationErrs, ok := err.(*exceptions.ValidationErrors); ok {
+		return rm.handleValidationErrors(validationErrs)
 	}
 	return rm.unhandledErrors(err)
 }
@@ -47,13 +49,24 @@ func (rm *RecoveryMiddleware) handleBindingError(bindingErr *exceptions.BindingE
 			Text:   "errors.numeric",
 			Params: []string{numError.Num},
 		}
-		return []controllers.Message{msg}, 422
+		return []controllers.Message{msg}, 400
 	}
 	msg := controllers.Message{
 		Text:   "errors.binding",
 		Params: []string{},
 	}
-	return []controllers.Message{msg}, 422
+	return []controllers.Message{msg}, 400
+}
+
+func (rm *RecoveryMiddleware) handleValidationErrors(validationErrs *exceptions.ValidationErrors) ([]controllers.Message, int) {
+	msgs := []controllers.Message{}
+	for i, fieldErr := range validationErrs.FieldErrors {
+		msgs[i] = controllers.Message{
+			Text:   "errors." + fieldErr.Tag,
+			Params: []string{fieldErr.Field},
+		}
+	}
+	return msgs, 422
 }
 
 func (rm *RecoveryMiddleware) unhandledErrors(err error) ([]controllers.Message, int) {
