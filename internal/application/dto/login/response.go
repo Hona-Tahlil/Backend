@@ -1,5 +1,5 @@
 package login
 
 type LoginResponse struct {
-	JWTToken string
+	JWTToken string `json:jwt_token`
 }
