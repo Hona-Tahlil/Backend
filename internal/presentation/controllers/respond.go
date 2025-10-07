@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"hona/backend/bootstrap"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -24,8 +25,7 @@ type multipleMessageResponse struct {
 }
 
 func Respond[T Message | []Message](ctx *gin.Context, statusCode int, messages T, data interface{}) {
-	// TODO: get key from bootstrap context constants
-	translator := GetTranslator(ctx, "translator")
+	translator := GetTranslator(ctx, bootstrap.ProjectConfig.Constants.Context.Translator)
 
 	switch msg := any(messages).(type) {
 	case Message:

@@ -1,0 +1,48 @@
+package database
+
+import (
+	"fmt"
+	"hona/backend/bootstrap"
+	"sync"
+
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
+)
+
+var dbInstance *PostgresDatabase
+
+type Database interface {
+	GetDB() *gorm.DB
+	WithTransaction(fn func(Database) error) error
+}
+
+type PostgresDatabase struct {
+	DB *gorm.DB
+}
+
+func (pgx *PostgresDatabase) GetDB() *gorm.DB {
+	return dbInstance.DB
+}
+
+func (pgx *PostgresDatabase) WithTransaction(fn func(Database) error) error {
+	return pgx.DB.Transaction(func(tx *gorm.DB) error {
+		txWrapper := &PostgresDatabase{DB: tx}
+		return fn(txWrapper)
+	})
+}
+
+func NewPostgresDatabase() *PostgresDatabase {
+	dsn := bootstrap.ProjectConfig.Env.DSN
+	var dbOnce *sync.Once
+
+	dbOnce.Do(func() {
+		db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+		if err != nil {
+			panic(fmt.Errorf("failed to connect database"))
+		}
+
+		dbInstance = &PostgresDatabase{DB: db}
+	})
+
+	return dbInstance
+}
