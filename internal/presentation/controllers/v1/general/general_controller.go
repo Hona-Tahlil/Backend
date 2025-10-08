@@ -1,17 +1,21 @@
 package general
 
 import (
+	"hona/backend/internal/application/dto/login"
+	"hona/backend/internal/application/service"
 	"hona/backend/internal/presentation/controllers"
 
 	"github.com/gin-gonic/gin"
 )
 
-// TODO: should have service
 type GeneralController struct {
+	service *service.GeneralService
 }
 
-func NewGeneralController() *GeneralController {
-	return &GeneralController{}
+func NewGeneralController(service *service.GeneralService) *GeneralController {
+	return &GeneralController{
+		service: service,
+	}
 }
 
 func (gc *GeneralController) Login(ctx *gin.Context) {
@@ -20,9 +24,17 @@ func (gc *GeneralController) Login(ctx *gin.Context) {
 		Password string `json:"password" validate:"required"`
 	}
 
-	controllers.Receive[loginParams](ctx)
+	params := controllers.Receive[loginParams](ctx)
+	loginInfo := login.LoginRequest{
+		Email:    params.Email,
+		Password: params.Password,
+	}
 
-	// TODO: Call Service
+	res := gc.service.Login(loginInfo)
 
-	// TODO: Respond
+	msg := controllers.Message{
+		Text:   "success.login",
+		Params: []string{},
+	}
+	controllers.Respond(ctx, 200, msg, res)
 }
