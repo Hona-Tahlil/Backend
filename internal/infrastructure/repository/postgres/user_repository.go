@@ -9,8 +9,10 @@ type UserRepository struct {
 	db database.Database
 }
 
-func NewUserRepository() *UserRepository {
-	return &UserRepository{}
+func NewUserRepository(db database.Database) *UserRepository {
+	return &UserRepository{
+		db: db,
+	}
 }
 
 func (up *UserRepository) FindUserByEmail(email string) *entity.User {

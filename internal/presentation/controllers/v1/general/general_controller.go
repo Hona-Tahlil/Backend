@@ -9,12 +9,12 @@ import (
 )
 
 type GeneralController struct {
-	service *service.GeneralService
+	generalService *service.GeneralService
 }
 
-func NewGeneralController(service *service.GeneralService) *GeneralController {
+func NewGeneralController(generalService *service.GeneralService) *GeneralController {
 	return &GeneralController{
-		service: service,
+		generalService: generalService,
 	}
 }
 
@@ -30,7 +30,7 @@ func (gc *GeneralController) Login(ctx *gin.Context) {
 		Password: params.Password,
 	}
 
-	res := gc.service.Login(loginInfo)
+	res := gc.generalService.Login(loginInfo)
 
 	msg := controllers.Message{
 		Text:   "success.login",

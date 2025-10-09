@@ -21,7 +21,7 @@ func (rm *RecoveryMiddleware) Recover(ctx *gin.Context) {
 	defer func() {
 		if r := recover(); r != nil {
 			if err, ok := r.(error); ok {
-				msgs, statusCode := rm.handleError(err)
+				msgs, statusCode := handleError(err)
 				if len(msgs) == 1 {
 					controllers.Respond(ctx, statusCode, msgs[0], nil)
 				} else {
@@ -34,16 +34,16 @@ func (rm *RecoveryMiddleware) Recover(ctx *gin.Context) {
 
 }
 
-func (rm *RecoveryMiddleware) handleError(err error) ([]controllers.Message, int) {
+func handleError(err error) ([]controllers.Message, int) {
 	if bindingErr, ok := err.(*exceptions.BindingError); ok {
-		return rm.handleBindingError(bindingErr)
+		return handleBindingError(bindingErr)
 	} else if validationErrs, ok := err.(*exceptions.ValidationErrors); ok {
-		return rm.handleValidationErrors(validationErrs)
+		return handleValidationErrors(validationErrs)
 	}
-	return rm.unhandledErrors(err)
+	return unhandledErrors(err)
 }
 
-func (rm *RecoveryMiddleware) handleBindingError(bindingErr *exceptions.BindingError) ([]controllers.Message, int) {
+func handleBindingError(bindingErr *exceptions.BindingError) ([]controllers.Message, int) {
 	if numError, ok := bindingErr.Err.(*strconv.NumError); ok {
 		msg := controllers.Message{
 			Text:   "errors.numeric",
@@ -58,7 +58,7 @@ func (rm *RecoveryMiddleware) handleBindingError(bindingErr *exceptions.BindingE
 	return []controllers.Message{msg}, 400
 }
 
-func (rm *RecoveryMiddleware) handleValidationErrors(validationErrs *exceptions.ValidationErrors) ([]controllers.Message, int) {
+func handleValidationErrors(validationErrs *exceptions.ValidationErrors) ([]controllers.Message, int) {
 	msgs := []controllers.Message{}
 	for i, fieldErr := range validationErrs.FieldErrors {
 		msgs[i] = controllers.Message{
@@ -69,7 +69,7 @@ func (rm *RecoveryMiddleware) handleValidationErrors(validationErrs *exceptions.
 	return msgs, 422
 }
 
-func (rm *RecoveryMiddleware) unhandledErrors(err error) ([]controllers.Message, int) {
+func unhandledErrors(err error) ([]controllers.Message, int) {
 	log.Println("an unhandled error occurred", err.Error())
 
 	msg := controllers.Message{
