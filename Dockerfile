@@ -1,14 +1,20 @@
-# Stage 1: Build
-FROM golang:1.23-alpine AS builder
+# Use Go 1.25 Alpine image
+FROM golang:1.25-alpine
+
+# Install Air
+RUN go install github.com/air-verse/air@latest
+
 WORKDIR /app
+
+# Copy go.mod first for caching
 COPY go.mod go.sum ./
 RUN go mod download
-COPY . .
-RUN go build -o server ./cmd
 
-# Stage 2: Run
-FROM alpine:latest
-WORKDIR /app
-COPY --from=builder /app/server .
+# Copy the rest of the source
+COPY . .
+
+# Expose app port for Gin
 EXPOSE 8080
-CMD ["./server"]
+
+# Run Air by default
+CMD ["air", "-c", ".air.toml"]

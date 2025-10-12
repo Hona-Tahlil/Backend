@@ -23,7 +23,9 @@ services:
       DB_PORT: ${DB_PORT}
     ports:
       - "${SERVER_PORT}:8080"
-    # command: ["go", "run", "./cmd/main.go"]
+    volumes:
+     - .:/app  
+
 
 volumes:
   pgdata:

@@ -11,6 +11,7 @@ import (
 )
 
 var dbInstance *PostgresDatabase
+var dbOnce sync.Once
 
 type Database interface {
 	GetDB() *gorm.DB
@@ -22,7 +23,8 @@ type PostgresDatabase struct {
 }
 
 func (pgx *PostgresDatabase) GetDB() *gorm.DB {
-	return dbInstance.DB
+	// TODO: ? was dbInstance.DB - which is better?
+	return pgx.DB
 }
 
 func (pgx *PostgresDatabase) WithTransaction(fn func(Database) error) error {
@@ -34,7 +36,6 @@ func (pgx *PostgresDatabase) WithTransaction(fn func(Database) error) error {
 
 func NewPostgresDatabase() *PostgresDatabase {
 	dsn := bootstrap.ProjectConfig.Env.DSN
-	var dbOnce *sync.Once
 
 	dbOnce.Do(func() {
 		db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
@@ -45,6 +46,7 @@ func NewPostgresDatabase() *PostgresDatabase {
 		dbInstance = &PostgresDatabase{DB: db}
 
 		dbInstance.DB.AutoMigrate(&entity.User{})
+
 	})
 
 	return dbInstance
