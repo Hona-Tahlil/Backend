@@ -45,9 +45,9 @@ func Respond[T Message | []Message](ctx *gin.Context, statusCode int, messages T
 			Data:       data,
 		}
 		for _, ms := range msg {
-			translatedTagValue, _ := translator.T(ms.Params[0])
-			translatedTag, _ := translator.T("errors."+ms.Text, translatedTagValue)
-			mms.Messages[ms.Text] = translatedTag
+			translatedFieldValue, _ := translator.T(ms.Params[0])
+			translatedTag, _ := translator.T(ms.Text, translatedFieldValue)
+			mms.Messages[ms.Params[0]] = translatedTag
 		}
 		ctx.JSON(statusCode, mms)
 	}
