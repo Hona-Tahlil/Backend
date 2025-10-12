@@ -31,7 +31,7 @@ func (rm *RecoveryMiddleware) Recover(ctx *gin.Context) {
 			ctx.Abort()
 		}
 	}()
-
+	ctx.Next()
 }
 
 func handleError(err error) ([]controllers.Message, int) {
@@ -60,11 +60,12 @@ func handleBindingError(bindingErr *exceptions.BindingError) ([]controllers.Mess
 
 func handleValidationErrors(validationErrs *exceptions.ValidationErrors) ([]controllers.Message, int) {
 	msgs := []controllers.Message{}
-	for i, fieldErr := range validationErrs.FieldErrors {
-		msgs[i] = controllers.Message{
+	for _, fieldErr := range validationErrs.FieldErrors {
+		msgs = append(msgs, controllers.Message{
 			Text:   "errors." + fieldErr.Tag,
 			Params: []string{fieldErr.Field},
-		}
+		})
+
 	}
 	return msgs, 422
 }

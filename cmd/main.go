@@ -10,6 +10,8 @@ import (
 func main() {
 	gin.DisableConsoleColor()
 
+	gin.SetMode(gin.ReleaseMode)
+
 	ginEngine := gin.Default()
 
 	bootstrap.Run()
