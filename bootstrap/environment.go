@@ -1,26 +1,32 @@
 package bootstrap
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/joho/godotenv"
 )
 
 type Env struct {
-	DSN string
+	PrimaryDB Database
+}
+
+type Database struct {
+	Host     string
+	User     string
+	Password string
+	Name     string
+	Port     string
 }
 
 func NewEnv() *Env {
 	godotenv.Load(".env")
 	return &Env{
-		DSN: fmt.Sprintf(
-			"host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=UTC",
-			os.Getenv("DB_HOST"),
-			os.Getenv("DB_USER"),
-			os.Getenv("DB_PASSWORD"),
-			os.Getenv("DB_NAME"),
-			os.Getenv("DB_PORT"),
-		),
+		PrimaryDB: Database{
+			Host:     os.Getenv("DB_HOST"),
+			User:     os.Getenv("DB_USER"),
+			Password: os.Getenv("DB_PASSWORD"),
+			Name:     os.Getenv("DB_NAME"),
+			Port:     os.Getenv("DB_PORT"),
+		},
 	}
 }
