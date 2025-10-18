@@ -1,0 +1,59 @@
+package persistence
+
+import (
+	"fmt"
+	"hona/backend/bootstrap"
+	"sync"
+
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
+)
+
+var dbInstance *PostgresDatabase
+var dbOnce sync.Once
+
+type Database interface {
+	GetDB() *gorm.DB
+	WithTransaction(fn func(Database) error) error
+}
+
+type PostgresDatabase struct {
+	DB *gorm.DB
+}
+
+func (pgx *PostgresDatabase) GetDB() *gorm.DB {
+	return pgx.DB
+}
+
+func (pgx *PostgresDatabase) WithTransaction(fn func(Database) error) error {
+	return pgx.DB.Transaction(func(tx *gorm.DB) error {
+		txWrapper := &PostgresDatabase{DB: tx}
+		return fn(txWrapper)
+	})
+}
+
+func NewPostgresDatabase() *PostgresDatabase {
+	dbConfig := bootstrap.ProjectConfig.Env.PrimaryDB
+	dsn := fmt.Sprintf(
+		"host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=UTC",
+		dbConfig.Host,
+		dbConfig.User,
+		dbConfig.Password,
+		dbConfig.Name,
+		dbConfig.Port,
+	)
+
+	dbOnce.Do(func() {
+		db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+		if err != nil {
+			panic(fmt.Errorf("failed to connect database"))
+		}
+
+		dbInstance = &PostgresDatabase{DB: db}
+
+		// dbInstance.DB.AutoMigrate(&entities.User{})
+
+	})
+
+	return dbInstance
+}
