@@ -5,6 +5,7 @@ import (
 	"hona/backend/internal/application/dto/user"
 	"hona/backend/internal/application/service"
 	"hona/backend/internal/presentation/controllers"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -22,20 +23,35 @@ func NewGeneralUserController(generalService *service.UserService) *GeneralUserC
 
 func (gc *GeneralUserController) Login(ctx *gin.Context) {
 	type loginParams struct {
-		Email    string `json:"email" validate:"required,email"`
-		Password string `json:"password" validate:"required"`
+		Email      string `json:"email" validate:"required,email"`
+		Password   string `json:"password" validate:"required,min=8,max=64"`
+		RememberMe bool   `json:"rememberMe"`
 	}
 
 	params := controllers.Receive[loginParams](ctx)
 	loginInfo := user.LoginRequest{
-		Email:    params.Email,
-		Password: params.Password,
+		Email:      params.Email,
+		Password:   params.Password,
+		RememberMe: params.RememberMe,
 	}
 
-	res := gc.generalService.Login(loginInfo)
+	res, refreshToken, err := gc.generalService.Login(loginInfo)
+	if err != nil {
+		panic(err)
+	}
+
+	ctx.SetCookie(
+		"refreshToken",
+		refreshToken,
+		int(time.Hour.Seconds()*7*24),
+		"/",
+		"",
+		true,
+		true,
+	)
 
 	msg := controllers.Message{
-		Text:   "success.login",
+		Text:   "successMessage.login",
 		Params: []string{},
 	}
 	controllers.Respond(ctx, 200, msg, res)

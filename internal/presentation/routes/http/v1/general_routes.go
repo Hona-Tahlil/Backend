@@ -2,8 +2,8 @@ package httpv1
 
 import (
 	"hona/backend/internal/application/service"
+	"hona/backend/internal/infrastructure/jwt"
 	"hona/backend/internal/infrastructure/persistence"
-	"hona/backend/internal/infrastructure/persistence/repository/postgres"
 	"hona/backend/internal/presentation/controllers/v1/general"
 
 	"github.com/gin-gonic/gin"
@@ -11,8 +11,9 @@ import (
 
 func SetUpRoutes(v1 *gin.RouterGroup) {
 	db := persistence.NewPostgresDatabase()
-	r := postgres.NewUserRepository(db.GetDB())
-	s := service.NewGeneralService(r)
+	uw := persistence.NewUnitOfWork(db.DB)
+	js := jwt.NewJWTService(jwt.NewJWTKeyManager())
+	s := service.NewUserService(uw, js)
 	uc := general.NewGeneralUserController(s)
 
 	auth := v1.Group("/auth")
