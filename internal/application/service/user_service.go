@@ -6,6 +6,7 @@ import (
 	"hona/backend/internal/domain/exceptions"
 	"hona/backend/internal/infrastructure/jwt"
 	"hona/backend/internal/infrastructure/persistence"
+	"time"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -22,21 +23,20 @@ func NewUserService(unitOfWork *persistence.UnitOfWork, jwtService *jwt.JWTServi
 	}
 }
 
-func (us *UserService) Login(loginInfo user.LoginRequest) (*user.LoginResponse, string, error) {
-
+func (us *UserService) Login(loginInfo user.LoginRequest) (*user.LoginResponse, string, int, error) {
 	foundUser, err := us.unitOfWork.Factory().UserRepository().FindUserByEmail(loginInfo.Email)
 	if err != nil {
 		invalidCredentialsErr := &exceptions.AuthError{
 			Type: "INVALID_CREDENTIALS",
 		}
-		return nil, "", invalidCredentialsErr
+		return nil, "", 0, invalidCredentialsErr
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(foundUser.Password), []byte(loginInfo.Password)); err != nil {
 		invalidCredentialsErr := &exceptions.AuthError{
 			Type: "INVALID_CREDENTIALS",
 		}
-		return nil, "", invalidCredentialsErr
+		return nil, "", 0, invalidCredentialsErr
 	}
 
 	accessToken, refreshToken := us.jwtService.GenerateTokens(foundUser.ID, loginInfo.RememberMe)
@@ -51,10 +51,17 @@ func (us *UserService) Login(loginInfo user.LoginRequest) (*user.LoginResponse, 
 		}
 	}
 
+	var expireTime int
+	if loginInfo.RememberMe {
+		expireTime = int(time.Hour.Seconds() * 7 * 24)
+	} else {
+		expireTime = int(time.Hour.Seconds() * 2 * 24)
+	}
+
 	return &user.LoginResponse{
 		AccessToken: accessToken,
 		Permissions: p,
-	}, refreshToken, nil
+	}, refreshToken, expireTime, nil
 }
 
 func (us *UserService) validateDuplicatePhone(email string) error {

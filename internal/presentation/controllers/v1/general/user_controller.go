@@ -1,23 +1,21 @@
 package general
 
 import (
-	"hona/backend/bootstrap"
 	"hona/backend/internal/application/dto/user"
 	"hona/backend/internal/application/service"
 	"hona/backend/internal/presentation/controllers"
-	"time"
 
 	"github.com/gin-gonic/gin"
 )
 
 type GeneralUserController struct {
-	generalService *service.UserService
-	constants      *bootstrap.Constants
+	userService *service.UserService
+	// constants   *bootstrap.Constants
 }
 
-func NewGeneralUserController(generalService *service.UserService) *GeneralUserController {
+func NewGeneralUserController(userService *service.UserService) *GeneralUserController {
 	return &GeneralUserController{
-		generalService: generalService,
+		userService: userService,
 	}
 }
 
@@ -35,7 +33,7 @@ func (gc *GeneralUserController) Login(ctx *gin.Context) {
 		RememberMe: params.RememberMe,
 	}
 
-	res, refreshToken, err := gc.generalService.Login(loginInfo)
+	res, refreshToken, expireTime, err := gc.userService.Login(loginInfo)
 	if err != nil {
 		panic(err)
 	}
@@ -43,7 +41,7 @@ func (gc *GeneralUserController) Login(ctx *gin.Context) {
 	ctx.SetCookie(
 		"refreshToken",
 		refreshToken,
-		int(time.Hour.Seconds()*7*24),
+		expireTime,
 		"/",
 		"",
 		true,
@@ -54,7 +52,7 @@ func (gc *GeneralUserController) Login(ctx *gin.Context) {
 		Text:   "successMessage.login",
 		Params: []string{},
 	}
-	controllers.Respond(ctx, 200, msg, res)
+	controllers.Respond(ctx, 200, msg, *res)
 }
 
 func (gc *GeneralUserController) Register(ctx *gin.Context) {
@@ -72,7 +70,7 @@ func (gc *GeneralUserController) Register(ctx *gin.Context) {
 		Email:     params.Email,
 		Password:  params.Password,
 	}
-	if err := gc.generalService.Register(registerInfo); err != nil {
+	if err := gc.userService.Register(registerInfo); err != nil {
 		panic(err)
 	}
 
@@ -88,7 +86,7 @@ func (gc *GeneralUserController) VerifyEmail(ctx *gin.Context) {
 		Email: params.Email,
 		OTP:   params.OTP,
 	}
-	if err := gc.generalService.VerifyEmail(verifyOTPInfo); err != nil {
+	if err := gc.userService.VerifyEmail(verifyOTPInfo); err != nil {
 		panic(err)
 	}
 
@@ -105,7 +103,7 @@ func (gc *GeneralUserController) ForgotPassword(ctx *gin.Context) {
 	forgotPasswordInfo := user.ForgotPasswordRequest{
 		Email: params.Email,
 	}
-	if err := gc.generalService.ForgotPassword(forgotPasswordInfo); err != nil {
+	if err := gc.userService.ForgotPassword(forgotPasswordInfo); err != nil {
 		panic(err)
 	}
 
