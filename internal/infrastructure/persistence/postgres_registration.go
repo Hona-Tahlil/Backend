@@ -9,30 +9,10 @@ import (
 	"gorm.io/gorm"
 )
 
-var dbInstance *PostgresDatabase
+var dbInstance *gorm.DB
 var dbOnce sync.Once
 
-type Database interface {
-	GetDB() *gorm.DB
-	WithTransaction(fn func(Database) error) error
-}
-
-type PostgresDatabase struct {
-	DB *gorm.DB
-}
-
-func (pgx *PostgresDatabase) GetDB() *gorm.DB {
-	return pgx.DB
-}
-
-func (pgx *PostgresDatabase) WithTransaction(fn func(Database) error) error {
-	return pgx.DB.Transaction(func(tx *gorm.DB) error {
-		txWrapper := &PostgresDatabase{DB: tx}
-		return fn(txWrapper)
-	})
-}
-
-func NewPostgresDatabase() *PostgresDatabase {
+func NewPostgresDatabase() *gorm.DB {
 	dbConfig := bootstrap.ProjectConfig.Env.PrimaryDB
 	dsn := fmt.Sprintf(
 		"host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=UTC",
@@ -48,11 +28,7 @@ func NewPostgresDatabase() *PostgresDatabase {
 		if err != nil {
 			panic(fmt.Errorf("failed to connect database"))
 		}
-
-		dbInstance = &PostgresDatabase{DB: db}
-
-		// dbInstance.DB.AutoMigrate(&entities.User{})
-
+		dbInstance = db
 	})
 
 	return dbInstance

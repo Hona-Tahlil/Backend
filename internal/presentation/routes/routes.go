@@ -1,19 +1,16 @@
 package routes
 
 import (
-	"hona/backend/internal/presentation/middleware"
 	httpv1 "hona/backend/internal/presentation/routes/http/v1"
+	"hona/backend/wire"
 
 	"github.com/gin-gonic/gin"
 )
 
-func SetUpRoutes(ginEngine *gin.Engine) {
-	lm := middleware.NewLocalizationMiddleware()
-	rm := middleware.NewRecoveryMiddleware()
-
-	ginEngine.Use(lm.AddTranslator)
-	ginEngine.Use(rm.Recover)
+func SetUpRoutes(ginEngine *gin.Engine, app *wire.Application) {
+	ginEngine.Use(app.Middlewares.LocalizationMiddleware.AddTranslator)
+	ginEngine.Use(app.Middlewares.RecoveryMiddleware.Recover)
 
 	v1 := ginEngine.Group("/v1")
-	httpv1.SetUpRoutes(v1)
+	httpv1.SetUpRoutes(v1, app)
 }
