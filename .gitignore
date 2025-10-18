@@ -2,3 +2,4 @@
 .vscode
 .air.toml
 *.toml
+*.pem
