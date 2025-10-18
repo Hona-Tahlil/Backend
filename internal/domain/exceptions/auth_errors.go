@@ -2,16 +2,10 @@ package exceptions
 
 import (
 	"fmt"
+	"hona/backend/bootstrap"
 )
 
-// TODO: should be in constants
-const (
-	ErrorTypeInvalidCredentials = "INVALID_CREDENTIALS"
-	ErrorTypeExpiredToken       = "EXPIRED_TOKEN"
-	ErrorTypeInvalidToken       = "INVALID_TOKEN"
-	ErrorTypeUnauthorized       = "UNAUTHORIZED"
-	ErrorTypeAccessDenied       = "ACCESS_DENIED"
-)
+var errTags = bootstrap.ProjectConfig.Constants.ErrorTags
 
 type AuthError struct {
 	Type    string
@@ -27,21 +21,21 @@ func NewInvalidCredentialsError(message string) *AuthError {
 		message = "username and password not match"
 	}
 	return &AuthError{
-		Type:    ErrorTypeInvalidCredentials,
+		Type:    errTags.InvalidAuthCredentials,
 		Message: message,
 	}
 }
 
 func NewExpiredTokenError() *AuthError {
 	return &AuthError{
-		Type:    ErrorTypeExpiredToken,
+		Type:    errTags.ExpiredAuthToken,
 		Message: "Authentication token has expired",
 	}
 }
 
 func NewInvalidTokenError() *AuthError {
 	return &AuthError{
-		Type:    ErrorTypeInvalidToken,
+		Type:    errTags.InvalidAuthToken,
 		Message: "Invalid authentication token",
 	}
 }
@@ -52,7 +46,7 @@ func NewUnauthorizedError(message string) *AuthError {
 	}
 
 	return &AuthError{
-		Type:    ErrorTypeUnauthorized,
+		Type:    errTags.Unauthorized,
 		Message: message,
 	}
 }
@@ -63,7 +57,7 @@ func NewAccessDeniedError(message string) *AuthError {
 	}
 
 	return &AuthError{
-		Type:    ErrorTypeAccessDenied,
+		Type:    errTags.AccessDenied,
 		Message: message,
 	}
 }

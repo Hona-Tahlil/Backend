@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"hona/backend/bootstrap"
 	"hona/backend/internal/domain/exceptions"
 	"hona/backend/internal/presentation/controllers"
 	"log"
@@ -9,7 +10,8 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// ? should have constants?
+var errTags = bootstrap.ProjectConfig.Constants.ErrorTags
+
 type RecoveryMiddleware struct {
 }
 
@@ -48,13 +50,13 @@ func handleError(err error) ([]controllers.Message, int) {
 func handleBindingError(bindingErr *exceptions.BindingError) ([]controllers.Message, int) {
 	if numError, ok := bindingErr.Err.(*strconv.NumError); ok {
 		msg := controllers.Message{
-			Text:   "errors.numeric",
+			Text:   "errors." + errTags.Numeric,
 			Params: []string{numError.Num},
 		}
 		return []controllers.Message{msg}, 400
 	}
 	msg := controllers.Message{
-		Text:   "errors.binding",
+		Text:   "errors." + errTags.Binding,
 		Params: []string{},
 	}
 	return []controllers.Message{msg}, 400
@@ -73,41 +75,17 @@ func handleValidationErrors(validationErrs *exceptions.ValidationErrors) ([]cont
 }
 
 func handleAuthError(authErr *exceptions.AuthError) ([]controllers.Message, int) {
-	switch authErr.Type {
-	case "INVALID_CREDENTIALS":
-		msg := controllers.Message{
-			Text: "errors.invalidAuthCredentials",
-		}
-		return []controllers.Message{msg}, 401
-	case "UNAUTHORIZED":
-		msg := controllers.Message{
-			Text: "errors.unauthorized",
-		}
-		return []controllers.Message{msg}, 401
-	case "ACCESS_DENIED":
-		msg := controllers.Message{
-			Text: "errors.accessDenied",
-		}
-		return []controllers.Message{msg}, 401
-	case "EXPIRED_TOKEN":
-		msg := controllers.Message{
-			Text: "errors.expiredAuthToken",
-		}
-		return []controllers.Message{msg}, 401
-	case "INVALID_TOKEN":
-		msg := controllers.Message{
-			Text: "errors.invalidAuthToken",
-		}
-		return []controllers.Message{msg}, 401
+	msg := controllers.Message{
+		Text: "errors." + authErr.Type,
 	}
-	return []controllers.Message{}, 401
+	return []controllers.Message{msg}, 401
 }
 
 func unhandledErrors(err error) ([]controllers.Message, int) {
 	log.Println("an unhandled error occurred", err.Error())
 
 	msg := controllers.Message{
-		Text:   "errors.generic",
+		Text:   "errors." + errTags.Generic,
 		Params: []string{},
 	}
 	return []controllers.Message{msg}, 500

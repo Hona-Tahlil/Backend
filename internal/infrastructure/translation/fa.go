@@ -68,6 +68,7 @@ var Persian = map[string]interface{}{
 		"invalidAuthToken":       "در توکن ورود شما اشکالی وجود دارد.",
 		"invalidRecaptcha":       "ریکپچا اشتباه است.",
 		"unauthorized":           "ابتدا باید وارد شوید.",
+		"accessDenied":           "دسترسی لازم برای انجام این کار را ندارید",
 		"awaitingApproval":       "حساب شما در انتظار تایید ادمین است.",
 		"rejected":               "حساب شما توسط ادمین رد شده است.",
 		"notExist":               "این {0} وجود ندارد.",
