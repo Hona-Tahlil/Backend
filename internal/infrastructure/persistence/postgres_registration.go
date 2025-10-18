@@ -3,6 +3,7 @@ package persistence
 import (
 	"fmt"
 	"hona/backend/bootstrap"
+	"hona/backend/internal/domain/entities"
 	"sync"
 
 	"gorm.io/driver/postgres"
@@ -29,6 +30,12 @@ func NewPostgresDatabase() *gorm.DB {
 			panic(fmt.Errorf("failed to connect database"))
 		}
 		dbInstance = db
+
+		db.AutoMigrate(
+			&entities.Role{},
+			&entities.Permission{},
+			&entities.User{},
+		)
 	})
 
 	return dbInstance
