@@ -10,9 +10,9 @@ type RegisterRequest struct {
 	Email     string
 	Password  string
 }
-type VerifyEamilRequest struct {
-	Email  string
-	OTP    string
+type VerifyEmailRequest struct {
+	Email string
+	OTP   string
 }
 type ForgotPasswordRequest struct {
 	Email string

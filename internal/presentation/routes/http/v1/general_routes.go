@@ -13,14 +13,13 @@ func SetUpRoutes(v1 *gin.RouterGroup) {
 	db := persistence.NewPostgresDatabase()
 	r := postgres.NewUserRepository(db.GetDB())
 	s := service.NewGeneralService(r)
-	gc := general.NewGeneralController(s)
+	uc := general.NewGeneralUserController(s)
 
 	auth := v1.Group("/auth")
 	{
-		auth.POST("/login", gc.Login)
-		auth.POST("/register", gc.Register)
-		auth.POST("/verify", gc.VerifyEmail)
-		auth.POST("/forgotpassword", gc.ForgotPassword)
-
+		auth.POST("/login", uc.Login)
+		auth.POST("/register", uc.Register)
+		auth.POST("/verify", uc.VerifyEmail)
+		auth.POST("/forgotpassword", uc.ForgotPassword)
 	}
 }

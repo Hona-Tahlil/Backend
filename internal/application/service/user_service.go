@@ -53,7 +53,7 @@ func (us *UserService) Register(registerInfo user.RegisterRequest) error {
 	return nil
 }
 
-func (us *UserService) VerifyEmail(verifyEmailInfo user.VerifyEamilRequest) error {
+func (us *UserService) VerifyEmail(verifyEmailInfo user.VerifyEmailRequest) error {
 	return nil
 }
 

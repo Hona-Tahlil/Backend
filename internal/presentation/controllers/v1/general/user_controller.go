@@ -9,18 +9,18 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type GeneralController struct {
+type GeneralUserController struct {
 	generalService *service.UserService
 	constants      *bootstrap.Constants
 }
 
-func NewGeneralController(generalService *service.UserService) *GeneralController {
-	return &GeneralController{
+func NewGeneralUserController(generalService *service.UserService) *GeneralUserController {
+	return &GeneralUserController{
 		generalService: generalService,
 	}
 }
 
-func (gc *GeneralController) Login(ctx *gin.Context) {
+func (gc *GeneralUserController) Login(ctx *gin.Context) {
 	type loginParams struct {
 		Email    string `json:"email" validate:"required,email"`
 		Password string `json:"password" validate:"required"`
@@ -41,7 +41,7 @@ func (gc *GeneralController) Login(ctx *gin.Context) {
 	controllers.Respond(ctx, 200, msg, res)
 }
 
-func (gc *GeneralController) Register(ctx *gin.Context) {
+func (gc *GeneralUserController) Register(ctx *gin.Context) {
 	type registerParams struct {
 		FirstName       string `json:"firstName" validate:"required"`
 		LastName        string `json:"lastName" validate:"required"`
@@ -62,13 +62,13 @@ func (gc *GeneralController) Register(ctx *gin.Context) {
 
 }
 
-func (gc *GeneralController) VerifyEmail(ctx *gin.Context) {
+func (gc *GeneralUserController) VerifyEmail(ctx *gin.Context) {
 	type verifyPhoneParams struct {
 		Email string `json:"phone" validate:"required,e164"`
 		OTP   string `json:"otp" validate:"required"`
 	}
 	params := controllers.Receive[verifyPhoneParams](ctx)
-	verifyOTPInfo := user.VerifyEamilRequest{
+	verifyOTPInfo := user.VerifyEmailRequest{
 		Email: params.Email,
 		OTP:   params.OTP,
 	}
@@ -76,13 +76,12 @@ func (gc *GeneralController) VerifyEmail(ctx *gin.Context) {
 		panic(err)
 	}
 
-	// trans := controller.GetTranslator(ctx, userController.constants.Context.Translator)
+	// trans := controller.GetTranslator(ctx, GeneralUserController.constants.Context.Translator)
 	// message, _ := trans.Translate("successMessage.phoneVerification")
 	// controller.Response(ctx, 200, message, nil)
 }
 
-
-func (gc *GeneralController) ForgotPassword(ctx *gin.Context) {
+func (gc *GeneralUserController) ForgotPassword(ctx *gin.Context) {
 	type forgotPasswordParams struct {
 		Email string `json:"Email" validate:"required,e164"`
 	}
@@ -94,7 +93,7 @@ func (gc *GeneralController) ForgotPassword(ctx *gin.Context) {
 		panic(err)
 	}
 
-	// trans := controller.GetTranslator(ctx, userController.constants.Context.Translator)
+	// trans := controller.GetTranslator(ctx, GeneralUserController.constants.Context.Translator)
 	// message, _ := trans.Translate("successMessage.forgotPassword")
 	// controller.Response(ctx, 200, message, nil)
 }
