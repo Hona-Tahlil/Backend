@@ -1,16 +1,22 @@
 package bootstrap
 
+import "sync"
+
 type Config struct {
 	Constants *Constants
 	Env       *Env
 }
 
+var runOnce sync.Once
+
 func Run() *Config {
-	ProjectConfig = &Config{
-		Constants: NewConstants(),
-		Env:       NewEnv(),
-	}
-	return ProjectConfig
+	runOnce.Do(func() {
+		projectConfig = &Config{
+			Constants: NewConstants(),
+			Env:       NewEnv(),
+		}
+	})
+	return projectConfig
 }
 
-var ProjectConfig *Config
+var projectConfig *Config

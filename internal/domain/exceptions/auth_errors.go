@@ -5,7 +5,7 @@ import (
 	"hona/backend/bootstrap"
 )
 
-var errTags = bootstrap.ProjectConfig.Constants.ErrorTags
+var errTags = bootstrap.Run().Constants.ErrorTags
 
 type AuthError struct {
 	Type    string

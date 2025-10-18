@@ -14,7 +14,7 @@ var dbInstance *gorm.DB
 var dbOnce sync.Once
 
 func NewPostgresDatabase() *gorm.DB {
-	dbConfig := bootstrap.ProjectConfig.Env.PrimaryDB
+	dbConfig := bootstrap.Run().Env.PrimaryDB
 	dsn := fmt.Sprintf(
 		"host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=UTC",
 		dbConfig.Host,

@@ -10,7 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-var errTags = bootstrap.ProjectConfig.Constants.ErrorTags
+var errTags = bootstrap.Run().Constants.ErrorTags
 
 type RecoveryMiddleware struct {
 }

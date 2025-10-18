@@ -20,8 +20,8 @@ type JWTKeyManager struct {
 
 func NewJWTKeyManager() *JWTKeyManager {
 	return &JWTKeyManager{
-		privateKeyPath: bootstrap.ProjectConfig.Constants.JWTKeysPath.PrivateKey,
-		publicKeyPath:  bootstrap.ProjectConfig.Constants.JWTKeysPath.PublicKey,
+		privateKeyPath: bootstrap.Run().Constants.JWTKeysPath.PrivateKey,
+		publicKeyPath:  bootstrap.Run().Constants.JWTKeysPath.PublicKey,
 	}
 }
 
