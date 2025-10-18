@@ -63,7 +63,7 @@ var Persian = map[string]interface{}{
 		"Expired":                "رمز یکبار مصرف شما منقضی شده است.",
 		"invalid":                "رمز یکبار مصرف وارد شده اشتباه است.",
 		"notRegistered":          "ابتدا باید در سایت ثبت نام کنید.",
-		"invalidAuthCredentials": "نام کاربری و رمز عبور تطابق ندارند.",
+		"invalidAuthCredentials": "نام کاربری و رمز عبور صحیح نمی باشند.",
 		"expiredAuthToken":       "نشست شما منقضی شده است. لطفا دوباره وارد شوید.",
 		"invalidAuthToken":       "در توکن ورود شما اشکالی وجود دارد.",
 		"invalidRecaptcha":       "ریکپچا اشتباه است.",

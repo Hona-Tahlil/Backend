@@ -22,7 +22,7 @@ func (rm *RecoveryMiddleware) Recover(ctx *gin.Context) {
 		if r := recover(); r != nil {
 			if err, ok := r.(error); ok {
 				msgs, statusCode := handleError(err)
-				if len(msgs) == 1 {
+				if statusCode != 422 {
 					controllers.Respond(ctx, statusCode, msgs[0], nil)
 				} else {
 					controllers.Respond(ctx, statusCode, msgs, nil)
@@ -39,6 +39,8 @@ func handleError(err error) ([]controllers.Message, int) {
 		return handleBindingError(bindingErr)
 	} else if validationErrs, ok := err.(*exceptions.ValidationErrors); ok {
 		return handleValidationErrors(validationErrs)
+	} else if authErr, ok := err.(*exceptions.AuthError); ok {
+		return handleAuthError(authErr)
 	}
 	return unhandledErrors(err)
 }
@@ -68,6 +70,37 @@ func handleValidationErrors(validationErrs *exceptions.ValidationErrors) ([]cont
 
 	}
 	return msgs, 422
+}
+
+func handleAuthError(authErr *exceptions.AuthError) ([]controllers.Message, int) {
+	switch authErr.Type {
+	case "INVALID_CREDENTIALS":
+		msg := controllers.Message{
+			Text: "errors.invalidAuthCredentials",
+		}
+		return []controllers.Message{msg}, 401
+	case "UNAUTHORIZED":
+		msg := controllers.Message{
+			Text: "errors.unauthorized",
+		}
+		return []controllers.Message{msg}, 401
+	case "ACCESS_DENIED":
+		msg := controllers.Message{
+			Text: "errors.accessDenied",
+		}
+		return []controllers.Message{msg}, 401
+	case "EXPIRED_TOKEN":
+		msg := controllers.Message{
+			Text: "errors.expiredAuthToken",
+		}
+		return []controllers.Message{msg}, 401
+	case "INVALID_TOKEN":
+		msg := controllers.Message{
+			Text: "errors.invalidAuthToken",
+		}
+		return []controllers.Message{msg}, 401
+	}
+	return []controllers.Message{}, 401
 }
 
 func unhandledErrors(err error) ([]controllers.Message, int) {

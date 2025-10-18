@@ -2,4 +2,3 @@
 .vscode
 .air.toml
 *.toml
-cmd/tmp/
