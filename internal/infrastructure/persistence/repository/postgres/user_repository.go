@@ -23,4 +23,3 @@ func (up *UserRepository) FindUserByEmail(email string) *entities.User {
 	}
 	return &user
 }
- 
