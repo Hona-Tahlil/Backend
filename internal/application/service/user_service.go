@@ -26,16 +26,12 @@ func NewUserService(unitOfWork *persistence.UnitOfWork, jwtService *jwt.JWTServi
 func (us *UserService) Login(loginInfo user.LoginRequest) (*user.LoginResponse, string, int, error) {
 	foundUser, err := us.unitOfWork.Factory().UserRepository().FindUserByEmail(loginInfo.Email)
 	if err != nil {
-		invalidCredentialsErr := &exceptions.AuthError{
-			Type: "INVALID_CREDENTIALS",
-		}
+		invalidCredentialsErr := exceptions.NewInvalidCredentialsError("email not found")
 		return nil, "", 0, invalidCredentialsErr
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(foundUser.Password), []byte(loginInfo.Password)); err != nil {
-		invalidCredentialsErr := &exceptions.AuthError{
-			Type: "INVALID_CREDENTIALS",
-		}
+		invalidCredentialsErr := exceptions.NewInvalidCredentialsError("password is wrong")
 		return nil, "", 0, invalidCredentialsErr
 	}
 
