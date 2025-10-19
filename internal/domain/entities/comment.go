@@ -4,10 +4,10 @@ import "gorm.io/gorm"
 
 type Comment struct {
 	gorm.Model
-	UserID      uint
-	PetSitterID uint
-	ReserveID   uint
+	UserID      uint `gorm:"index;not null"`
+	PetSitterID uint `gorm:"index;not null"`
+	ReserveID   uint `gorm:"index;not null"`
 	Title       string
 	Description string
-	Rating      int
+	Rating      uint `gorm:"index; not null"`
 }

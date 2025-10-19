@@ -5,8 +5,8 @@ import "gorm.io/gorm"
 type Chat struct {
 	gorm.Model
 	Messages           []TextMessage `gorm:"foreignKey:ChatID"`
-	IsUserBlocked      bool
-	IsPetSitterBlocked bool
-	IsAccepted         bool
-	RequestID          uint
+	IsUserBlocked      bool          `gorm:"default=false"`
+	IsPetSitterBlocked bool          `gorm:"default=false"`
+	IsAccepted         bool          `gorm:"default=false"`
+	RequestID          uint          `gorm:"index"`
 }

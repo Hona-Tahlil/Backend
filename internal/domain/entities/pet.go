@@ -1,6 +1,7 @@
 package entities
 
 import (
+	"hona/backend/internal/domain/enums"
 	"time"
 
 	"gorm.io/gorm"
@@ -8,13 +9,13 @@ import (
 
 type Pet struct {
 	gorm.Model
-	UserID       uint
-	Name         string
-	Kind         string // make it enum later
-	Species      string
-	BirthDate    time.Time
-	Gender       string // make enum later
-	Weight       int
-	HealthRecord string
-	PictureLink  string
+	UserID       uint          `gorm:"index;not null"`
+	Name         string        `gorm:"not null"`
+	Kind         enums.PetKind `gorm:"index"`
+	Species      *string
+	BirthDate    *time.Time
+	Gender       enums.Gender
+	Weight       *uint
+	HealthRecord *string
+	PictureLink  *string
 }

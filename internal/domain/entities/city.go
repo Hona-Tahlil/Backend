@@ -6,8 +6,8 @@ import (
 	"gorm.io/gorm"
 )
 
-type Permission struct {
+type City struct {
 	gorm.Model
-	Type        enums.Permission
-	Description *string
+	Name       enums.City `gorm:"index;not null"`
+	ProvinceID uint
 }

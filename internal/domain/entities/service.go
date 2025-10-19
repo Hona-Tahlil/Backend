@@ -1,10 +1,14 @@
 package entities
 
-import "gorm.io/gorm"
+import (
+	"hona/backend/internal/domain/enums"
+
+	"gorm.io/gorm"
+)
 
 type Service struct {
 	gorm.Model
-	PetSitterID uint
-	Type        string // make enum later
-	Price       int
+	PetSitterID uint              `gorm:"index"`
+	Type        enums.ServiceType `gorm:"index"`
+	Price       uint              `gorm:"index"`
 }

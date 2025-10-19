@@ -6,10 +6,10 @@ import (
 
 type PetSitter struct {
 	gorm.Model
-	UserID       uint
+	UserID       uint     `gorm:"index"`
 	Certificates []string `gorm:"type:text[]"`
-	IsVerified   bool
-	Bio          string
+	IsVerified   bool     `gorm:"default=false"`
+	Bio          *string
 	Requests     []Request      `gorm:"foreignKey:PetSitterID"`
 	Services     []Service      `gorm:"foreignKey:PetSitterID"`
 	Schedule     []CalenderSlot `gorm:"foreignKey:Refer"`

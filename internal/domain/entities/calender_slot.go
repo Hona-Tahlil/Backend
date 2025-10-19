@@ -1,6 +1,7 @@
 package entities
 
 import (
+	"hona/backend/internal/domain/enums"
 	"time"
 
 	"gorm.io/gorm"
@@ -8,10 +9,10 @@ import (
 
 type CalenderSlot struct {
 	gorm.Model
-	StartTime        time.Time
-	EndTime          time.Time
-	IsDailyRepeated  bool
-	IsWeeklyRepeated bool
-	Status           string // make enum later
+	StartTime        time.Time `gorm:"not null"`
+	EndTime          time.Time `gorm:"not null"`
+	IsDailyRepeated  bool      `gorm:"default=false"`
+	IsWeeklyRepeated bool      `gorm:"default=false"`
+	Status           enums.CalenderStatus
 	Refer            uint
 }
