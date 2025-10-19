@@ -10,6 +10,7 @@ import (
 type User struct {
 	gorm.Model
 	Email       string   `gorm:"not null;unique;index"`
+	IsVerified  bool     `gorm:"default=false;index"`
 	Password    string   `gorm:"not null"`
 	Name        string   `gorm:"not null;index"`
 	Address     *Address `gorm:"foreignKey:OwnerID"`
