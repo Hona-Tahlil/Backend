@@ -52,25 +52,25 @@ func NewPostgresDatabase() *PostgresDatabase {
 
 		dbInstance = &PostgresDatabase{DB: db}
 
-		db = db.Debug()
-		db.Migrator().DropTable(
-			&entities.User{},
-			&entities.Role{},
-			&entities.Permission{},
-			&entities.Wallet{},
-			&entities.Request{},
-			&entities.CalenderSlot{},
-			&entities.Pet{},
-			&entities.PetSitter{},
-			&entities.Reserve{},
-			&entities.Service{},
-			&entities.Chat{},
-			&entities.Comment{},
-			&entities.Address{},
-			&entities.Province{},
-			&entities.City{},
-			&entities.TextMessage{},
-		)
+		// db = db.Debug()
+		// db.Migrator().DropTable(
+		// 	&entities.User{},
+		// 	&entities.Role{},
+		// 	&entities.Permission{},
+		// 	&entities.Wallet{},
+		// 	&entities.Request{},
+		// 	&entities.CalenderSlot{},
+		// 	&entities.Pet{},
+		// 	&entities.PetSitter{},
+		// 	&entities.Reserve{},
+		// 	&entities.Service{},
+		// 	&entities.Chat{},
+		// 	&entities.Comment{},
+		// 	&entities.Address{},
+		// 	&entities.Province{},
+		// 	&entities.City{},
+		// 	&entities.TextMessage{},
+		// )
 		db.AutoMigrate(
 			&entities.User{},
 			&entities.Role{},
