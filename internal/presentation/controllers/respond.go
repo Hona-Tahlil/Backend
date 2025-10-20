@@ -25,7 +25,7 @@ type multipleMessageResponse struct {
 }
 
 func Respond[T Message | []Message](ctx *gin.Context, statusCode int, messages T, data interface{}) {
-	translator := GetTranslator(ctx, bootstrap.ProjectConfig.Constants.Context.Translator)
+	translator := GetTranslator(ctx, bootstrap.Run().Constants.Context.Translator)
 
 	switch msg := any(messages).(type) {
 	case Message:
