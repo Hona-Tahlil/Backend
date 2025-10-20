@@ -62,5 +62,5 @@ jobs:
             docker image prune -f
             sleep 5
             docker pull ghcr.io/${{ secrets.USERNAME }}/backend:feat-cd
-            docker tag ghcr.io/${{ secrets.USERNAME }}/backend:feat-cd backend_app_1
+            docker tag ghcr.io/${USERNAME}/backend:feat-cd backend_app_1:latest
             docker compose up -d
