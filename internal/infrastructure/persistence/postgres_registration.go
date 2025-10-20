@@ -3,6 +3,7 @@ package persistence
 import (
 	"fmt"
 	"hona/backend/bootstrap"
+	"hona/backend/internal/domain/entities"
 	"sync"
 
 	"gorm.io/driver/postgres"
@@ -51,7 +52,7 @@ func NewPostgresDatabase() *PostgresDatabase {
 
 		dbInstance = &PostgresDatabase{DB: db}
 
-		// dbInstance.DB.AutoMigrate(&entities.User{})
+		dbInstance.DB.AutoMigrate(&entities.User{})
 
 	})
 

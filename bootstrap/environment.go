@@ -7,7 +7,8 @@ import (
 )
 
 type Env struct {
-	PrimaryDB Database
+	PrimaryDB    Database
+	PrimaryRedis Redis
 }
 
 type Database struct {
@@ -16,6 +17,13 @@ type Database struct {
 	Password string
 	Name     string
 	Port     string
+}
+
+type Redis struct {
+	Port      string
+	Address   string
+	Password  string
+	RDBNumber string
 }
 
 func NewEnv() *Env {
@@ -27,6 +35,12 @@ func NewEnv() *Env {
 			Password: os.Getenv("DB_PASSWORD"),
 			Name:     os.Getenv("DB_NAME"),
 			Port:     os.Getenv("DB_PORT"),
+		},
+		PrimaryRedis: Redis{
+			Port:      os.Getenv("RDB_PORT"),
+			Address:   os.Getenv("RDB_ADDRESS"),
+			Password:  os.Getenv("RDB_PASSWORD"),
+			RDBNumber: os.Getenv("RDB_NUMBER"),
 		},
 	}
 }

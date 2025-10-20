@@ -43,23 +43,25 @@ func (gc *GeneralUserController) Login(ctx *gin.Context) {
 
 func (gc *GeneralUserController) Register(ctx *gin.Context) {
 	type registerParams struct {
-		FirstName       string `json:"firstName" validate:"required"`
-		LastName        string `json:"lastName" validate:"required"`
+		Name            string `json:"name" validate:"required"`
 		Email           string `json:"email" validate:"required"`
 		Password        string `json:"password" validate:"required"`
 		ConfirmPassword string `json:"confirmPassword" validate:"required,eqfield=Password"`
 	}
 	params := controllers.Receive[registerParams](ctx)
 	registerInfo := user.RegisterRequest{
-		FirstName: params.FirstName,
-		LastName:  params.LastName,
+		Name:  params.Name,
 		Email:     params.Email,
 		Password:  params.Password,
 	}
 	if err := gc.generalService.Register(registerInfo); err != nil {
 		panic(err)
 	}
-
+	msg := controllers.Message{
+		Text:   "success.userRegister",
+		Params: []string{},
+	}
+	controllers.Respond(ctx, 200, msg, nil)
 }
 
 func (gc *GeneralUserController) VerifyEmail(ctx *gin.Context) {
@@ -75,10 +77,12 @@ func (gc *GeneralUserController) VerifyEmail(ctx *gin.Context) {
 	if err := gc.generalService.VerifyEmail(verifyOTPInfo); err != nil {
 		panic(err)
 	}
+	msg := controllers.Message{
+		Text:   "success.emailVerification",
+		Params: []string{},
+	}
+	controllers.Respond(ctx, 200, msg, nil)
 
-	// trans := controller.GetTranslator(ctx, GeneralUserController.constants.Context.Translator)
-	// message, _ := trans.Translate("successMessage.phoneVerification")
-	// controller.Response(ctx, 200, message, nil)
 }
 
 func (gc *GeneralUserController) ForgotPassword(ctx *gin.Context) {
@@ -93,7 +97,4 @@ func (gc *GeneralUserController) ForgotPassword(ctx *gin.Context) {
 		panic(err)
 	}
 
-	// trans := controller.GetTranslator(ctx, GeneralUserController.constants.Context.Translator)
-	// message, _ := trans.Translate("successMessage.forgotPassword")
-	// controller.Response(ctx, 200, message, nil)
 }

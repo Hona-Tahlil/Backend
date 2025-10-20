@@ -94,7 +94,7 @@ var Persian = map[string]interface{}{
 		"alreadyDraft":           "این {0} قبلا در حالت پیش نویس قرار گرفته است.",
 		"bannedUser":             "حساب شما مسدود شده است. شما مجاز به انجام این عمل نیستید.",
 	},
-	"successMessage": map[string]interface{}{
+	"success": map[string]interface{}{
 		"userRegister":              "ثبت نام موفق بود! لطفاً پیامک های خود را بررسی کنید تا حساب خود را تأیید کرده و فرآیند ثبت نام را تکمیل نمایید.",
 		"phoneVerification":         "شماره شما با موفقیت تایید شد.",
 		"login":                     "شما با موفقیت وارد شدید.",
