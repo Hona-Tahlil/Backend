@@ -40,6 +40,9 @@ func (rm *RBACMiddleware) NeedsPermission(allowedPermissions []enums.Permission)
 					break
 				}
 			}
+			if allowed {
+				break
+			}
 		}
 		if !allowed {
 			accessDeniedErr := exceptions.NewAccessDeniedError("you don't have the required access")
