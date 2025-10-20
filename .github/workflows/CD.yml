@@ -65,6 +65,7 @@ jobs:
 
 
             docker compose down -v
+            docker image prune -f
             sleep 10
             docker compose pull
             docker compose up -d
