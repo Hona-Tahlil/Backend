@@ -11,10 +11,10 @@ import (
 )
 
 type UserCacheRepository struct {
-	rdb *persistence.Cache
+	rdb persistence.Cache
 }
 
-func NewUserCacheRepository(rdb *persistence.Cache) *UserCacheRepository {
+func NewUserCacheRepository(rdb persistence.Cache) *UserCacheRepository {
 	return &UserCacheRepository{
 		rdb: rdb,
 	}
