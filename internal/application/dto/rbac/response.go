@@ -5,3 +5,8 @@ type PermissionResponse struct {
 	Name        string `json:"name"`
 	Description string `json:"description"`
 }
+
+type RefreshTokenResponse struct {
+	AccessToken string               `json:"accessToken"`
+	Permissions []PermissionResponse `json:"permissions"`
+}

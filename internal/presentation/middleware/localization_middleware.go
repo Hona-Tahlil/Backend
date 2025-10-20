@@ -3,12 +3,12 @@ package middleware
 import (
 	"net/http"
 
+	"hona/backend/bootstrap"
 	"hona/backend/internal/infrastructure/translation"
 
 	"github.com/gin-gonic/gin"
 )
 
-// ? what should it have?
 type LocalizationMiddleware struct {
 }
 
@@ -17,7 +17,7 @@ func NewLocalizationMiddleware() *LocalizationMiddleware {
 }
 
 func GetLocale(request *http.Request) string {
-	return request.Header.Get("Accept-Language")
+	return request.Header.Get(bootstrap.Run().Constants.Context.AcceptLanguage)
 }
 
 func (lm *LocalizationMiddleware) AddTranslator(ctx *gin.Context) {
@@ -25,7 +25,7 @@ func (lm *LocalizationMiddleware) AddTranslator(ctx *gin.Context) {
 
 	trans := translation.GetTranslator(locale)
 
-	ctx.Set("translator", trans)
+	ctx.Set(bootstrap.Run().Constants.Context.Translator, trans)
 
 	ctx.Next()
 }

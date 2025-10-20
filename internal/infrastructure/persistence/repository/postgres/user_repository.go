@@ -24,3 +24,12 @@ func (up *UserRepository) FindUserByEmail(email string) (*entities.User, error) 
 	}
 	return &foundUser, nil
 }
+
+func (up *UserRepository) FindUserByID(userID uint) (*entities.User, error) {
+	var foundUser entities.User
+
+	if result := up.db.First(&foundUser, userID); result.Error != nil {
+		return nil, result.Error
+	}
+	return &foundUser, nil
+}

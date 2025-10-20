@@ -2,6 +2,7 @@ package jwt
 
 import (
 	"errors"
+	"hona/backend/bootstrap"
 	"hona/backend/internal/domain/exceptions"
 	"time"
 
@@ -42,21 +43,21 @@ func (js *JWTService) GenerateClaims(userID uint, rememberMe bool) (accessTokenC
 		"sub":  userID,
 		"exp":  time.Now().Add(time.Minute * 2).Unix(),
 		"iat":  time.Now().Unix(),
-		"type": "access",
+		"type": bootstrap.Run().Constants.JWTConstants.AccessTokenType,
 	}
 	if rememberMe {
 		refreshTokenClaims = jwt.MapClaims{
 			"sub":  userID,
 			"exp":  time.Now().Add(time.Hour * 24 * 7).Unix(),
 			"iat":  time.Now().Unix(),
-			"type": "refresh",
+			"type": bootstrap.Run().Constants.JWTConstants.RefreshTokenType,
 		}
 	} else {
 		refreshTokenClaims = jwt.MapClaims{
 			"sub":  userID,
 			"exp":  time.Now().Add(time.Hour * 24 * 2).Unix(),
 			"iat":  time.Now().Unix(),
-			"type": "refresh",
+			"type": bootstrap.Run().Constants.JWTConstants.RefreshTokenType,
 		}
 	}
 	return
@@ -100,7 +101,7 @@ func (js *JWTService) ValidateToken(tokenString string, tokenType string) uint {
 }
 
 func (js *JWTService) RefreshTokens(refreshTokenString string) (accessTokenString string, newRefreshTokenString string, userID uint) {
-	userID = js.ValidateToken(refreshTokenString, "refresh")
+	userID = js.ValidateToken(refreshTokenString, bootstrap.Run().Constants.JWTConstants.RefreshTokenType)
 
 	accessTokenString, newRefreshTokenString = js.GenerateTokens(userID, false)
 	return
