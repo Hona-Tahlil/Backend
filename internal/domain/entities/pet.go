@@ -14,9 +14,9 @@ type Pet struct {
 	Kind         enums.PetKind `gorm:"index"`
 	Species      *string
 	BirthDate    *time.Time
-	Gender       enums.Gender
+	Gender       *enums.Gender
 	Weight       *uint
 	HealthRecord *string
 	PictureLink  *string
-	AboutPet     *string
+	// AboutPet     *string
 }
