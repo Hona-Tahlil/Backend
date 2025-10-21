@@ -11,6 +11,8 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+// TODO: interface for service and repo
+
 type UserService struct {
 	jwtService *jwt.JWTService
 	unitOfWork *persistence.UnitOfWork
@@ -37,6 +39,7 @@ func (us *UserService) Login(loginInfo user.LoginRequest) (*user.LoginResponse, 
 
 	accessToken, refreshToken := us.jwtService.GenerateTokens(foundUser.ID, loginInfo.RememberMe)
 
+	// TODO: separate method
 	p := make([]rbac.PermissionResponse, 0)
 	for _, role := range foundUser.Roles {
 		for _, per := range role.Permissions {
@@ -47,6 +50,7 @@ func (us *UserService) Login(loginInfo user.LoginRequest) (*user.LoginResponse, 
 		}
 	}
 
+	// TODO: env + method
 	var expireTime int
 	if loginInfo.RememberMe {
 		expireTime = int(time.Hour.Seconds() * 7 * 24)

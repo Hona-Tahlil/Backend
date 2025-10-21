@@ -8,6 +8,8 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
+// TODO: interface
+
 type JWTService struct {
 	keyManager *JWTKeyManager
 }

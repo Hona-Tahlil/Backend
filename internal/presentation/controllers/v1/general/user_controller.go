@@ -50,7 +50,7 @@ func (gc *GeneralUserController) Login(ctx *gin.Context) {
 
 	msg := controllers.Message{
 		Text:   "successMessage.login",
-		Params: []string{},
+		Params: nil,
 	}
 	controllers.Respond(ctx, 200, msg, *res)
 }

@@ -16,6 +16,7 @@ func NewUserRepository(db *gorm.DB) *UserRepository {
 	}
 }
 
+// TODO: handle gormError
 func (up *UserRepository) FindUserByEmail(email string) (*entities.User, error) {
 	var foundUser entities.User
 
