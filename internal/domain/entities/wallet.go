@@ -4,8 +4,11 @@ import "gorm.io/gorm"
 
 type Wallet struct {
 	gorm.Model
-	Balance        uint `gorm:"default=0;not null"`
-	PendingBalance uint `gorm:"default=0;not null"`
+	Balance        uint `gorm:"default=0"`
+	PendingBalance uint `gorm:"default=0;index"`
 	PaymentInfo    *string
-	UserID         uint
+	UserID         uint          `gorm:"index"`
+	InTransfers    []Transfer    `gorm:"foreignKey:ReceiverWalletID"`
+	OutTransfers   []Transfer    `gorm:"foreignKey:SenderWalletID"`
+	Transactions   []Transaction `gorm:"foreignKey:WalletID"`
 }

@@ -9,7 +9,7 @@ import (
 
 type Pet struct {
 	gorm.Model
-	UserID       uint          `gorm:"index;not null"`
+	UserID       uint          `gorm:"index"`
 	Name         string        `gorm:"not null"`
 	Kind         enums.PetKind `gorm:"index"`
 	Species      *string
@@ -18,4 +18,5 @@ type Pet struct {
 	Weight       *uint
 	HealthRecord *string
 	PictureLink  *string
+	AboutPet     *string
 }

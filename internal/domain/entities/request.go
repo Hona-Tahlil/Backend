@@ -4,10 +4,11 @@ import "gorm.io/gorm"
 
 type Request struct {
 	gorm.Model
-	UserID      uint    `gorm:"not null;index"`
-	PetSitterID uint    `gorm:"not null;index"`
-	IsApproved  bool    `gorm:"not null;default=false;index"`
-	IsPaid      bool    `gorm:"not null=default=false;index"`
+	UserID      uint    `gorm:"index"`
+	PetSitterID uint    `gorm:"index"`
+	IsApproved  bool    `gorm:"default=false;index"`
+	IsPaid      bool    `gorm:"default=false;index"`
 	Reserve     Reserve `gorm:"foreignKey:RequestID;not null"`
 	Chat        Chat    `gorm:"foreignKey:RequestID;not null"`
+	TransferID  uint
 }

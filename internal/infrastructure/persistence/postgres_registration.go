@@ -88,6 +88,8 @@ func NewPostgresDatabase() *PostgresDatabase {
 			&entities.Province{},
 			&entities.City{},
 			&entities.TextMessage{},
+			&entities.Transaction{},
+			&entities.Transfer{},
 		)
 
 	})
