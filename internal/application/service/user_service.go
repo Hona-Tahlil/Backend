@@ -56,6 +56,7 @@ func (us *UserService) Login(loginInfo user.LoginRequest) (*user.LoginResponse, 
 
 	return &user.LoginResponse{
 		AccessToken: accessToken,
+		IsVerified:  foundUser.IsVerified,
 		Permissions: p,
 	}, refreshToken, expireTime, nil
 }
