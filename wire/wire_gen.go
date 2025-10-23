@@ -23,7 +23,8 @@ func InitializeApplication(container *bootstrap.Config) (*Application, error) {
 	unitOfWork := persistence.NewUnitOfWork(db)
 	jwtKeyManager := jwt.NewJWTKeyManager()
 	jwtService := jwt.NewJWTService(jwtKeyManager)
-	userService := service.NewUserService(unitOfWork, jwtService)
+	rbacService := service.NewRBACService()
+	userService := service.NewUserService(unitOfWork, jwtService, rbacService)
 	generalUserController := general.NewGeneralUserController(userService)
 	generalControllers := &GeneralControllers{
 		GeneralUserController: generalUserController,
@@ -45,7 +46,7 @@ func InitializeApplication(container *bootstrap.Config) (*Application, error) {
 
 var RepositoryProviderSet = wire.NewSet(persistence.NewRepositoryFactory, persistence.NewUnitOfWork, persistence.NewPostgresDatabase)
 
-var ServiceProviderSet = wire.NewSet(service.NewUserService, jwt.NewJWTService, jwt.NewJWTKeyManager)
+var ServiceProviderSet = wire.NewSet(service.NewUserService, jwt.NewJWTService, jwt.NewJWTKeyManager, service.NewRBACService)
 
 var GeneralControllersProviderSet = wire.NewSet(general.NewGeneralUserController, wire.Struct(new(GeneralControllers), "*"))
 

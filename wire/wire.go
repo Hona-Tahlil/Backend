@@ -25,6 +25,7 @@ var ServiceProviderSet = wire.NewSet(
 	service.NewUserService,
 	jwt.NewJWTService,
 	jwt.NewJWTKeyManager,
+	service.NewRBACService,
 )
 
 var GeneralControllersProviderSet = wire.NewSet(
