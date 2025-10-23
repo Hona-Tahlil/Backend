@@ -7,7 +7,6 @@ import (
 	"hona/backend/internal/application/service"
 	"hona/backend/internal/domain/exceptions"
 	"hona/backend/internal/presentation/controllers"
-	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -42,6 +41,7 @@ func (gc *GeneralUserController) Login(ctx *gin.Context) {
 		panic(err)
 	}
 
+	// TODO: new Method
 	ctx.SetCookie(
 		bootstrap.Run().Constants.Context.RefreshToken,
 		refreshToken,
@@ -127,15 +127,16 @@ func (gc *GeneralUserController) RefreshTokens(ctx *gin.Context) {
 		RefreshToken: RefreshToken,
 	}
 
-	res, refreshToken, err := gc.userService.RefreshTokens(refreshTokenInfo)
+	res, refreshToken, expireTime, err := gc.userService.RefreshTokens(refreshTokenInfo)
 	if err != nil {
 		panic(err)
 	}
 
+	// TODO: new Method
 	ctx.SetCookie(
 		bootstrap.Run().Constants.Context.RefreshToken,
 		refreshToken,
-		int(time.Hour.Seconds()*7*24),
+		expireTime,
 		"/",
 		"",
 		true,

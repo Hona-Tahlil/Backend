@@ -105,27 +105,20 @@ func (us *UserService) ForgotPassword(forgetPasswordInfo user.ForgotPasswordRequ
 	return nil
 }
 
-func (us *UserService) RefreshTokens(refreshTokenInfo rbac.RefreshTokenRequest) (*rbac.RefreshTokenResponse, string, error) {
-	accessToken, refreshToken, userID := us.jwtService.RefreshTokens(refreshTokenInfo.RefreshToken)
+func (us *UserService) RefreshTokens(refreshTokenInfo rbac.RefreshTokenRequest) (*rbac.RefreshTokenResponse, string, int, error) {
+	accessToken, refreshToken, userID, expireTime := us.jwtService.RefreshTokens(refreshTokenInfo.RefreshToken)
 
+	// TODO: new Method
 	foundUser, err := us.unitOfWork.Factory().UserRepository().FindUserByID(userID)
 	if err != nil {
 		unauthorizedError := exceptions.NewUnauthorizedError("user not found")
-		return nil, "", unauthorizedError
+		return nil, "", expireTime, unauthorizedError
 	}
 
-	p := make([]rbac.PermissionResponse, 0)
-	for _, role := range foundUser.Roles {
-		for _, per := range role.Permissions {
-			p = append(p, rbac.PermissionResponse{
-				ID:   per.ID,
-				Name: per.Type.String(),
-			})
-		}
-	}
+	roles := us.rbacService.GetRolesResponse(*foundUser)
 
 	return &rbac.RefreshTokenResponse{
 		AccessToken: accessToken,
-		Permissions: p,
-	}, refreshToken, nil
+		Roles:       roles,
+	}, refreshToken, expireTime, nil
 }
