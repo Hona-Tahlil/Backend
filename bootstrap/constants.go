@@ -1,10 +1,16 @@
 package bootstrap
 
 type Constants struct {
-	Context     Context
-	JWTKeysPath JWTKeysPath
-	ErrorFields ErrorFields
-	ErrorTags   ErrorTags
+	Context      Context
+	JWTKeysPath  JWTKeysPath
+	ErrorFields  ErrorFields
+	ErrorTags    ErrorTags
+	JWTConstants JWTConstants
+}
+
+type JWTConstants struct {
+	AccessTokenType  string
+	RefreshTokenType string
 }
 
 type ErrorFields struct {
@@ -68,13 +74,19 @@ type JWTKeysPath struct {
 }
 
 type Context struct {
-	Translator string
+	Translator     string
+	ID             string
+	RefreshToken   string
+	AcceptLanguage string
 }
 
 func NewConstants() *Constants {
 	return &Constants{
 		Context: Context{
-			Translator: "translator",
+			Translator:     "translator",
+			ID:             "id",
+			RefreshToken:   "refreshToken",
+			AcceptLanguage: "Accept-Language",
 		},
 		JWTKeysPath: JWTKeysPath{
 			PublicKey:  "./internal/infrastructure/jwt/public_key.pem",
@@ -132,6 +144,10 @@ func NewConstants() *Constants {
 			AccessDenied:           "accessDenied",
 			Binding:                "binding",
 			Generic:                "generic",
+		},
+		JWTConstants: JWTConstants{
+			AccessTokenType:  "access",
+			RefreshTokenType: "refresh",
 		},
 	}
 }

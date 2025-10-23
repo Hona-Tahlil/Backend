@@ -3,3 +3,6 @@
 .air.toml
 *.toml
 *.pem
+*.log
+tmp/
+cmd/tmp/

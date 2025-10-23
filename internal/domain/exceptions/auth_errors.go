@@ -62,6 +62,12 @@ func NewAccessDeniedError(message string) *AuthError {
 	}
 }
 
+func NewNotVerifiedError() *AuthError {
+	return &AuthError{
+		Type: errTags.NotVerified,
+	}
+}
+
 func IsAuthError(err error) bool {
 	_, ok := err.(*AuthError)
 	return ok

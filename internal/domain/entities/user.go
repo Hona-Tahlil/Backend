@@ -10,6 +10,7 @@ type User struct {
 	gorm.Model
 	Email       string `gorm:"not null"`
 	Password    string `gorm:"not null"`
+	IsVerified  bool
 	Name        string
 	Gender      string // make enum later
 	Address     string

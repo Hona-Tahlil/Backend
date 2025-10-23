@@ -1,6 +1,9 @@
 package controllers
 
 import (
+	"hona/backend/bootstrap"
+	"hona/backend/internal/domain/exceptions"
+
 	"github.com/gin-gonic/gin"
 	ut "github.com/go-playground/universal-translator"
 )
@@ -8,4 +11,25 @@ import (
 func GetTranslator(ctx *gin.Context, key string) ut.Translator {
 	trans, _ := ctx.Get(key)
 	return trans.(ut.Translator)
+}
+
+func SetRefreshTokenCookie(ctx *gin.Context, refreshToken string, expireTime int) {
+	ctx.SetCookie(
+		bootstrap.Run().Constants.Context.RefreshToken,
+		refreshToken,
+		expireTime,
+		"/",
+		"",
+		true,
+		true,
+	)
+}
+
+func GetRefreshTokenCookie(ctx *gin.Context) (refreshToken string) {
+	refreshToken, err := ctx.Cookie(bootstrap.Run().Constants.Context.RefreshToken)
+	if err != nil {
+		invalidTokenErr := exceptions.NewInvalidTokenError()
+		panic(invalidTokenErr)
+	}
+	return
 }

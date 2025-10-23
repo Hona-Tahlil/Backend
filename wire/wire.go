@@ -7,6 +7,9 @@ import (
 	"hona/backend/bootstrap"
 
 	"hona/backend/internal/application/service"
+	"hona/backend/internal/application/usecase"
+	domainjwt "hona/backend/internal/domain/jwt"
+	"hona/backend/internal/domain/ports"
 	"hona/backend/internal/infrastructure/jwt"
 	"hona/backend/internal/infrastructure/persistence"
 	"hona/backend/internal/presentation/controllers/v1/general"
@@ -19,12 +22,18 @@ var RepositoryProviderSet = wire.NewSet(
 	persistence.NewRepositoryFactory,
 	persistence.NewUnitOfWork,
 	persistence.NewPostgresDatabase,
+	wire.Bind(new(ports.RepositoryFactory), new(*persistence.RepositoryFactory)),
+	wire.Bind(new(ports.UnitOfWork), new(*persistence.UnitOfWork)),
 )
 
 var ServiceProviderSet = wire.NewSet(
 	service.NewUserService,
 	jwt.NewJWTService,
 	jwt.NewJWTKeyManager,
+	service.NewRBACService,
+	wire.Bind(new(domainjwt.JWTService), new(*jwt.JWTService)),
+	wire.Bind(new(domainjwt.JWTKeyManager), new(*jwt.JWTKeyManager)),
+	wire.Bind(new(usecase.RBACService), new(*service.RBACService)),
 )
 
 var GeneralControllersProviderSet = wire.NewSet(
