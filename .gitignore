@@ -4,3 +4,5 @@
 *.toml
 *.pem
 *.log
+tmp/
+cmd/tmp/

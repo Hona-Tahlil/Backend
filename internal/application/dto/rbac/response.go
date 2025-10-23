@@ -13,3 +13,8 @@ type RoleResponse struct {
 	Description string               `json:"description"`
 	Permissions []PermissionResponse `json:"permissions"`
 }
+
+type RefreshTokenResponse struct {
+	AccessToken string         `json:"accessToken"`
+	Roles       []RoleResponse `json:"roles"`
+}

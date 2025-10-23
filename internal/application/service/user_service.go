@@ -1,6 +1,7 @@
 package service
 
 import (
+	"hona/backend/internal/application/dto/rbac"
 	"hona/backend/internal/application/dto/user"
 	"hona/backend/internal/domain/entities"
 	"hona/backend/internal/domain/exceptions"
@@ -18,10 +19,11 @@ type UserService struct {
 	rbacService *RBACService
 }
 
-func NewUserService(unitOfWork *persistence.UnitOfWork, jwtService *jwt.JWTService) *UserService {
+func NewUserService(unitOfWork *persistence.UnitOfWork, jwtService *jwt.JWTService, rbacService *RBACService) *UserService {
 	return &UserService{
-		unitOfWork: unitOfWork,
-		jwtService: jwtService,
+		unitOfWork:  unitOfWork,
+		jwtService:  jwtService,
+		rbacService: rbacService,
 	}
 }
 
@@ -101,4 +103,29 @@ func (us *UserService) VerifyEmail(verifyEmailInfo user.VerifyEmailRequest) erro
 
 func (us *UserService) ForgotPassword(forgetPasswordInfo user.ForgotPasswordRequest) error {
 	return nil
+}
+
+func (us *UserService) RefreshTokens(refreshTokenInfo rbac.RefreshTokenRequest) (*rbac.RefreshTokenResponse, string, error) {
+	accessToken, refreshToken, userID := us.jwtService.RefreshTokens(refreshTokenInfo.RefreshToken)
+
+	foundUser, err := us.unitOfWork.Factory().UserRepository().FindUserByID(userID)
+	if err != nil {
+		unauthorizedError := exceptions.NewUnauthorizedError("user not found")
+		return nil, "", unauthorizedError
+	}
+
+	p := make([]rbac.PermissionResponse, 0)
+	for _, role := range foundUser.Roles {
+		for _, per := range role.Permissions {
+			p = append(p, rbac.PermissionResponse{
+				ID:   per.ID,
+				Name: per.Type.String(),
+			})
+		}
+	}
+
+	return &rbac.RefreshTokenResponse{
+		AccessToken: accessToken,
+		Permissions: p,
+	}, refreshToken, nil
 }
