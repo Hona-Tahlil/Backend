@@ -1,8 +1,21 @@
 package usecase
 
-import "hona/backend/internal/application/dto/user"
+import (
+	"hona/backend/internal/application/dto/rbac"
+	"hona/backend/internal/application/dto/user"
+	"hona/backend/internal/domain/entities"
+)
 
 type UserService interface {
 	Login(loginInfo user.LoginRequest) (*user.LoginResponse, string, int, error)
-	Register(registerInfo user.RegisterRequest) error
+	findVerifiedUserByEmail(email string) (*entities.User, error)
+	findVerifiedUserByID(id uint) (*entities.User, error)
+	findUserByID(id uint) (*entities.User, error)
+	// validateDuplicatePhone(email string) error
+	// passwordValidation(password string) error
+	// GenerateFromPassword(password string, cost int) error
+	// Register(registerInfo user.RegisterRequest) error
+	// VerifyEmail(verifyEmailInfo user.VerifyEmailRequest) error
+	// ForgotPassword(forgetPasswordInfo user.ForgotPasswordRequest) error
+	RefreshTokens(refreshTokenInfo rbac.RefreshTokenRequest) (*rbac.RefreshTokenResponse, string, int, error)
 }

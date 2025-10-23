@@ -10,6 +10,9 @@ import (
 	"github.com/google/wire"
 	"hona/backend/bootstrap"
 	"hona/backend/internal/application/service"
+	"hona/backend/internal/application/usecase"
+	"hona/backend/internal/domain/jwt"
+	"hona/backend/internal/domain/ports"
 	"hona/backend/internal/infrastructure/jwt"
 	"hona/backend/internal/infrastructure/persistence"
 	"hona/backend/internal/presentation/controllers/v1/general"
@@ -44,9 +47,9 @@ func InitializeApplication(container *bootstrap.Config) (*Application, error) {
 
 // wire.go:
 
-var RepositoryProviderSet = wire.NewSet(persistence.NewRepositoryFactory, persistence.NewUnitOfWork, persistence.NewPostgresDatabase)
+var RepositoryProviderSet = wire.NewSet(persistence.NewRepositoryFactory, persistence.NewUnitOfWork, persistence.NewPostgresDatabase, wire.Bind(new(ports.RepositoryFactory), new(*persistence.RepositoryFactory)), wire.Bind(new(ports.UnitOfWork), new(*persistence.UnitOfWork)))
 
-var ServiceProviderSet = wire.NewSet(service.NewUserService, jwt.NewJWTService, jwt.NewJWTKeyManager, service.NewRBACService)
+var ServiceProviderSet = wire.NewSet(service.NewUserService, jwt.NewJWTService, jwt.NewJWTKeyManager, service.NewRBACService, wire.Bind(new(domainjwt.JWTService), new(*jwt.JWTService)), wire.Bind(new(domainjwt.JWTKeyManager), new(*jwt.JWTKeyManager)), wire.Bind(new(usecase.RBACService), new(*service.RBACService)))
 
 var GeneralControllersProviderSet = wire.NewSet(general.NewGeneralUserController, wire.Struct(new(GeneralControllers), "*"))
 

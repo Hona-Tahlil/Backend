@@ -4,18 +4,17 @@ import (
 	"errors"
 	"hona/backend/bootstrap"
 	"hona/backend/internal/domain/exceptions"
+	domainjwt "hona/backend/internal/domain/jwt"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
 )
 
-// TODO: interface
-
 type JWTService struct {
-	keyManager *JWTKeyManager
+	keyManager domainjwt.JWTKeyManager
 }
 
-func NewJWTService(keyManager *JWTKeyManager) *JWTService {
+func NewJWTService(keyManager domainjwt.JWTKeyManager) *JWTService {
 	return &JWTService{
 		keyManager: keyManager,
 	}

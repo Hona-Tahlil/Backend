@@ -1,6 +1,10 @@
 package persistence
 
-import "gorm.io/gorm"
+import (
+	"hona/backend/internal/domain/ports"
+
+	"gorm.io/gorm"
+)
 
 type UnitOfWork struct {
 	db *gorm.DB
@@ -12,11 +16,11 @@ func NewUnitOfWork(db *gorm.DB) *UnitOfWork {
 	}
 }
 
-func (u *UnitOfWork) Factory() *RepositoryFactory {
+func (u *UnitOfWork) Factory() ports.RepositoryFactory {
 	return NewRepositoryFactory(u.db)
 }
 
-func (u *UnitOfWork) WithTransaction(fn func(*RepositoryFactory) error) error {
+func (u *UnitOfWork) WithTransaction(fn func(ports.RepositoryFactory) error) error {
 	return u.db.Transaction(func(tx *gorm.DB) error {
 		factory := NewRepositoryFactory(tx)
 		return fn(factory)

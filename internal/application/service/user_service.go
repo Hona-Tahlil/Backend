@@ -3,23 +3,22 @@ package service
 import (
 	"hona/backend/internal/application/dto/rbac"
 	"hona/backend/internal/application/dto/user"
+	"hona/backend/internal/application/usecase"
 	"hona/backend/internal/domain/entities"
 	"hona/backend/internal/domain/exceptions"
-	"hona/backend/internal/infrastructure/jwt"
-	"hona/backend/internal/infrastructure/persistence"
+	domainjwt "hona/backend/internal/domain/jwt"
+	"hona/backend/internal/domain/ports"
 
 	"golang.org/x/crypto/bcrypt"
 )
 
-// TODO: interface for service and repo
-
 type UserService struct {
-	jwtService  *jwt.JWTService
-	unitOfWork  *persistence.UnitOfWork
-	rbacService *RBACService
+	jwtService  domainjwt.JWTService
+	unitOfWork  ports.UnitOfWork
+	rbacService usecase.RBACService
 }
 
-func NewUserService(unitOfWork *persistence.UnitOfWork, jwtService *jwt.JWTService, rbacService *RBACService) *UserService {
+func NewUserService(unitOfWork ports.UnitOfWork, jwtService domainjwt.JWTService, rbacService usecase.RBACService) *UserService {
 	return &UserService{
 		unitOfWork:  unitOfWork,
 		jwtService:  jwtService,
