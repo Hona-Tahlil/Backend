@@ -1,11 +1,9 @@
 package general
 
 import (
-	"hona/backend/bootstrap"
 	"hona/backend/internal/application/dto/rbac"
 	"hona/backend/internal/application/dto/user"
 	"hona/backend/internal/application/service"
-	"hona/backend/internal/domain/exceptions"
 	"hona/backend/internal/presentation/controllers"
 
 	"github.com/gin-gonic/gin"
@@ -41,16 +39,7 @@ func (gc *GeneralUserController) Login(ctx *gin.Context) {
 		panic(err)
 	}
 
-	// TODO: new Method
-	ctx.SetCookie(
-		bootstrap.Run().Constants.Context.RefreshToken,
-		refreshToken,
-		expireTime,
-		"/",
-		"",
-		true,
-		true,
-	)
+	controllers.SetRefreshTokenCookie(ctx, refreshToken, expireTime)
 
 	msg := controllers.Message{
 		Text:   "successMessage.login",
@@ -117,11 +106,7 @@ func (gc *GeneralUserController) ForgotPassword(ctx *gin.Context) {
 }
 
 func (gc *GeneralUserController) RefreshTokens(ctx *gin.Context) {
-	RefreshToken, err := ctx.Cookie(bootstrap.Run().Constants.Context.RefreshToken)
-	if err != nil {
-		invalidTokenErr := exceptions.NewInvalidTokenError()
-		panic(invalidTokenErr)
-	}
+	RefreshToken := controllers.GetRefreshTokenCookie(ctx)
 
 	refreshTokenInfo := rbac.RefreshTokenRequest{
 		RefreshToken: RefreshToken,
@@ -132,16 +117,7 @@ func (gc *GeneralUserController) RefreshTokens(ctx *gin.Context) {
 		panic(err)
 	}
 
-	// TODO: new Method
-	ctx.SetCookie(
-		bootstrap.Run().Constants.Context.RefreshToken,
-		refreshToken,
-		expireTime,
-		"/",
-		"",
-		true,
-		true,
-	)
+	controllers.SetRefreshTokenCookie(ctx, refreshToken, expireTime)
 
 	msg := controllers.Message{
 		Text:   "successMessage.refreshToken",

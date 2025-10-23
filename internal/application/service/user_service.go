@@ -67,6 +67,34 @@ func (us *UserService) findVerifiedUserByEmail(email string) (*entities.User, er
 	return foundUser, nil
 }
 
+func (us *UserService) findVerifiedUserByID(id uint) (*entities.User, error) {
+	foundUser, err := us.findUserByID(id)
+	if err != nil {
+		return nil, err
+	}
+
+	if !foundUser.IsVerified {
+		notVerifiedErr := exceptions.NewNotVerifiedError()
+		return nil, notVerifiedErr
+	}
+
+	return foundUser, nil
+}
+
+func (us *UserService) findUserByID(id uint) (*entities.User, error) {
+	foundUser, err := us.unitOfWork.Factory().UserRepository().FindUserByID(id)
+	if foundUser == nil {
+		invalidCredentialsErr := exceptions.NewInvalidCredentialsError("user not found")
+		return nil, invalidCredentialsErr
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return foundUser, nil
+}
+
 func (us *UserService) validateDuplicatePhone(email string) error {
 	return nil
 }
@@ -108,11 +136,9 @@ func (us *UserService) ForgotPassword(forgetPasswordInfo user.ForgotPasswordRequ
 func (us *UserService) RefreshTokens(refreshTokenInfo rbac.RefreshTokenRequest) (*rbac.RefreshTokenResponse, string, int, error) {
 	accessToken, refreshToken, userID, expireTime := us.jwtService.RefreshTokens(refreshTokenInfo.RefreshToken)
 
-	// TODO: new Method
-	foundUser, err := us.unitOfWork.Factory().UserRepository().FindUserByID(userID)
+	foundUser, err := us.findUserByID(userID)
 	if err != nil {
-		unauthorizedError := exceptions.NewUnauthorizedError("user not found")
-		return nil, "", expireTime, unauthorizedError
+		return nil, "", 0, err
 	}
 
 	roles := us.rbacService.GetRolesResponse(*foundUser)

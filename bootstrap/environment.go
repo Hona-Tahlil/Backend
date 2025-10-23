@@ -2,12 +2,20 @@ package bootstrap
 
 import (
 	"os"
+	"strconv"
 
 	"github.com/joho/godotenv"
 )
 
 type Env struct {
-	PrimaryDB Database
+	PrimaryDB    Database
+	TokenExpires TokenExpires
+}
+
+type TokenExpires struct {
+	LongRefreshHours  int
+	ShortRefreshHours int
+	AccessMinutes     int
 }
 
 type Database struct {
@@ -19,6 +27,9 @@ type Database struct {
 }
 
 func NewEnv() *Env {
+	LongRefreshHours, _ := strconv.Atoi(os.Getenv("LONG_REFRESH_HOURS"))
+	ShortRefreshHours, _ := strconv.Atoi(os.Getenv("SHORT_REFRESH_HOURS"))
+	AccessMinutes, _ := strconv.Atoi(os.Getenv("ACCESS_MINUTES"))
 	godotenv.Load(".env")
 	return &Env{
 		PrimaryDB: Database{
@@ -27,6 +38,11 @@ func NewEnv() *Env {
 			Password: os.Getenv("DB_PASSWORD"),
 			Name:     os.Getenv("DB_NAME"),
 			Port:     os.Getenv("DB_PORT"),
+		},
+		TokenExpires: TokenExpires{
+			LongRefreshHours:  LongRefreshHours,
+			ShortRefreshHours: ShortRefreshHours,
+			AccessMinutes:     AccessMinutes,
 		},
 	}
 }
