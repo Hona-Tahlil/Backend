@@ -33,3 +33,8 @@ func (rs *RBACService) GetRolesResponse(user entities.User) []rbac.RoleResponse 
 	}
 	return r
 }
+
+// TODO: response
+func (rs *RBACService) GetAllRolesWithUsers() {
+
+}

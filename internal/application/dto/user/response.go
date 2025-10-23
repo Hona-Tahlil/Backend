@@ -1,8 +1,6 @@
 package user
 
-import (
-	"hona/backend/internal/application/dto/rbac"
-)
+import "hona/backend/internal/application/dto/rbac"
 
 type LoginResponse struct {
 	AccessToken string              `json:"accessToken"`

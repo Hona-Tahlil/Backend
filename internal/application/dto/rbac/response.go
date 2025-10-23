@@ -18,3 +18,14 @@ type RefreshTokenResponse struct {
 	AccessToken string         `json:"accessToken"`
 	Roles       []RoleResponse `json:"roles"`
 }
+
+type RolesWithUsersResponse struct {
+}
+
+type RoleWithUsersResponse struct {
+	Role  RoleResponse
+	Users []UserInfoResponse
+}
+
+type UserInfoResponse struct {
+}
