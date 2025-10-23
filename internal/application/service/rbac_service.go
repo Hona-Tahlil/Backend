@@ -20,14 +20,14 @@ func (rs *RBACService) GetRolesResponse(user entities.User) []rbac.RoleResponse 
 			p = append(p, rbac.PermissionResponse{
 				ID:          per.ID,
 				Name:        per.Type.String(),
-				Description: per.Description,
+				Description: *per.Description,
 				Category:    per.Category.String(),
 			})
 		}
 		r = append(r, rbac.RoleResponse{
 			ID:          role.ID,
 			Name:        role.Type,
-			Description: role.Description,
+			Description: *role.Description,
 			Permissions: p,
 		})
 	}

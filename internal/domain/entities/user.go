@@ -22,7 +22,7 @@ type User struct {
 	PictureLink *string
 	Wallet      Wallet    `gorm:"foreignKey:UserID;not null"`
 	Requests    []Request `gorm:"foreignKey:UserID"`
-	Role        Role      `gorm:"foreignKey:RoleID"`
+	Roles       []Role    `gorm:"many2many:user_roles"`
 	RoleID      uint
 	Pets        []Pet      `gorm:"foreignKey:UserID"`
 	PetSitter   *PetSitter `gorm:"foreignKey:UserID"`
