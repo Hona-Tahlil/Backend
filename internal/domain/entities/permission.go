@@ -9,5 +9,6 @@ import (
 type Permission struct {
 	gorm.Model
 	Type        enums.Permission
+	Category    enums.PermissionCategory
 	Description string
 }

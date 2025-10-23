@@ -1,12 +1,11 @@
 package service
 
 import (
-	"hona/backend/internal/application/dto/rbac"
 	"hona/backend/internal/application/dto/user"
+	"hona/backend/internal/domain/entities"
 	"hona/backend/internal/domain/exceptions"
 	"hona/backend/internal/infrastructure/jwt"
 	"hona/backend/internal/infrastructure/persistence"
-	"time"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -14,8 +13,9 @@ import (
 // TODO: interface for service and repo
 
 type UserService struct {
-	jwtService *jwt.JWTService
-	unitOfWork *persistence.UnitOfWork
+	jwtService  *jwt.JWTService
+	unitOfWork  *persistence.UnitOfWork
+	rbacService *RBACService
 }
 
 func NewUserService(unitOfWork *persistence.UnitOfWork, jwtService *jwt.JWTService) *UserService {
@@ -26,10 +26,9 @@ func NewUserService(unitOfWork *persistence.UnitOfWork, jwtService *jwt.JWTServi
 }
 
 func (us *UserService) Login(loginInfo user.LoginRequest) (*user.LoginResponse, string, int, error) {
-	foundUser, err := us.unitOfWork.Factory().UserRepository().FindUserByEmail(loginInfo.Email)
+	foundUser, err := us.findVerifiedUserByEmail(loginInfo.Email)
 	if err != nil {
-		invalidCredentialsErr := exceptions.NewInvalidCredentialsError("email not found")
-		return nil, "", 0, invalidCredentialsErr
+		return nil, "", 0, err
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(foundUser.Password), []byte(loginInfo.Password)); err != nil {
@@ -37,32 +36,33 @@ func (us *UserService) Login(loginInfo user.LoginRequest) (*user.LoginResponse, 
 		return nil, "", 0, invalidCredentialsErr
 	}
 
-	accessToken, refreshToken := us.jwtService.GenerateTokens(foundUser.ID, loginInfo.RememberMe)
+	accessToken, refreshToken, expireTime := us.jwtService.GenerateTokens(foundUser.ID, loginInfo.RememberMe)
 
-	// TODO: separate method
-	p := make([]rbac.PermissionResponse, 0)
-	for _, role := range foundUser.Roles {
-		for _, per := range role.Permissions {
-			p = append(p, rbac.PermissionResponse{
-				ID:   per.ID,
-				Name: per.Type.String(),
-			})
-		}
-	}
-
-	// TODO: env + method
-	var expireTime int
-	if loginInfo.RememberMe {
-		expireTime = int(time.Hour.Seconds() * 7 * 24)
-	} else {
-		expireTime = int(time.Hour.Seconds() * 2 * 24)
-	}
+	roles := us.rbacService.GetRolesResponse(*foundUser)
 
 	return &user.LoginResponse{
 		AccessToken: accessToken,
-		IsVerified:  foundUser.IsVerified,
-		Permissions: p,
+		Roles:       roles,
 	}, refreshToken, expireTime, nil
+}
+
+func (us *UserService) findVerifiedUserByEmail(email string) (*entities.User, error) {
+	foundUser, err := us.unitOfWork.Factory().UserRepository().FindUserByEmail(email)
+	if foundUser == nil {
+		invalidCredentialsErr := exceptions.NewInvalidCredentialsError("email not found")
+		return nil, invalidCredentialsErr
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if !foundUser.IsVerified {
+		notVerifiedErr := exceptions.NewNotVerifiedError()
+		return nil, notVerifiedErr
+	}
+
+	return foundUser, nil
 }
 
 func (us *UserService) validateDuplicatePhone(email string) error {

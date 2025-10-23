@@ -6,6 +6,7 @@ import (
 
 type Role struct {
 	gorm.Model
-	Type        string       // TODO: should be enum? don't think so
+	Type        string `gorm:"not null"`
+	Description string
 	Permissions []Permission `gorm:"many2many:role_permission"`
 }
