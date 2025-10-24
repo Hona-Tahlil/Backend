@@ -1,6 +1,7 @@
 package service
 
 import (
+	"hona/backend/bootstrap"
 	"hona/backend/internal/application/dto/rbac"
 	"hona/backend/internal/application/dto/user"
 	"hona/backend/internal/application/usecase"
@@ -29,6 +30,9 @@ func NewUserService(unitOfWork ports.UnitOfWork, jwtService domainjwt.JWTService
 func (us *UserService) Login(loginInfo user.LoginRequest) (*user.LoginResponse, string, int, error) {
 	foundUser, err := us.findVerifiedUserByEmail(loginInfo.Email)
 	if err != nil {
+		if _, ok := err.(*exceptions.NotFoundError); ok {
+			err = exceptions.NewInvalidCredentialsError("no user found with that email")
+		}
 		return nil, "", 0, err
 	}
 
@@ -48,31 +52,40 @@ func (us *UserService) Login(loginInfo user.LoginRequest) (*user.LoginResponse, 
 }
 
 func (us *UserService) findVerifiedUserByEmail(email string) (*entities.User, error) {
-	foundUser, err := us.unitOfWork.Factory().UserRepository().FindUserByEmail(email)
-	if foundUser == nil {
-		invalidCredentialsErr := exceptions.NewInvalidCredentialsError("email not found")
-		return nil, invalidCredentialsErr
-	}
-
+	foundUser, err := us.FindUserByEmail(email)
 	if err != nil {
 		return nil, err
 	}
 
-	if !foundUser.IsVerified {
+	if !foundUser.IsEmailVerified {
 		notVerifiedErr := exceptions.NewNotVerifiedError()
 		return nil, notVerifiedErr
+	}
+
+	return foundUser, nil
+}
+
+func (us *UserService) FindUserByEmail(email string) (*entities.User, error) {
+	foundUser, err := us.unitOfWork.Factory().UserRepository().FindUserByEmail(email)
+	if foundUser == nil {
+		NotFoundError := exceptions.NewNotFoundError(bootstrap.Run().Constants.Fields.User)
+		return nil, NotFoundError
+	}
+
+	if err != nil {
+		return nil, err
 	}
 
 	return foundUser, nil
 }
 
 func (us *UserService) findVerifiedUserByID(id uint) (*entities.User, error) {
-	foundUser, err := us.findUserByID(id)
+	foundUser, err := us.FindUserByID(id)
 	if err != nil {
 		return nil, err
 	}
 
-	if !foundUser.IsVerified {
+	if !foundUser.IsEmailVerified {
 		notVerifiedErr := exceptions.NewNotVerifiedError()
 		return nil, notVerifiedErr
 	}
@@ -80,11 +93,11 @@ func (us *UserService) findVerifiedUserByID(id uint) (*entities.User, error) {
 	return foundUser, nil
 }
 
-func (us *UserService) findUserByID(id uint) (*entities.User, error) {
+func (us *UserService) FindUserByID(id uint) (*entities.User, error) {
 	foundUser, err := us.unitOfWork.Factory().UserRepository().FindUserByID(id)
 	if foundUser == nil {
-		invalidCredentialsErr := exceptions.NewInvalidCredentialsError("user not found")
-		return nil, invalidCredentialsErr
+		NotFoundError := exceptions.NewNotFoundError(bootstrap.Run().Constants.Fields.User)
+		return nil, NotFoundError
 	}
 
 	if err != nil {
@@ -135,7 +148,7 @@ func (us *UserService) ForgotPassword(forgetPasswordInfo user.ForgotPasswordRequ
 func (us *UserService) RefreshTokens(refreshTokenInfo rbac.RefreshTokenRequest) (*rbac.RefreshTokenResponse, string, int, error) {
 	accessToken, refreshToken, userID, expireTime := us.jwtService.RefreshTokens(refreshTokenInfo.RefreshToken)
 
-	foundUser, err := us.findUserByID(userID)
+	foundUser, err := us.FindUserByID(userID)
 	if err != nil {
 		return nil, "", 0, err
 	}

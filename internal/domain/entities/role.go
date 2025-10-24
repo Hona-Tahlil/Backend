@@ -6,7 +6,7 @@ import (
 
 type Role struct {
 	gorm.Model
-	Type        string `gorm:"not null"`
+	Type        string `gorm:"not null;unique"`
 	Description *string
 	Permissions []Permission `gorm:"many2many:role_permission"`
 }

@@ -1,11 +1,12 @@
 package enums
 
+// TODO: 2 enums
 type Gender uint
 
 const (
 	Male Gender = iota + 1
 	Female
-	Unknown
+	// Unknown
 )
 
 func (gender Gender) String() string {
@@ -14,8 +15,8 @@ func (gender Gender) String() string {
 		return "male"
 	case Gender(Female):
 		return "female"
-	case Gender(Unknown):
-		return "unknown"
+		// case Gender(Unknown):
+		// 	return "unknown"
 	}
 	return ""
 }
@@ -24,6 +25,6 @@ func GetAllGenders() []Gender {
 	return []Gender{
 		Male,
 		Female,
-		Unknown,
+		// Unknown,
 	}
 }

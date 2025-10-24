@@ -43,6 +43,10 @@ func handleError(err error) ([]controllers.Message, int) {
 		return handleValidationErrors(validationErrs)
 	} else if authErr, ok := err.(*exceptions.AuthError); ok {
 		return handleAuthError(authErr)
+	} else if notFoundErr, ok := err.(*exceptions.NotFoundError); ok {
+		return handleNotFoundError(notFoundErr)
+	} else if conflictErrs, ok := err.(*exceptions.ConflictErrors); ok {
+		return handleConflictErrors(conflictErrs)
 	}
 	return unhandledErrors(err)
 }
@@ -79,6 +83,26 @@ func handleAuthError(authErr *exceptions.AuthError) ([]controllers.Message, int)
 		Text: "errors." + authErr.Type,
 	}
 	return []controllers.Message{msg}, 401
+}
+
+func handleNotFoundError(notFoundErr *exceptions.NotFoundError) ([]controllers.Message, int) {
+	msg := controllers.Message{
+		Text:   "errors." + errTags.NotFound,
+		Params: []string{notFoundErr.Item},
+	}
+	return []controllers.Message{msg}, 404
+}
+
+func handleConflictErrors(conflictErrs *exceptions.ConflictErrors) ([]controllers.Message, int) {
+	msgs := []controllers.Message{}
+	for _, fieldErr := range conflictErrs.Errors {
+		msgs = append(msgs, controllers.Message{
+			Text:   "errors." + fieldErr.Tag,
+			Params: []string{fieldErr.Field},
+		})
+
+	}
+	return msgs, 409
 }
 
 func unhandledErrors(err error) ([]controllers.Message, int) {

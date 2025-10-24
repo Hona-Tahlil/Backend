@@ -10,7 +10,8 @@ type UserService interface {
 	Login(loginInfo user.LoginRequest) (*user.LoginResponse, string, int, error)
 	findVerifiedUserByEmail(email string) (*entities.User, error)
 	findVerifiedUserByID(id uint) (*entities.User, error)
-	findUserByID(id uint) (*entities.User, error)
+	FindUserByID(id uint) (*entities.User, error)
+	FindUserByEmail(email string) (*entities.User, error)
 	// validateDuplicatePhone(email string) error
 	// passwordValidation(password string) error
 	// GenerateFromPassword(password string, cost int) error

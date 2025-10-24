@@ -6,6 +6,12 @@ type Constants struct {
 	ErrorFields  ErrorFields
 	ErrorTags    ErrorTags
 	JWTConstants JWTConstants
+	Fields       Fields
+}
+
+type Fields struct {
+	Role string
+	User string
 }
 
 type JWTConstants struct {
@@ -66,6 +72,7 @@ type ErrorTags struct {
 	AccessDenied           string
 	Binding                string
 	Generic                string
+	NotFound               string
 }
 
 type JWTKeysPath struct {
@@ -144,10 +151,15 @@ func NewConstants() *Constants {
 			AccessDenied:           "accessDenied",
 			Binding:                "binding",
 			Generic:                "generic",
+			NotFound:               "notFound",
 		},
 		JWTConstants: JWTConstants{
 			AccessTokenType:  "access",
 			RefreshTokenType: "refresh",
+		},
+		Fields: Fields{
+			Role: "role",
+			User: "user",
 		},
 	}
 }
