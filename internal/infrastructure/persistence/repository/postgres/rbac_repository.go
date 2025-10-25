@@ -63,26 +63,12 @@ func (rr *RBACRepository) GetAllRoles() ([]entities.Role, error) {
 	return roles, nil
 }
 
-func (rr *RBACRepository) RemoveRoleFromUserByID(user entities.User, roleID uint) error {
-	role, err := rr.GetRoleByID(roleID)
-	if err != nil {
-		return err
-	}
-	if err := rr.db.Model(&user).Association("Roles").Delete(role); err != nil {
-		panic(err)
-	}
-	return nil
+func (rr *RBACRepository) RemoveRoleFromUser(user entities.User, role entities.Role) error {
+	return rr.db.Model(&user).Association("Roles").Delete(&role)
 }
 
-func (rr *RBACRepository) AddRoleToUserByID(user entities.User, roleID uint) error {
-	role, err := rr.GetRoleByID(roleID)
-	if err != nil {
-		return err
-	}
-	if err := rr.db.Model(&user).Association("Roles").Append(&role); err != nil {
-		panic(err)
-	}
-	return nil
+func (rr *RBACRepository) AddRoleToUser(user entities.User, role entities.Role) error {
+	return rr.db.Model(&user).Association("Roles").Append(&role)
 }
 
 func (rr *RBACRepository) AddRole(roleType string, description *string) error {
@@ -94,4 +80,43 @@ func (rr *RBACRepository) AddRole(roleType string, description *string) error {
 		return err
 	}
 	return nil
+}
+
+func (rr *RBACRepository) RemoveRole(role entities.Role) error {
+	return rr.db.Delete(&role).Error
+}
+
+func (rr *RBACRepository) AddPermissionToRole(role entities.Role, permission entities.Permission) error {
+	return rr.db.Model(&role).Association("Permissions").Append(&permission)
+}
+
+func (rr *RBACRepository) GetPermissionByID(id uint) (*entities.Permission, error) {
+	var foundPermission entities.Permission
+
+	if result := rr.db.First(&foundPermission, id); result.Error != nil {
+		if result.Error == gorm.ErrRecordNotFound {
+			return nil, nil
+		}
+		return nil, result.Error
+	}
+	return &foundPermission, nil
+}
+
+func (rr *RBACRepository) RemovePermissionFromRole(role entities.Role, permission entities.Permission) error {
+	return rr.db.Model(&role).Association("Permissions").Delete(&permission)
+}
+
+func (rr *RBACRepository) GetPermissionRolesByID(permissionID uint) ([]entities.Role, error) {
+	var roles []entities.Role
+	err := rr.db.
+		Joins("JOIN role_permissions rp ON rp.role_id = role.id").
+		Where("rp.permission_id = ?", permissionID).
+		Preload("Permissions").
+		Find(&roles).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return roles, nil
 }

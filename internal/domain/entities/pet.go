@@ -9,15 +9,16 @@ import (
 
 type Pet struct {
 	gorm.Model
-	UserID    uint          `gorm:"index"`
-	Name      string        `gorm:"not null"`
+	UserID uint   `gorm:"index"`
+	Name   string `gorm:"not null"`
+	// TODO: join kind and species
 	Kind      enums.PetKind `gorm:"index"`
-	Species   *string       // enum
+	Species   string        // enum
 	BirthDate *time.Time
-	IsAdult   bool
-	Gender    *enums.Gender
-	// remove?
-	Weight *uint
+	// TODO: calculate
+	IsAdult bool
+	Gender  *enums.Gender
+	Weight  *uint
 	// HealthRecord *string
 	PictureLink *string
 	AboutPet    *string

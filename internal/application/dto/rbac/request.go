@@ -44,3 +44,25 @@ type AddRoleRequest struct {
 	Type        string
 	Description *string
 }
+
+type RemoveRoleByIDRequest struct {
+	ID uint
+}
+
+type RemoveRoleByTypeRequest struct {
+	Type string
+}
+
+type AddPermissionToRoleRequest struct {
+	RoleID       uint
+	PermissionID uint
+}
+
+type RemovePermissionFromRoleRequest struct {
+	RoleID       uint
+	PermissionID uint
+}
+
+type GetPermissionRolesRequest struct {
+	PermissionID uint
+}

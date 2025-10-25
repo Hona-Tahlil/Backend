@@ -25,5 +25,5 @@ type RoleWithUsersResponse struct {
 }
 
 type UserInfoResponse struct {
-	Username string
+	Email string
 }

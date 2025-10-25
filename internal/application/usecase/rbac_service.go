@@ -7,9 +7,13 @@ import (
 
 type RBACService interface {
 	GetRolesResponse(user entities.User) []rbac.RoleResponse
-	GetRoleResponse(role entities.Role) rbac.RoleResponse
+	GetRoleResponse(role entities.Role) *rbac.RoleResponse
 	GetUserInfosResponse(users []entities.User) []rbac.UserInfoResponse
 	GetAllRolesWithUsers() ([]rbac.RoleWithUsersResponse, error)
+	getRoleWithUsers(role *entities.Role) (*rbac.RoleWithUsersResponse, error)
+	findRoleByID(roleID uint) (*entities.Role, error)
+	findRoleByType(roleType string) (*entities.Role, error)
+	findPermissionByID(permissionID uint) (*entities.Permission, error)
 	GetRoleWithUsersByID(info rbac.GetRoleByIDRequest) (*rbac.RoleWithUsersResponse, error)
 	GetRoleWithUsersByType(info rbac.GetRoleByTypeRequest) (*rbac.RoleWithUsersResponse, error)
 	GetRoleByID(info rbac.GetRoleByIDRequest) (*rbac.RoleResponse, error)
@@ -22,4 +26,9 @@ type RBACService interface {
 	AddRoleToUserByID(info rbac.AddRoleToUserByIDRequest) error
 	AddRoleToUserByEmail(info rbac.AddRoleToUserByEmailRequest) error
 	AddRole(info rbac.AddRoleRequest) error
+	RemoveRoleByID(info rbac.RemoveRoleByIDRequest) error
+	RemoveRoleByType(info rbac.RemoveRoleByTypeRequest) error
+	AddPermissionToRole(info rbac.AddPermissionToRoleRequest) error
+	RemovePermissionFromRole(info rbac.RemovePermissionFromRoleRequest) error
+	GetPermissionRoles(info rbac.GetPermissionRolesRequest) ([]rbac.RoleResponse, error)
 }

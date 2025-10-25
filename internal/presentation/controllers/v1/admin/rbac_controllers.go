@@ -218,7 +218,6 @@ func (ac *AdminRBACController) AddRoleToUserByEmail(ctx *gin.Context) {
 	controllers.Respond(ctx, 200, msg, nil)
 }
 
-// TODO: Add a New Role
 func (ac *AdminRBACController) AddRole(ctx *gin.Context) {
 	type AddRoleParams struct {
 		Type        string  `json:"type"`
@@ -240,10 +239,98 @@ func (ac *AdminRBACController) AddRole(ctx *gin.Context) {
 	controllers.Respond(ctx, 200, msg, nil)
 }
 
-// TODO: Remove a Role
+func (ac *AdminRBACController) RemoveRoleByID(ctx *gin.Context) {
+	type RemoveRoleByIDParams struct {
+		ID uint `uri:"id"`
+	}
+	params := controllers.Receive[RemoveRoleByIDParams](ctx)
+	RemoveRoleByIDInfo := rbac.RemoveRoleByIDRequest{
+		ID: params.ID,
+	}
+	err := ac.rbacService.RemoveRoleByID(RemoveRoleByIDInfo)
+	if err != nil {
+		panic(err)
+	}
 
-// TODO: Add a Permission To a Role
+	msg := controllers.Message{
+		Text: "successMessage.generic",
+	}
+	controllers.Respond(ctx, 200, msg, nil)
+}
 
-// TODO: Remove a Permission From a Role
+func (ac *AdminRBACController) RemoveRoleByType(ctx *gin.Context) {
+	type RemoveRoleByTypeParams struct {
+		Type string `uri:"type"`
+	}
+	params := controllers.Receive[RemoveRoleByTypeParams](ctx)
+	RemoveRoleByTypeInfo := rbac.RemoveRoleByTypeRequest{
+		Type: params.Type,
+	}
+	err := ac.rbacService.RemoveRoleByType(RemoveRoleByTypeInfo)
+	if err != nil {
+		panic(err)
+	}
 
-// TODO: Get a Permissions Roles
+	msg := controllers.Message{
+		Text: "successMessage.generic",
+	}
+	controllers.Respond(ctx, 200, msg, nil)
+}
+
+func (ac *AdminRBACController) AddPermissionToRole(ctx *gin.Context) {
+	type AddPermissionToRoleParams struct {
+		RoleID       uint `json:"roleID"`
+		PermissionID uint `json:"permissionID"`
+	}
+	params := controllers.Receive[AddPermissionToRoleParams](ctx)
+	AddPermissionToRoleInfo := rbac.AddPermissionToRoleRequest{
+		RoleID:       params.RoleID,
+		PermissionID: params.PermissionID,
+	}
+	err := ac.rbacService.AddPermissionToRole(AddPermissionToRoleInfo)
+	if err != nil {
+		panic(err)
+	}
+
+	msg := controllers.Message{
+		Text: "successMessage.generic",
+	}
+	controllers.Respond(ctx, 200, msg, nil)
+}
+
+func (ac *AdminRBACController) RemovePermissionFromRole(ctx *gin.Context) {
+	type RemovePermissionFromRoleParams struct {
+		RoleID       uint `json:"roleID"`
+		PermissionID uint `json:"permissionID"`
+	}
+	params := controllers.Receive[RemovePermissionFromRoleParams](ctx)
+	RemovePermissionFromRoleInfo := rbac.RemovePermissionFromRoleRequest{
+		RoleID:       params.RoleID,
+		PermissionID: params.PermissionID,
+	}
+	err := ac.rbacService.RemovePermissionFromRole(RemovePermissionFromRoleInfo)
+	if err != nil {
+		panic(err)
+	}
+
+	msg := controllers.Message{
+		Text: "successMessage.generic",
+	}
+	controllers.Respond(ctx, 200, msg, nil)
+}
+
+func (ac *AdminRBACController) GetPermissionRoles(ctx *gin.Context) {
+	type GetPermissionRolesParams struct {
+		PermissionID uint `json:"permissionID"`
+	}
+	params := controllers.Receive[GetPermissionRolesParams](ctx)
+	GetPermissionRolesInfo := rbac.GetPermissionRolesRequest{
+		PermissionID: params.PermissionID,
+	}
+	res, err := ac.rbacService.GetPermissionRoles(GetPermissionRolesInfo)
+	if err != nil {
+		panic(err)
+	}
+
+	controllers.Respond(ctx, 200, controllers.Message{}, res)
+}

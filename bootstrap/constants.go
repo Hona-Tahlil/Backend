@@ -6,12 +6,6 @@ type Constants struct {
 	ErrorFields  ErrorFields
 	ErrorTags    ErrorTags
 	JWTConstants JWTConstants
-	Fields       Fields
-}
-
-type Fields struct {
-	Role string
-	User string
 }
 
 type JWTConstants struct {
@@ -156,10 +150,6 @@ func NewConstants() *Constants {
 		JWTConstants: JWTConstants{
 			AccessTokenType:  "access",
 			RefreshTokenType: "refresh",
-		},
-		Fields: Fields{
-			Role: "role",
-			User: "user",
 		},
 	}
 }
