@@ -24,16 +24,16 @@ func SetUpAdminRoutes(v1 *gin.RouterGroup, app *wire.Application) {
 
 		// ===== USERS & ROLES =====
 		rbacGroup.GET("/users/:id/roles", app.Controllers.AdminControllers.AdminRBACController.GetUserRolesByID)
-		rbacGroup.GET("/users/email/:email/roles", app.Controllers.AdminControllers.AdminRBACController.GetUserRolesByEmail)
-		rbacGroup.POST("/users/:id/roles", app.Controllers.AdminControllers.AdminRBACController.AddRoleToUserByID)
-		rbacGroup.POST("/users/email/:email/roles", app.Controllers.AdminControllers.AdminRBACController.AddRoleToUserByEmail)
-		rbacGroup.DELETE("/users/:id/roles/:roleID", app.Controllers.AdminControllers.AdminRBACController.RemoveRoleFromUserByID)
-		rbacGroup.DELETE("/users/email/:email/roles/:roleID", app.Controllers.AdminControllers.AdminRBACController.RemoveRoleFromUserByEmail)
+		rbacGroup.GET("/users/email/roles/", app.Controllers.AdminControllers.AdminRBACController.GetUserRolesByEmail)
+		rbacGroup.POST("/users/roles/", app.Controllers.AdminControllers.AdminRBACController.AddRoleToUserByID)
+		rbacGroup.POST("/users/email/roles", app.Controllers.AdminControllers.AdminRBACController.AddRoleToUserByEmail)
+		rbacGroup.DELETE("/users/:userID/roles/:roleID", app.Controllers.AdminControllers.AdminRBACController.RemoveRoleFromUserByID)
+		rbacGroup.DELETE("/users/email/:userEmail/roles/:roleID", app.Controllers.AdminControllers.AdminRBACController.RemoveRoleFromUserByEmail)
 
 		// ===== PERMISSIONS =====
 		rbacGroup.GET("/permissions/:permissionID/roles", app.Controllers.AdminControllers.AdminRBACController.GetPermissionRoles)
-		rbacGroup.POST("/roles/:roleID/permissions", app.Controllers.AdminControllers.AdminRBACController.AddPermissionToRole)
-		rbacGroup.DELETE("/roles/:roleID/permissions/:permissionID", app.Controllers.AdminControllers.AdminRBACController.RemovePermissionFromRole)
+		rbacGroup.POST("/permissions/roles", app.Controllers.AdminControllers.AdminRBACController.AddPermissionToRole)
+		rbacGroup.DELETE("/permissions/:roleID/:permissionID", app.Controllers.AdminControllers.AdminRBACController.RemovePermissionFromRole)
 
 	}
 }

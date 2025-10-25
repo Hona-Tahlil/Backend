@@ -5,7 +5,6 @@ import (
 	"hona/backend/internal/domain/exceptions"
 	"hona/backend/internal/presentation/controllers"
 	"log"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -45,23 +44,21 @@ func handleError(err error) ([]controllers.Message, int) {
 		return handleAuthError(authErr)
 	} else if notFoundErr, ok := err.(*exceptions.NotFoundError); ok {
 		return handleNotFoundError(notFoundErr)
-	} else if conflictErrs, ok := err.(*exceptions.ConflictErrors); ok {
+	} else if conflictErrs, ok := err.(exceptions.ConflictErrors); ok {
 		return handleConflictErrors(conflictErrs)
 	}
 	return unhandledErrors(err)
 }
 
 func handleBindingError(bindingErr *exceptions.BindingError) ([]controllers.Message, int) {
-	if numError, ok := bindingErr.Err.(*strconv.NumError); ok {
-		msg := controllers.Message{
-			Text:   "errors." + errTags.Numeric,
-			Params: []string{numError.Num},
-		}
-		return []controllers.Message{msg}, 400
-	}
+	// if _, ok := bindingErr.Err.(*strconv.NumError); ok {
+	// 	msg := controllers.Message{
+	// 		Text: "errors." + errTags.Numeric,
+	// 	}
+	// 	return []controllers.Message{msg}, 400
+	// }
 	msg := controllers.Message{
-		Text:   "errors." + errTags.Binding,
-		Params: []string{},
+		Text: "errors." + errTags.Binding,
 	}
 	return []controllers.Message{msg}, 400
 }
@@ -93,7 +90,7 @@ func handleNotFoundError(notFoundErr *exceptions.NotFoundError) ([]controllers.M
 	return []controllers.Message{msg}, 404
 }
 
-func handleConflictErrors(conflictErrs *exceptions.ConflictErrors) ([]controllers.Message, int) {
+func handleConflictErrors(conflictErrs exceptions.ConflictErrors) ([]controllers.Message, int) {
 	msgs := []controllers.Message{}
 	for _, fieldErr := range conflictErrs.Errors {
 		msgs = append(msgs, controllers.Message{

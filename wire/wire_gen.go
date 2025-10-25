@@ -27,13 +27,13 @@ func InitializeApplication(container *bootstrap.Config) (*Application, error) {
 	unitOfWork := persistence.NewUnitOfWork(db)
 	jwtKeyManager := jwt.NewJWTKeyManager()
 	jwtService := jwt.NewJWTService(jwtKeyManager)
-	rbacService := service.NewRBACService()
-	userService := service.NewUserService(unitOfWork, jwtService, rbacService)
+	userService := service.NewUserService(unitOfWork, jwtService)
 	generalUserController := general.NewGeneralUserController(userService)
 	generalControllers := &GeneralControllers{
 		GeneralUserController: generalUserController,
 	}
-	adminRBACController := admin.NewAdminRBACController()
+	rbacService := service.NewRBACService(unitOfWork, userService)
+	adminRBACController := admin.NewAdminRBACController(rbacService)
 	adminControllers := &AdminControllers{
 		AdminRBACController: adminRBACController,
 	}
@@ -55,7 +55,7 @@ func InitializeApplication(container *bootstrap.Config) (*Application, error) {
 
 var RepositoryProviderSet = wire.NewSet(persistence.NewRepositoryFactory, persistence.NewUnitOfWork, persistence.NewPostgresDatabase, wire.Bind(new(ports.RepositoryFactory), new(*persistence.RepositoryFactory)), wire.Bind(new(ports.UnitOfWork), new(*persistence.UnitOfWork)))
 
-var ServiceProviderSet = wire.NewSet(service.NewUserService, jwt.NewJWTService, jwt.NewJWTKeyManager, service.NewRBACService, wire.Bind(new(domainjwt.JWTService), new(*jwt.JWTService)), wire.Bind(new(domainjwt.JWTKeyManager), new(*jwt.JWTKeyManager)), wire.Bind(new(usecase.RBACService), new(*service.RBACService)))
+var ServiceProviderSet = wire.NewSet(service.NewUserService, jwt.NewJWTService, jwt.NewJWTKeyManager, service.NewRBACService, wire.Bind(new(domainjwt.JWTService), new(*jwt.JWTService)), wire.Bind(new(domainjwt.JWTKeyManager), new(*jwt.JWTKeyManager)), wire.Bind(new(usecase.RBACService), new(*service.RBACService)), wire.Bind(new(usecase.UserService), new(*service.UserService)))
 
 var GeneralControllersProviderSet = wire.NewSet(general.NewGeneralUserController, wire.Struct(new(GeneralControllers), "*"))
 

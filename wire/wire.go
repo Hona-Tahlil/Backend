@@ -34,6 +34,7 @@ var ServiceProviderSet = wire.NewSet(
 	wire.Bind(new(domainjwt.JWTService), new(*jwt.JWTService)),
 	wire.Bind(new(domainjwt.JWTKeyManager), new(*jwt.JWTKeyManager)),
 	wire.Bind(new(usecase.RBACService), new(*service.RBACService)),
+	wire.Bind(new(usecase.UserService), new(*service.UserService)),
 )
 
 var GeneralControllersProviderSet = wire.NewSet(

@@ -4,7 +4,6 @@ import (
 	"hona/backend/bootstrap"
 	"hona/backend/internal/application/dto/rbac"
 	"hona/backend/internal/application/dto/user"
-	"hona/backend/internal/application/usecase"
 	"hona/backend/internal/domain/entities"
 	"hona/backend/internal/domain/exceptions"
 	domainjwt "hona/backend/internal/domain/jwt"
@@ -14,17 +13,45 @@ import (
 )
 
 type UserService struct {
-	jwtService  domainjwt.JWTService
-	unitOfWork  ports.UnitOfWork
-	rbacService usecase.RBACService
+	jwtService domainjwt.JWTService
+	unitOfWork ports.UnitOfWork
 }
 
-func NewUserService(unitOfWork ports.UnitOfWork, jwtService domainjwt.JWTService, rbacService usecase.RBACService) *UserService {
+func NewUserService(unitOfWork ports.UnitOfWork, jwtService domainjwt.JWTService) *UserService {
 	return &UserService{
-		unitOfWork:  unitOfWork,
-		jwtService:  jwtService,
-		rbacService: rbacService,
+		unitOfWork: unitOfWork,
+		jwtService: jwtService,
 	}
+}
+
+func (us *UserService) GetRolesResponse(user entities.User) []rbac.RoleResponse {
+	r := make([]rbac.RoleResponse, 0)
+	for _, role := range user.Roles {
+		p := make([]rbac.PermissionResponse, 0)
+		for _, per := range role.Permissions {
+			des := ""
+			if per.Description != nil {
+				des = *per.Description
+			}
+			p = append(p, rbac.PermissionResponse{
+				ID:          per.ID,
+				Name:        per.Type.String(),
+				Description: des,
+				Category:    per.Category.String(),
+			})
+		}
+		des := ""
+		if role.Description != nil {
+			des = *role.Description
+		}
+		r = append(r, rbac.RoleResponse{
+			ID:          role.ID,
+			Name:        role.Type,
+			Description: des,
+			Permissions: p,
+		})
+	}
+	return r
 }
 
 func (us *UserService) Login(loginInfo user.LoginRequest) (*user.LoginResponse, string, int, error) {
@@ -43,7 +70,7 @@ func (us *UserService) Login(loginInfo user.LoginRequest) (*user.LoginResponse, 
 
 	accessToken, refreshToken, expireTime := us.jwtService.GenerateTokens(foundUser.ID, loginInfo.RememberMe)
 
-	roles := us.rbacService.GetRolesResponse(*foundUser)
+	roles := us.GetRolesResponse(*foundUser)
 
 	return &user.LoginResponse{
 		AccessToken: accessToken,
@@ -153,7 +180,7 @@ func (us *UserService) RefreshTokens(refreshTokenInfo rbac.RefreshTokenRequest) 
 		return nil, "", 0, err
 	}
 
-	roles := us.rbacService.GetRolesResponse(*foundUser)
+	roles := us.GetRolesResponse(*foundUser)
 
 	return &rbac.RefreshTokenResponse{
 		AccessToken: accessToken,

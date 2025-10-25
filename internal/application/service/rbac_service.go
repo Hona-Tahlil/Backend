@@ -15,46 +15,35 @@ type RBACService struct {
 	userService usecase.UserService
 }
 
-func NewRBACService() *RBACService {
-	return &RBACService{}
-}
-
-func (rs *RBACService) GetRolesResponse(user entities.User) []rbac.RoleResponse {
-	r := make([]rbac.RoleResponse, 0)
-	for _, role := range user.Roles {
-		p := make([]rbac.PermissionResponse, 0)
-		for _, per := range role.Permissions {
-			p = append(p, rbac.PermissionResponse{
-				ID:          per.ID,
-				Name:        per.Type.String(),
-				Description: *per.Description,
-				Category:    per.Category.String(),
-			})
-		}
-		r = append(r, rbac.RoleResponse{
-			ID:          role.ID,
-			Name:        role.Type,
-			Description: *role.Description,
-			Permissions: p,
-		})
+func NewRBACService(unitOfWork ports.UnitOfWork, userService usecase.UserService) *RBACService {
+	return &RBACService{
+		unitOfWork:  unitOfWork,
+		userService: userService,
 	}
-	return r
 }
 
 func (rs *RBACService) GetRoleResponse(role entities.Role) *rbac.RoleResponse {
 	p := make([]rbac.PermissionResponse, 0)
 	for _, per := range role.Permissions {
+		des := ""
+		if per.Description != nil {
+			des = *per.Description
+		}
 		p = append(p, rbac.PermissionResponse{
 			ID:          per.ID,
 			Name:        per.Type.String(),
-			Description: *per.Description,
+			Description: des,
 			Category:    per.Category.String(),
 		})
+	}
+	des := ""
+	if role.Description != nil {
+		des = *role.Description
 	}
 	r := &rbac.RoleResponse{
 		ID:          role.ID,
 		Name:        role.Type,
-		Description: *role.Description,
+		Description: des,
 		Permissions: p,
 	}
 	return r
@@ -91,6 +80,10 @@ func (rs *RBACService) GetAllRolesWithUsers() ([]rbac.RoleWithUsersResponse, err
 func (rs *RBACService) getRoleWithUsers(role *entities.Role) (*rbac.RoleWithUsersResponse, error) {
 	users, err := rs.unitOfWork.Factory().RBACRepository().GetRoleUsersByID(role.ID)
 	if err != nil {
+		return nil, err
+	}
+
+	if err := rs.unitOfWork.Factory().RBACRepository().PreloadRolePermissions(role); err != nil {
 		return nil, err
 	}
 
@@ -166,12 +159,20 @@ func (rs *RBACService) GetRoleByID(info rbac.GetRoleByIDRequest) (*rbac.RoleResp
 		return nil, err
 	}
 
+	if err := rs.unitOfWork.Factory().RBACRepository().PreloadRolePermissions(role); err != nil {
+		return nil, err
+	}
+
 	return rs.GetRoleResponse(*role), nil
 }
 
 func (rs *RBACService) GetRoleByType(info rbac.GetRoleByTypeRequest) (*rbac.RoleResponse, error) {
 	role, err := rs.findRoleByType(info.Type)
 	if err != nil {
+		return nil, err
+	}
+
+	if err := rs.unitOfWork.Factory().RBACRepository().PreloadRolePermissions(role); err != nil {
 		return nil, err
 	}
 
@@ -185,8 +186,10 @@ func (rs *RBACService) GetAllRoles() ([]rbac.RoleResponse, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	for _, role := range roles {
+		if err := rs.unitOfWork.Factory().RBACRepository().PreloadRolePermissions(&role); err != nil {
+			return nil, err
+		}
 		res := rs.GetRoleResponse(role)
 		r = append(r, *res)
 	}
@@ -200,7 +203,11 @@ func (rs *RBACService) GetUserRolesByID(info rbac.GetUserRolesByIDRequest) ([]rb
 		return nil, err
 	}
 
-	return rs.GetRolesResponse(*user), nil
+	if err := rs.unitOfWork.Factory().RBACRepository().PreloadUserRoles(user); err != nil {
+		return nil, err
+	}
+
+	return rs.userService.GetRolesResponse(*user), nil
 }
 
 func (rs *RBACService) GetUserRolesByEmail(info rbac.GetUserRolesByEmailRequest) ([]rbac.RoleResponse, error) {
@@ -209,7 +216,11 @@ func (rs *RBACService) GetUserRolesByEmail(info rbac.GetUserRolesByEmailRequest)
 		return nil, err
 	}
 
-	return rs.GetRolesResponse(*user), nil
+	if err := rs.unitOfWork.Factory().RBACRepository().PreloadUserRoles(user); err != nil {
+		return nil, err
+	}
+
+	return rs.userService.GetRolesResponse(*user), nil
 }
 
 func (rs *RBACService) RemoveRoleFromUserByID(info rbac.RemoveRoleFromUserByIDRequest) error {
@@ -223,7 +234,7 @@ func (rs *RBACService) RemoveRoleFromUserByID(info rbac.RemoveRoleFromUserByIDRe
 		return err
 	}
 
-	err = rs.unitOfWork.Factory().RBACRepository().RemoveRoleFromUser(*user, *role)
+	err = rs.unitOfWork.Factory().RBACRepository().RemoveRoleFromUser(user, role)
 	if err != nil {
 		return err
 	}
@@ -242,7 +253,7 @@ func (rs *RBACService) RemoveRoleFromUserByEmail(info rbac.RemoveRoleFromUserByE
 		return err
 	}
 
-	err = rs.unitOfWork.Factory().RBACRepository().RemoveRoleFromUser(*user, *role)
+	err = rs.unitOfWork.Factory().RBACRepository().RemoveRoleFromUser(user, role)
 	if err != nil {
 		return err
 	}
@@ -261,7 +272,7 @@ func (rs *RBACService) AddRoleToUserByID(info rbac.AddRoleToUserByIDRequest) err
 		return err
 	}
 
-	err = rs.unitOfWork.Factory().RBACRepository().AddRoleToUser(*user, *role)
+	err = rs.unitOfWork.Factory().RBACRepository().AddRoleToUser(user, role)
 	if err != nil {
 		return err
 	}
@@ -280,7 +291,7 @@ func (rs *RBACService) AddRoleToUserByEmail(info rbac.AddRoleToUserByEmailReques
 		return err
 	}
 
-	err = rs.unitOfWork.Factory().RBACRepository().AddRoleToUser(*user, *role)
+	err = rs.unitOfWork.Factory().RBACRepository().AddRoleToUser(user, role)
 	if err != nil {
 		return err
 	}
@@ -294,14 +305,14 @@ func (rs *RBACService) AddRole(info rbac.AddRoleRequest) error {
 	}
 	_, err := rs.findRoleByType(info.Type)
 	if err == nil {
-		var ce *exceptions.ConflictErrors
+		var ce exceptions.ConflictErrors
 		ce.Add(bootstrap.Run().Constants.ErrorFields.Role, bootstrap.Run().Constants.ErrorTags.AlreadyExist)
 		return ce
 	}
+
 	if err := rs.unitOfWork.Factory().RBACRepository().AddRole(info.Type, info.Description); err != nil {
 		return err
 	}
-
 	return nil
 }
 
@@ -310,7 +321,7 @@ func (rs *RBACService) RemoveRoleByID(info rbac.RemoveRoleByIDRequest) error {
 	if err != nil {
 		return err
 	}
-	err = rs.unitOfWork.Factory().RBACRepository().RemoveRole(*role)
+	err = rs.unitOfWork.Factory().RBACRepository().RemoveRole(role)
 	if err != nil {
 		return err
 	}
@@ -322,7 +333,7 @@ func (rs *RBACService) RemoveRoleByType(info rbac.RemoveRoleByTypeRequest) error
 	if err != nil {
 		return err
 	}
-	err = rs.unitOfWork.Factory().RBACRepository().RemoveRole(*role)
+	err = rs.unitOfWork.Factory().RBACRepository().RemoveRole(role)
 	if err != nil {
 		return err
 	}
@@ -340,7 +351,7 @@ func (rs *RBACService) AddPermissionToRole(info rbac.AddPermissionToRoleRequest)
 		return err
 	}
 
-	err = rs.unitOfWork.Factory().RBACRepository().AddPermissionToRole(*role, *permission)
+	err = rs.unitOfWork.Factory().RBACRepository().AddPermissionToRole(role, permission)
 	if err != nil {
 		return err
 	}
@@ -359,7 +370,7 @@ func (rs *RBACService) RemovePermissionFromRole(info rbac.RemovePermissionFromRo
 		return err
 	}
 
-	err = rs.unitOfWork.Factory().RBACRepository().RemovePermissionFromRole(*role, *permission)
+	err = rs.unitOfWork.Factory().RBACRepository().RemovePermissionFromRole(role, permission)
 	if err != nil {
 		return err
 	}
@@ -374,8 +385,10 @@ func (rs *RBACService) GetPermissionRoles(info rbac.GetPermissionRolesRequest) (
 	if err != nil {
 		return nil, err
 	}
-
 	for _, role := range roles {
+		if err := rs.unitOfWork.Factory().RBACRepository().PreloadRolePermissions(&role); err != nil {
+			return nil, err
+		}
 		r = append(r, *rs.GetRoleResponse(role))
 	}
 

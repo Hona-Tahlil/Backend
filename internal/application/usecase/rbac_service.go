@@ -6,7 +6,6 @@ import (
 )
 
 type RBACService interface {
-	GetRolesResponse(user entities.User) []rbac.RoleResponse
 	GetRoleResponse(role entities.Role) *rbac.RoleResponse
 	GetUserInfosResponse(users []entities.User) []rbac.UserInfoResponse
 	GetAllRolesWithUsers() ([]rbac.RoleWithUsersResponse, error)

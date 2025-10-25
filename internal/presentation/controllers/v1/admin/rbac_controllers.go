@@ -12,8 +12,10 @@ type AdminRBACController struct {
 	rbacService usecase.RBACService
 }
 
-func NewAdminRBACController() *AdminRBACController {
-	return &AdminRBACController{}
+func NewAdminRBACController(rbacService usecase.RBACService) *AdminRBACController {
+	return &AdminRBACController{
+		rbacService: rbacService,
+	}
 }
 
 func (ac *AdminRBACController) GetAllRolesWithUsers(ctx *gin.Context) {
