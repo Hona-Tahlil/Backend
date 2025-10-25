@@ -12,6 +12,7 @@ import (
 	"hona/backend/internal/domain/ports"
 	"hona/backend/internal/infrastructure/jwt"
 	"hona/backend/internal/infrastructure/persistence"
+	"hona/backend/internal/presentation/controllers/v1/admin"
 	"hona/backend/internal/presentation/controllers/v1/general"
 	"hona/backend/internal/presentation/middleware"
 
@@ -25,7 +26,6 @@ var RepositoryProviderSet = wire.NewSet(
 	wire.Bind(new(ports.RepositoryFactory), new(*persistence.RepositoryFactory)),
 	wire.Bind(new(ports.UnitOfWork), new(*persistence.UnitOfWork)),
 )
-wire: /home/mohammad/Projects/PetYar/Backend/wire/wire.go:36:2: *hona/backend/internal/application/service.RBACService does not implement hona/backend/internal/application/usecase.RBACService
 var ServiceProviderSet = wire.NewSet(
 	service.NewUserService,
 	jwt.NewJWTService,
@@ -39,6 +39,11 @@ var ServiceProviderSet = wire.NewSet(
 var GeneralControllersProviderSet = wire.NewSet(
 	general.NewGeneralUserController,
 	wire.Struct(new(GeneralControllers), "*"),
+)
+
+var AdminControllersProviderSet = wire.NewSet(
+	admin.NewAdminRBACController,
+	wire.Struct(new(AdminControllers), "*"),
 )
 
 var ControllersProviderSet = wire.NewSet(
@@ -55,6 +60,7 @@ var ProviderSet = wire.NewSet(
 	MiddlewaresProviderSet,
 	ControllersProviderSet,
 	GeneralControllersProviderSet,
+	AdminControllersProviderSet,
 	ServiceProviderSet,
 	RepositoryProviderSet,
 )
@@ -63,8 +69,13 @@ type GeneralControllers struct {
 	GeneralUserController *general.GeneralUserController
 }
 
+type AdminControllers struct {
+	AdminRBACController *admin.AdminRBACController
+}
+
 type Controllers struct {
 	GeneralControllers *GeneralControllers
+	AdminControllers   *AdminControllers
 }
 
 type Middlewares struct {

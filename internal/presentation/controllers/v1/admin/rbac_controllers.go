@@ -178,8 +178,8 @@ func (ac *AdminRBACController) RemoveRoleFromUserByEmail(ctx *gin.Context) {
 
 func (ac *AdminRBACController) AddRoleToUserByID(ctx *gin.Context) {
 	type AddRoleToUserByIDParams struct {
-		UserID uint `uri:"userID"`
-		RoleID uint `uri:"roleID"`
+		UserID uint `json:"userID"`
+		RoleID uint `json:"roleID"`
 	}
 	params := controllers.Receive[AddRoleToUserByIDParams](ctx)
 	AddRoleToUserByIDInfo := rbac.AddRoleToUserByIDRequest{
@@ -199,8 +199,8 @@ func (ac *AdminRBACController) AddRoleToUserByID(ctx *gin.Context) {
 
 func (ac *AdminRBACController) AddRoleToUserByEmail(ctx *gin.Context) {
 	type AddRoleToUserByEmailParams struct {
-		UserEmail string `uri:"userEmail"`
-		RoleID    uint   `uri:"roleID"`
+		UserEmail string `json:"userEmail"`
+		RoleID    uint   `json:"roleID"`
 	}
 	params := controllers.Receive[AddRoleToUserByEmailParams](ctx)
 	AddRoleToUserByEmailInfo := rbac.AddRoleToUserByEmailRequest{
@@ -300,8 +300,8 @@ func (ac *AdminRBACController) AddPermissionToRole(ctx *gin.Context) {
 
 func (ac *AdminRBACController) RemovePermissionFromRole(ctx *gin.Context) {
 	type RemovePermissionFromRoleParams struct {
-		RoleID       uint `json:"roleID"`
-		PermissionID uint `json:"permissionID"`
+		RoleID       uint `uri:"roleID"`
+		PermissionID uint `uri:"permissionID"`
 	}
 	params := controllers.Receive[RemovePermissionFromRoleParams](ctx)
 	RemovePermissionFromRoleInfo := rbac.RemovePermissionFromRoleRequest{
@@ -321,7 +321,7 @@ func (ac *AdminRBACController) RemovePermissionFromRole(ctx *gin.Context) {
 
 func (ac *AdminRBACController) GetPermissionRoles(ctx *gin.Context) {
 	type GetPermissionRolesParams struct {
-		PermissionID uint `json:"permissionID"`
+		PermissionID uint `uri:"permissionID"`
 	}
 	params := controllers.Receive[GetPermissionRolesParams](ctx)
 	GetPermissionRolesInfo := rbac.GetPermissionRolesRequest{

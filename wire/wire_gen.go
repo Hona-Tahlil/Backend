@@ -15,6 +15,7 @@ import (
 	"hona/backend/internal/domain/ports"
 	"hona/backend/internal/infrastructure/jwt"
 	"hona/backend/internal/infrastructure/persistence"
+	"hona/backend/internal/presentation/controllers/v1/admin"
 	"hona/backend/internal/presentation/controllers/v1/general"
 	"hona/backend/internal/presentation/middleware"
 )
@@ -32,8 +33,13 @@ func InitializeApplication(container *bootstrap.Config) (*Application, error) {
 	generalControllers := &GeneralControllers{
 		GeneralUserController: generalUserController,
 	}
+	adminRBACController := admin.NewAdminRBACController()
+	adminControllers := &AdminControllers{
+		AdminRBACController: adminRBACController,
+	}
 	controllers := &Controllers{
 		GeneralControllers: generalControllers,
+		AdminControllers:   adminControllers,
 	}
 	localizationMiddleware := middleware.NewLocalizationMiddleware()
 	recoveryMiddleware := middleware.NewRecoveryMiddleware()
@@ -53,6 +59,8 @@ var ServiceProviderSet = wire.NewSet(service.NewUserService, jwt.NewJWTService, 
 
 var GeneralControllersProviderSet = wire.NewSet(general.NewGeneralUserController, wire.Struct(new(GeneralControllers), "*"))
 
+var AdminControllersProviderSet = wire.NewSet(admin.NewAdminRBACController, wire.Struct(new(AdminControllers), "*"))
+
 var ControllersProviderSet = wire.NewSet(wire.Struct(new(Controllers), "*"))
 
 var MiddlewaresProviderSet = wire.NewSet(middleware.NewLocalizationMiddleware, middleware.NewRecoveryMiddleware, wire.Struct(new(Middlewares), "*"))
@@ -61,6 +69,7 @@ var ProviderSet = wire.NewSet(
 	MiddlewaresProviderSet,
 	ControllersProviderSet,
 	GeneralControllersProviderSet,
+	AdminControllersProviderSet,
 	ServiceProviderSet,
 	RepositoryProviderSet,
 )
@@ -69,8 +78,13 @@ type GeneralControllers struct {
 	GeneralUserController *general.GeneralUserController
 }
 
+type AdminControllers struct {
+	AdminRBACController *admin.AdminRBACController
+}
+
 type Controllers struct {
 	GeneralControllers *GeneralControllers
+	AdminControllers   *AdminControllers
 }
 
 type Middlewares struct {
