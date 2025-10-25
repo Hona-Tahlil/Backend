@@ -10,10 +10,6 @@ type RBACService interface {
 	GetRoleResponse(role entities.Role) *rbac.RoleResponse
 	GetUserInfosResponse(users []entities.User) []rbac.UserInfoResponse
 	GetAllRolesWithUsers() ([]rbac.RoleWithUsersResponse, error)
-	getRoleWithUsers(role *entities.Role) (*rbac.RoleWithUsersResponse, error)
-	findRoleByID(roleID uint) (*entities.Role, error)
-	findRoleByType(roleType string) (*entities.Role, error)
-	findPermissionByID(permissionID uint) (*entities.Permission, error)
 	GetRoleWithUsersByID(info rbac.GetRoleByIDRequest) (*rbac.RoleWithUsersResponse, error)
 	GetRoleWithUsersByType(info rbac.GetRoleByTypeRequest) (*rbac.RoleWithUsersResponse, error)
 	GetRoleByID(info rbac.GetRoleByIDRequest) (*rbac.RoleResponse, error)

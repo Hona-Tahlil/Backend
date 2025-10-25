@@ -25,7 +25,7 @@ var RepositoryProviderSet = wire.NewSet(
 	wire.Bind(new(ports.RepositoryFactory), new(*persistence.RepositoryFactory)),
 	wire.Bind(new(ports.UnitOfWork), new(*persistence.UnitOfWork)),
 )
-
+wire: /home/mohammad/Projects/PetYar/Backend/wire/wire.go:36:2: *hona/backend/internal/application/service.RBACService does not implement hona/backend/internal/application/usecase.RBACService
 var ServiceProviderSet = wire.NewSet(
 	service.NewUserService,
 	jwt.NewJWTService,
