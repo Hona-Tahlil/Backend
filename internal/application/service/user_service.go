@@ -28,7 +28,7 @@ func NewUserService(unitOfWork ports.UnitOfWork, jwtService domainjwt.JWTService
 }
 
 func (us *UserService) Login(loginInfo user.LoginRequest) (*user.LoginResponse, string, int, error) {
-	foundUser, err := us.findVerifiedUserByEmail(loginInfo.Email)
+	foundUser, err := us.FindUserByEmail(loginInfo.Email)
 	if err != nil {
 		return nil, "", 0, err
 	}
