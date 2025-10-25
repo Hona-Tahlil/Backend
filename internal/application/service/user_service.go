@@ -1,6 +1,7 @@
 package service
 
 import (
+	"hona/backend/bootstrap"
 	"hona/backend/internal/application/dto/rbac"
 	"hona/backend/internal/application/dto/user"
 	"hona/backend/internal/application/usecase"
@@ -85,6 +86,20 @@ func (us *UserService) findUserByID(id uint) (*entities.User, error) {
 	if foundUser == nil {
 		invalidCredentialsErr := exceptions.NewInvalidCredentialsError("user not found")
 		return nil, invalidCredentialsErr
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return foundUser, nil
+}
+
+func (us *UserService) FindUserByEmail(email string) (*entities.User, error) {
+	foundUser, err := us.unitOfWork.Factory().UserRepository().FindUserByEmail(email)
+	if foundUser == nil {
+		NotFoundError := exceptions.NewNotFoundError(bootstrap.Run().Constants.ErrorFields.User)
+		return nil, NotFoundError
 	}
 
 	if err != nil {
