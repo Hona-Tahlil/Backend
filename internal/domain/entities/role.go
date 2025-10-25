@@ -1,13 +1,12 @@
 package entities
 
 import (
-	"hona/backend/internal/domain/enums"
-
 	"gorm.io/gorm"
 )
 
 type Role struct {
 	gorm.Model
-	Type        enums.Role
+	Type        string `gorm:"not null;unique"`
+	Description *string
 	Permissions []Permission `gorm:"many2many:role_permission"`
 }

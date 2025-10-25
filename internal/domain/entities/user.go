@@ -9,22 +9,22 @@ import (
 
 type User struct {
 	gorm.Model
-	Email       string `gorm:"not null;unique;index"`
-	IsVerified  bool   `gorm:"default=false;index"`
-	Password    string `gorm:"not null"`
-	Username    string `gorm:"unique;index;not null"`
-	FirstName   string
-	LastName    string
-	Address     *Address `gorm:"foreignKey:OwnerID"`
-	Phone       *string  `gorm:"index"`
-	Gender      enums.Gender
-	BirthDate   *time.Time
-	PictureLink *string
-	Wallet      Wallet    `gorm:"foreignKey:UserID;not null"`
-	Requests    []Request `gorm:"foreignKey:UserID"`
-	Role        Role      `gorm:"foreignKey:RoleID"`
-	RoleID      uint
-	Pets        []Pet      `gorm:"foreignKey:UserID"`
-	PetSitter   *PetSitter `gorm:"foreignKey:UserID"`
-	Comments    []Comment  `gorm:"foreignKey:UserID"`
+	Email           string    `gorm:"not null;unique;index"`
+	IsEmailVerified bool      `gorm:"default=false;index"`
+	Password        string    `gorm:"not null"`
+	FirstName       string    `gorm:"not null"`
+	LastName        string    `gorm:"not null"`
+	Address         []Address `gorm:"foreignKey:OwnerID"`
+	Phone           *string   `gorm:"index"`
+	IsPhoneVerified bool      `gorm:"default=false;index"`
+	Gender          enums.Gender
+	BirthDate       *time.Time
+	PictureLink     *string
+	Wallet          Wallet    `gorm:"foreignKey:UserID;not null"`
+	Requests        []Request `gorm:"foreignKey:UserID"`
+	Roles           []Role    `gorm:"many2many:user_roles"`
+	RoleID          uint
+	Pets            []Pet      `gorm:"foreignKey:UserID"`
+	PetSitter       *PetSitter `gorm:"foreignKey:UserID"`
+	Comments        []Comment  `gorm:"foreignKey:UserID"`
 }
