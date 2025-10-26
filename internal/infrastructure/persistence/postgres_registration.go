@@ -80,7 +80,6 @@ func NewPostgresDatabase() *PostgresDatabase {
 			&entities.CalenderSlot{},
 			&entities.Pet{},
 			&entities.PetSitter{},
-			&entities.Reserve{},
 			&entities.Service{},
 			&entities.Chat{},
 			&entities.Comment{},

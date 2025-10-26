@@ -20,10 +20,9 @@ type User struct {
 	Gender          enums.Gender
 	BirthDate       *time.Time
 	PictureLink     *string
-	Wallet          Wallet    `gorm:"foreignKey:UserID;not null"`
-	Requests        []Request `gorm:"foreignKey:UserID"`
-	Roles           []Role    `gorm:"many2many:user_roles"`
-	RoleID          uint
+	Wallet          Wallet     `gorm:"foreignKey:UserID;not null"`
+	Requests        []Request  `gorm:"foreignKey:UserID"`
+	Roles           []Role     `gorm:"many2many:user_roles"`
 	Pets            []Pet      `gorm:"foreignKey:UserID"`
 	PetSitter       *PetSitter `gorm:"foreignKey:UserID"`
 	Comments        []Comment  `gorm:"foreignKey:UserID"`

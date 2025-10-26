@@ -11,4 +11,5 @@ type Service struct {
 	PetSitterID uint              `gorm:"index"`
 	Type        enums.ServiceType `gorm:"index"`
 	Price       uint              `gorm:"index"`
+	Description *string
 }
