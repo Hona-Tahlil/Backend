@@ -15,8 +15,8 @@ type Request struct {
 	Pets          []Pet          `gorm:"many2many:reserve_pet"`
 	TotalPrice    uint
 	Notes         *string
-	Comment       *Comment
-	Address       Address `gorm:"foreignKey:AddressID;not null"`
+	Comment       *Comment `gorm:"foreignKey:RequestID"`
+	Address       Address  `gorm:"foreignKey:AddressID;not null"`
 	AddressID     uint
 	Services      []Service `gorm:"many2many:reserve_service"`
 }
