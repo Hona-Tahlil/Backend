@@ -49,12 +49,7 @@ func (us *UserService) Login(loginInfo user.LoginRequest) (*user.LoginResponse, 
 }
 
 func (us *UserService) findVerifiedUserByEmail(email string) (*entities.User, error) {
-	foundUser, err := us.unitOfWork.Factory().UserRepository().FindUserByEmail(email)
-	if foundUser == nil {
-		invalidCredentialsErr := exceptions.NewInvalidCredentialsError("email not found")
-		return nil, invalidCredentialsErr
-	}
-
+	foundUser, err := us.FindUserByEmail(email)
 	if err != nil {
 		return nil, err
 	}
@@ -83,13 +78,13 @@ func (us *UserService) findVerifiedUserByID(id uint) (*entities.User, error) {
 
 func (us *UserService) findUserByID(id uint) (*entities.User, error) {
 	foundUser, err := us.unitOfWork.Factory().UserRepository().FindUserByID(id)
+	if err != nil {
+		return nil, err
+	}
+
 	if foundUser == nil {
 		invalidCredentialsErr := exceptions.NewInvalidCredentialsError("user not found")
 		return nil, invalidCredentialsErr
-	}
-
-	if err != nil {
-		return nil, err
 	}
 
 	return foundUser, nil
