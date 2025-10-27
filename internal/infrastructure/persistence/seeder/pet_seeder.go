@@ -83,15 +83,15 @@ func (s *PetSeeder) Seed(count int) error {
 		isAdult := yearsAgo >= 2
 
 		// Random weight based on pet kind (in appropriate units)
-		var weight *uint
-		var w uint
+		var weight *float32
+		var w float32
 		switch kind {
 		case enums.Dog:
-			w = uint(10 + rand.Intn(40)) // 10-50 kg for dogs
+			w = float32(10 + rand.Intn(40)) // 10-50 kg for dogs
 		case enums.Cat:
-			w = uint(3 + rand.Intn(7)) // 3-10 kg for cats
+			w = float32(3 + rand.Intn(7)) // 3-10 kg for cats
 		case enums.Rabbit:
-			w = uint(2 + rand.Intn(5)) // 2-7 kg for rabbits
+			w = float32(2 + rand.Intn(5)) // 2-7 kg for rabbits
 		}
 		weight = &w
 
