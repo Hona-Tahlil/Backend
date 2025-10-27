@@ -97,13 +97,13 @@ func (us *UserService) findUserByID(id uint) (*entities.User, error) {
 
 func (us *UserService) FindUserByEmail(email string) (*entities.User, error) {
 	foundUser, err := us.unitOfWork.Factory().UserRepository().FindUserByEmail(email)
+	if err != nil {
+		return nil, err
+	}
+
 	if foundUser == nil {
 		NotFoundError := exceptions.NewNotFoundError(bootstrap.Run().Constants.ErrorFields.User)
 		return nil, NotFoundError
-	}
-
-	if err != nil {
-		return nil, err
 	}
 
 	return foundUser, nil
