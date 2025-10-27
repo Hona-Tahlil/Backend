@@ -16,7 +16,7 @@ type Pet struct {
 	BirthDate   *time.Time
 	IsAdult     bool
 	Gender      enums.PetGender
-	Weight      *uint
+	Weight      *float32
 	PictureLink *string
 	AboutPet    *string
 }
