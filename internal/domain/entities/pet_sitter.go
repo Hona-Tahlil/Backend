@@ -11,7 +11,7 @@ type PetSitter struct {
 	IsVerified       bool           `gorm:"default=false"`
 	Requests         []Request      `gorm:"foreignKey:PetSitterID"`
 	Services         []Service      `gorm:"foreignKey:PetSitterID"`
-	Schedule         []CalenderSlot `gorm:"foreignKey:Refer"`
+	Schedule         []CalendarSlot `gorm:"foreignKey:Refer"`
 	Comments         []Comment      `gorm:"foreignKey:PetSitterID"`
 	Bio              *string
 }

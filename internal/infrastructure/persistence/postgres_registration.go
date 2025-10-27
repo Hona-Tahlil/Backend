@@ -77,7 +77,7 @@ func NewPostgresDatabase() *PostgresDatabase {
 			&entities.Permission{},
 			&entities.Wallet{},
 			&entities.Request{},
-			&entities.CalenderSlot{},
+			&entities.CalendarSlot{},
 			&entities.Pet{},
 			&entities.PetSitter{},
 			&entities.Service{},

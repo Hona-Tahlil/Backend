@@ -7,15 +7,15 @@ import (
 	"gorm.io/gorm"
 )
 
-type Pet struct {
+type RequestPet struct {
 	gorm.Model
-	UserID      uint          `gorm:"index"`
+	RequestID   uint
 	Name        string        `gorm:"not null"`
 	Kind        enums.PetKind `gorm:"index"`
 	Species     enums.Species
 	BirthDate   *time.Time
 	IsAdult     bool
-	Gender      enums.PetGender
+	Gender      *enums.Gender
 	Weight      *uint
 	PictureLink *string
 	AboutPet    *string

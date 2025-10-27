@@ -7,12 +7,12 @@ import (
 	"gorm.io/gorm"
 )
 
-type CalenderSlot struct {
+type CalendarSlot struct {
 	gorm.Model
 	StartTime        time.Time `gorm:"not null"`
 	EndTime          time.Time `gorm:"not null"`
 	IsDailyRepeated  bool      `gorm:"default=false"`
 	IsWeeklyRepeated bool      `gorm:"default=false"`
-	Status           enums.CalenderStatus
+	Status           enums.CalendarStatus
 	Refer            uint
 }
