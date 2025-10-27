@@ -1,7 +1,7 @@
 package general
 
 import (
-	"hona/backend/bootstrap"
+	"hona/backend/internal/application/dto/rbac"
 	"hona/backend/internal/application/dto/user"
 	"hona/backend/internal/application/service"
 	"hona/backend/internal/presentation/controllers"
@@ -10,35 +10,42 @@ import (
 )
 
 type GeneralUserController struct {
-	generalService *service.UserService
-	constants      *bootstrap.Constants
+	userService *service.UserService
+	// constants   *bootstrap.Constants
 }
 
-func NewGeneralUserController(generalService *service.UserService) *GeneralUserController {
+func NewGeneralUserController(userService *service.UserService) *GeneralUserController {
 	return &GeneralUserController{
-		generalService: generalService,
+		userService: userService,
 	}
 }
 
 func (gc *GeneralUserController) Login(ctx *gin.Context) {
 	type loginParams struct {
-		Email    string `json:"email" validate:"required,email"`
-		Password string `json:"password" validate:"required"`
+		Email      string `json:"email" validate:"required,email"`
+		Password   string `json:"password" validate:"required,min=8,max=64"`
+		RememberMe bool   `json:"rememberMe"`
 	}
 
 	params := controllers.Receive[loginParams](ctx)
 	loginInfo := user.LoginRequest{
-		Email:    params.Email,
-		Password: params.Password,
+		Email:      params.Email,
+		Password:   params.Password,
+		RememberMe: params.RememberMe,
 	}
 
-	res := gc.generalService.Login(loginInfo)
+	res, refreshToken, expireTime, err := gc.userService.Login(loginInfo)
+	if err != nil {
+		panic(err)
+	}
+
+	controllers.SetRefreshTokenCookie(ctx, refreshToken, expireTime)
 
 	msg := controllers.Message{
-		Text:   "success.login",
+		Text:   "successMessage.login",
 		Params: []string{},
 	}
-	controllers.Respond(ctx, 200, msg, res)
+	controllers.Respond(ctx, 200, msg, *res)
 }
 
 func (gc *GeneralUserController) Register(ctx *gin.Context) {
@@ -56,7 +63,7 @@ func (gc *GeneralUserController) Register(ctx *gin.Context) {
 		Email:     params.Email,
 		Password:  params.Password,
 	}
-	if err := gc.generalService.Register(registerInfo); err != nil {
+	if err := gc.userService.Register(registerInfo); err != nil {
 		panic(err)
 	}
 
@@ -72,7 +79,7 @@ func (gc *GeneralUserController) VerifyEmail(ctx *gin.Context) {
 		Email: params.Email,
 		OTP:   params.OTP,
 	}
-	if err := gc.generalService.VerifyEmail(verifyOTPInfo); err != nil {
+	if err := gc.userService.VerifyEmail(verifyOTPInfo); err != nil {
 		panic(err)
 	}
 
@@ -89,11 +96,32 @@ func (gc *GeneralUserController) ForgotPassword(ctx *gin.Context) {
 	forgotPasswordInfo := user.ForgotPasswordRequest{
 		Email: params.Email,
 	}
-	if err := gc.generalService.ForgotPassword(forgotPasswordInfo); err != nil {
+	if err := gc.userService.ForgotPassword(forgotPasswordInfo); err != nil {
 		panic(err)
 	}
 
 	// trans := controller.GetTranslator(ctx, GeneralUserController.constants.Context.Translator)
 	// message, _ := trans.Translate("successMessage.forgotPassword")
 	// controller.Response(ctx, 200, message, nil)
+}
+
+func (gc *GeneralUserController) RefreshTokens(ctx *gin.Context) {
+	RefreshToken := controllers.GetRefreshTokenCookie(ctx)
+
+	refreshTokenInfo := rbac.RefreshTokenRequest{
+		RefreshToken: RefreshToken,
+	}
+
+	res, refreshToken, expireTime, err := gc.userService.RefreshTokens(refreshTokenInfo)
+	if err != nil {
+		panic(err)
+	}
+
+	controllers.SetRefreshTokenCookie(ctx, refreshToken, expireTime)
+
+	msg := controllers.Message{
+		Text:   "successMessage.refreshToken",
+		Params: []string{},
+	}
+	controllers.Respond(ctx, 200, msg, *res)
 }
