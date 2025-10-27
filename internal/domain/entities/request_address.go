@@ -10,7 +10,7 @@ type RequestAddress struct {
 	City          City     `gorm:"not null;foreignKey:CityID"`
 	CityID        uint     `gorm:"index"`
 	StreetAddress string   `gorm:"not null"`
-	// HouseNumber   uint
-	// Unit          uint    `gorm:"default=1"`
-	PostalCode *string `gorm:"index"`
+	HouseNumber   uint
+	Unit          uint    `gorm:"default=1"`
+	PostalCode    *string `gorm:"index"`
 }
