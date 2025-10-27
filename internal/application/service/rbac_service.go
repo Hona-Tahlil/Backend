@@ -95,13 +95,13 @@ func (rs *RBACService) getRoleWithUsers(role *entities.Role) (*rbac.RoleWithUser
 
 func (rs *RBACService) findRoleByID(roleID uint) (*entities.Role, error) {
 	foundRole, err := rs.unitOfWork.Factory().RBACRepository().GetRoleByID(roleID)
+	if err != nil {
+		return nil, err
+	}
+
 	if foundRole == nil {
 		NotFoundError := exceptions.NewNotFoundError(bootstrap.Run().Constants.ErrorFields.Role)
 		return nil, NotFoundError
-	}
-
-	if err != nil {
-		return nil, err
 	}
 
 	return foundRole, nil
@@ -109,13 +109,13 @@ func (rs *RBACService) findRoleByID(roleID uint) (*entities.Role, error) {
 
 func (rs *RBACService) findRoleByType(roleType string) (*entities.Role, error) {
 	foundRole, err := rs.unitOfWork.Factory().RBACRepository().GetRoleByType(roleType)
+	if err != nil {
+		return nil, err
+	}
+
 	if foundRole == nil {
 		NotFoundError := exceptions.NewNotFoundError(bootstrap.Run().Constants.ErrorFields.Role)
 		return nil, NotFoundError
-	}
-
-	if err != nil {
-		return nil, err
 	}
 
 	return foundRole, nil
@@ -123,13 +123,13 @@ func (rs *RBACService) findRoleByType(roleType string) (*entities.Role, error) {
 
 func (rs *RBACService) findPermissionByID(permissionID uint) (*entities.Permission, error) {
 	foundPermission, err := rs.unitOfWork.Factory().RBACRepository().GetPermissionByID(permissionID)
+	if err != nil {
+		return nil, err
+	}
+
 	if foundPermission == nil {
 		NotFoundError := exceptions.NewNotFoundError(bootstrap.Run().Constants.ErrorFields.Permission)
 		return nil, NotFoundError
-	}
-
-	if err != nil {
-		return nil, err
 	}
 
 	return foundPermission, nil
