@@ -10,6 +10,18 @@ import (
 type Env struct {
 	PrimaryDB    Database
 	TokenExpires TokenExpires
+	Storage      Storage
+}
+
+type Storage struct {
+	Buckets   Buckets
+	Endpoint  string
+	AccessKey string
+	SecretKey string
+}
+
+type Buckets struct {
+	PetProfilePic string
 }
 
 type TokenExpires struct {
@@ -43,6 +55,14 @@ func NewEnv() *Env {
 			LongRefreshHours:  LongRefreshHours,
 			ShortRefreshHours: ShortRefreshHours,
 			AccessMinutes:     AccessMinutes,
+		},
+		Storage: Storage{
+			Endpoint:  os.Getenv("STORAGE_ENDPOINT"),
+			AccessKey: os.Getenv("STORAGE_ACCESS_KEY"),
+			SecretKey: os.Getenv("STORAGE_SECRET_KEY"),
+			Buckets: Buckets{
+				PetProfilePic: os.Getenv("STORAGE_PET_PROFILE_PIC_BUCKET"),
+			},
 		},
 	}
 }
