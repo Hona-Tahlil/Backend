@@ -9,5 +9,5 @@ type Comment struct {
 	RequestID   uint `gorm:"index;not null"`
 	Title       string
 	Description string
-	Rating      uint `gorm:"index; not null"`
+	Rating      uint `gorm:"index;not null"`
 }
