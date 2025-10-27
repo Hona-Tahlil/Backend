@@ -15,6 +15,7 @@ import (
 	"hona/backend/internal/domain/ports"
 	"hona/backend/internal/infrastructure/jwt"
 	"hona/backend/internal/infrastructure/persistence"
+	"hona/backend/internal/infrastructure/persistence/seeder"
 	"hona/backend/internal/presentation/controllers/v1/admin"
 	"hona/backend/internal/presentation/controllers/v1/general"
 	"hona/backend/internal/presentation/middleware"
@@ -47,7 +48,11 @@ func InitializeApplication(container *bootstrap.Config) (*Application, error) {
 		LocalizationMiddleware: localizationMiddleware,
 		RecoveryMiddleware:     recoveryMiddleware,
 	}
-	application := NewApplication(controllers, middlewares)
+	databaseSeeder := seeder.NewDatabaseSeeder(db)
+	wireSeeder := &Seeder{
+		DatabaseSeeder: databaseSeeder,
+	}
+	application := NewApplication(controllers, middlewares, wireSeeder)
 	return application, nil
 }
 
@@ -65,6 +70,8 @@ var ControllersProviderSet = wire.NewSet(wire.Struct(new(Controllers), "*"))
 
 var MiddlewaresProviderSet = wire.NewSet(middleware.NewLocalizationMiddleware, middleware.NewRecoveryMiddleware, wire.Struct(new(Middlewares), "*"))
 
+var SeederProviderSet = wire.NewSet(seeder.NewDatabaseSeeder, wire.Struct(new(Seeder), "*"))
+
 var ProviderSet = wire.NewSet(
 	MiddlewaresProviderSet,
 	ControllersProviderSet,
@@ -72,6 +79,7 @@ var ProviderSet = wire.NewSet(
 	AdminControllersProviderSet,
 	ServiceProviderSet,
 	RepositoryProviderSet,
+	SeederProviderSet,
 )
 
 type GeneralControllers struct {
@@ -92,14 +100,20 @@ type Middlewares struct {
 	RecoveryMiddleware     *middleware.RecoveryMiddleware
 }
 
+type Seeder struct {
+	DatabaseSeeder *seeder.DatabaseSeeder
+}
+
 type Application struct {
 	Controllers *Controllers
 	Middlewares *Middlewares
+	Seeder      *Seeder
 }
 
-func NewApplication(controllers *Controllers, middlewares *Middlewares) *Application {
+func NewApplication(controllers *Controllers, middlewares *Middlewares, seeder2 *Seeder) *Application {
 	return &Application{
 		Controllers: controllers,
 		Middlewares: middlewares,
+		Seeder:      seeder2,
 	}
 }

@@ -12,6 +12,7 @@ import (
 	"hona/backend/internal/domain/ports"
 	"hona/backend/internal/infrastructure/jwt"
 	"hona/backend/internal/infrastructure/persistence"
+	"hona/backend/internal/infrastructure/persistence/seeder"
 	"hona/backend/internal/presentation/controllers/v1/admin"
 	"hona/backend/internal/presentation/controllers/v1/general"
 	"hona/backend/internal/presentation/middleware"
@@ -57,6 +58,11 @@ var MiddlewaresProviderSet = wire.NewSet(
 	wire.Struct(new(Middlewares), "*"),
 )
 
+var SeederProviderSet = wire.NewSet(
+	seeder.NewDatabaseSeeder,
+	wire.Struct(new(Seeder), "*"),
+)
+
 var ProviderSet = wire.NewSet(
 	MiddlewaresProviderSet,
 	ControllersProviderSet,
@@ -64,6 +70,7 @@ var ProviderSet = wire.NewSet(
 	AdminControllersProviderSet,
 	ServiceProviderSet,
 	RepositoryProviderSet,
+	SeederProviderSet,
 )
 
 type GeneralControllers struct {
@@ -84,15 +91,21 @@ type Middlewares struct {
 	RecoveryMiddleware     *middleware.RecoveryMiddleware
 }
 
+type Seeder struct {
+	DatabaseSeeder *seeder.DatabaseSeeder
+}
+
 type Application struct {
 	Controllers *Controllers
 	Middlewares *Middlewares
+	Seeder      *Seeder
 }
 
-func NewApplication(controllers *Controllers, middlewares *Middlewares) *Application {
+func NewApplication(controllers *Controllers, middlewares *Middlewares, seeder *Seeder) *Application {
 	return &Application{
 		Controllers: controllers,
 		Middlewares: middlewares,
+		Seeder:      seeder,
 	}
 }
 
