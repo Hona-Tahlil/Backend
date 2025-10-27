@@ -1,6 +1,7 @@
 package general
 
 import (
+	"hona/backend/internal/application/dto/rbac"
 	"hona/backend/internal/application/dto/user"
 	"hona/backend/internal/application/service"
 	"hona/backend/internal/presentation/controllers"
@@ -38,15 +39,7 @@ func (gc *GeneralUserController) Login(ctx *gin.Context) {
 		panic(err)
 	}
 
-	ctx.SetCookie(
-		"refreshToken",
-		refreshToken,
-		expireTime,
-		"/",
-		"",
-		true,
-		true,
-	)
+	controllers.SetRefreshTokenCookie(ctx, refreshToken, expireTime)
 
 	msg := controllers.Message{
 		Text:   "successMessage.login",
@@ -110,4 +103,25 @@ func (gc *GeneralUserController) ForgotPassword(ctx *gin.Context) {
 	// trans := controller.GetTranslator(ctx, GeneralUserController.constants.Context.Translator)
 	// message, _ := trans.Translate("successMessage.forgotPassword")
 	// controller.Response(ctx, 200, message, nil)
+}
+
+func (gc *GeneralUserController) RefreshTokens(ctx *gin.Context) {
+	RefreshToken := controllers.GetRefreshTokenCookie(ctx)
+
+	refreshTokenInfo := rbac.RefreshTokenRequest{
+		RefreshToken: RefreshToken,
+	}
+
+	res, refreshToken, expireTime, err := gc.userService.RefreshTokens(refreshTokenInfo)
+	if err != nil {
+		panic(err)
+	}
+
+	controllers.SetRefreshTokenCookie(ctx, refreshToken, expireTime)
+
+	msg := controllers.Message{
+		Text:   "successMessage.refreshToken",
+		Params: []string{},
+	}
+	controllers.Respond(ctx, 200, msg, *res)
 }

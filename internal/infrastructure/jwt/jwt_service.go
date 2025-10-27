@@ -2,24 +2,26 @@ package jwt
 
 import (
 	"errors"
+	"hona/backend/bootstrap"
 	"hona/backend/internal/domain/exceptions"
+	domainjwt "hona/backend/internal/domain/jwt"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
 )
 
 type JWTService struct {
-	keyManager *JWTKeyManager
+	keyManager domainjwt.JWTKeyManager
 }
 
-func NewJWTService(keyManager *JWTKeyManager) *JWTService {
+func NewJWTService(keyManager domainjwt.JWTKeyManager) *JWTService {
 	return &JWTService{
 		keyManager: keyManager,
 	}
 }
 
-func (js *JWTService) GenerateTokens(userID uint, rememberMe bool) (accessTokenString string, refreshTokenString string) {
-	accessTokenClaims, refreshTokenClaims := js.GenerateClaims(userID, rememberMe)
+func (js *JWTService) GenerateTokens(userID uint, rememberMe bool) (accessTokenString string, refreshTokenString string, expireTime int) {
+	accessTokenClaims, refreshTokenClaims, expireTime := js.generateClaims(userID, rememberMe)
 
 	accessToken := jwt.NewWithClaims(jwt.SigningMethodRS256, accessTokenClaims)
 	refreshToken := jwt.NewWithClaims(jwt.SigningMethodRS256, refreshTokenClaims)
@@ -37,28 +39,26 @@ func (js *JWTService) GenerateTokens(userID uint, rememberMe bool) (accessTokenS
 	return
 }
 
-func (js *JWTService) GenerateClaims(userID uint, rememberMe bool) (accessTokenClaims jwt.MapClaims, refreshTokenClaims jwt.MapClaims) {
+func (js *JWTService) generateClaims(userID uint, rememberMe bool) (accessTokenClaims jwt.MapClaims, refreshTokenClaims jwt.MapClaims, expireTime int) {
+	if rememberMe {
+		expireTime = int(time.Now().Add(time.Hour * time.Duration(bootstrap.Run().Env.TokenExpires.LongRefreshHours)).Unix())
+	} else {
+		expireTime = int(time.Now().Add(time.Hour * time.Duration(bootstrap.Run().Env.TokenExpires.ShortRefreshHours)).Unix())
+	}
 	accessTokenClaims = jwt.MapClaims{
 		"sub":  userID,
-		"exp":  time.Now().Add(time.Minute * 2).Unix(),
+		"exp":  time.Now().Add(time.Minute * time.Duration(bootstrap.Run().Env.TokenExpires.AccessMinutes)).Unix(),
 		"iat":  time.Now().Unix(),
-		"type": "access",
+		"type": bootstrap.Run().Constants.JWTConstants.AccessTokenType,
 	}
-	if rememberMe {
-		refreshTokenClaims = jwt.MapClaims{
-			"sub":  userID,
-			"exp":  time.Now().Add(time.Hour * 24 * 7).Unix(),
-			"iat":  time.Now().Unix(),
-			"type": "refresh",
-		}
-	} else {
-		refreshTokenClaims = jwt.MapClaims{
-			"sub":  userID,
-			"exp":  time.Now().Add(time.Hour * 24 * 2).Unix(),
-			"iat":  time.Now().Unix(),
-			"type": "refresh",
-		}
+
+	refreshTokenClaims = jwt.MapClaims{
+		"sub":  userID,
+		"exp":  expireTime,
+		"iat":  time.Now().Unix(),
+		"type": bootstrap.Run().Constants.JWTConstants.RefreshTokenType,
 	}
+
 	return
 }
 
@@ -99,9 +99,9 @@ func (js *JWTService) ValidateToken(tokenString string, tokenType string) uint {
 	return userID
 }
 
-func (js *JWTService) RefreshTokens(refreshTokenString string) (accessTokenString string, newRefreshTokenString string, userID uint) {
-	userID = js.ValidateToken(refreshTokenString, "refresh")
+func (js *JWTService) RefreshTokens(refreshTokenString string) (accessTokenString string, newRefreshTokenString string, userID uint, expireTime int) {
+	userID = js.ValidateToken(refreshTokenString, bootstrap.Run().Constants.JWTConstants.RefreshTokenType)
 
-	accessTokenString, newRefreshTokenString = js.GenerateTokens(userID, false)
+	accessTokenString, newRefreshTokenString, expireTime = js.GenerateTokens(userID, false)
 	return
 }

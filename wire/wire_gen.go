@@ -10,8 +10,13 @@ import (
 	"github.com/google/wire"
 	"hona/backend/bootstrap"
 	"hona/backend/internal/application/service"
+	"hona/backend/internal/application/usecase"
+	"hona/backend/internal/domain/jwt"
+	"hona/backend/internal/domain/ports"
 	"hona/backend/internal/infrastructure/jwt"
 	"hona/backend/internal/infrastructure/persistence"
+	"hona/backend/internal/infrastructure/persistence/seeder"
+	"hona/backend/internal/presentation/controllers/v1/admin"
 	"hona/backend/internal/presentation/controllers/v1/general"
 	"hona/backend/internal/presentation/middleware"
 )
@@ -28,8 +33,14 @@ func InitializeApplication(container *bootstrap.Config) (*Application, error) {
 	generalControllers := &GeneralControllers{
 		GeneralUserController: generalUserController,
 	}
+	rbacService := service.NewRBACService(unitOfWork, userService)
+	adminRBACController := admin.NewAdminRBACController(rbacService)
+	adminControllers := &AdminControllers{
+		AdminRBACController: adminRBACController,
+	}
 	controllers := &Controllers{
 		GeneralControllers: generalControllers,
+		AdminControllers:   adminControllers,
 	}
 	localizationMiddleware := middleware.NewLocalizationMiddleware()
 	recoveryMiddleware := middleware.NewRecoveryMiddleware()
@@ -37,36 +48,51 @@ func InitializeApplication(container *bootstrap.Config) (*Application, error) {
 		LocalizationMiddleware: localizationMiddleware,
 		RecoveryMiddleware:     recoveryMiddleware,
 	}
-	application := NewApplication(controllers, middlewares)
+	databaseSeeder := seeder.NewDatabaseSeeder(db)
+	wireSeeder := &Seeder{
+		DatabaseSeeder: databaseSeeder,
+	}
+	application := NewApplication(controllers, middlewares, wireSeeder)
 	return application, nil
 }
 
 // wire.go:
 
-var RepositoryProviderSet = wire.NewSet(persistence.NewRepositoryFactory, persistence.NewUnitOfWork, persistence.NewPostgresDatabase)
+var RepositoryProviderSet = wire.NewSet(persistence.NewRepositoryFactory, persistence.NewUnitOfWork, persistence.NewPostgresDatabase, wire.Bind(new(ports.RepositoryFactory), new(*persistence.RepositoryFactory)), wire.Bind(new(ports.UnitOfWork), new(*persistence.UnitOfWork)))
 
-var ServiceProviderSet = wire.NewSet(service.NewUserService, jwt.NewJWTService, jwt.NewJWTKeyManager)
+var ServiceProviderSet = wire.NewSet(service.NewUserService, jwt.NewJWTService, jwt.NewJWTKeyManager, service.NewRBACService, wire.Bind(new(domainjwt.JWTService), new(*jwt.JWTService)), wire.Bind(new(domainjwt.JWTKeyManager), new(*jwt.JWTKeyManager)), wire.Bind(new(usecase.RBACService), new(*service.RBACService)), wire.Bind(new(usecase.UserService), new(*service.UserService)))
 
 var GeneralControllersProviderSet = wire.NewSet(general.NewGeneralUserController, wire.Struct(new(GeneralControllers), "*"))
+
+var AdminControllersProviderSet = wire.NewSet(admin.NewAdminRBACController, wire.Struct(new(AdminControllers), "*"))
 
 var ControllersProviderSet = wire.NewSet(wire.Struct(new(Controllers), "*"))
 
 var MiddlewaresProviderSet = wire.NewSet(middleware.NewLocalizationMiddleware, middleware.NewRecoveryMiddleware, wire.Struct(new(Middlewares), "*"))
 
+var SeederProviderSet = wire.NewSet(seeder.NewDatabaseSeeder, wire.Struct(new(Seeder), "*"))
+
 var ProviderSet = wire.NewSet(
 	MiddlewaresProviderSet,
 	ControllersProviderSet,
 	GeneralControllersProviderSet,
+	AdminControllersProviderSet,
 	ServiceProviderSet,
 	RepositoryProviderSet,
+	SeederProviderSet,
 )
 
 type GeneralControllers struct {
 	GeneralUserController *general.GeneralUserController
 }
 
+type AdminControllers struct {
+	AdminRBACController *admin.AdminRBACController
+}
+
 type Controllers struct {
 	GeneralControllers *GeneralControllers
+	AdminControllers   *AdminControllers
 }
 
 type Middlewares struct {
@@ -74,14 +100,20 @@ type Middlewares struct {
 	RecoveryMiddleware     *middleware.RecoveryMiddleware
 }
 
+type Seeder struct {
+	DatabaseSeeder *seeder.DatabaseSeeder
+}
+
 type Application struct {
 	Controllers *Controllers
 	Middlewares *Middlewares
+	Seeder      *Seeder
 }
 
-func NewApplication(controllers *Controllers, middlewares *Middlewares) *Application {
+func NewApplication(controllers *Controllers, middlewares *Middlewares, seeder2 *Seeder) *Application {
 	return &Application{
 		Controllers: controllers,
 		Middlewares: middlewares,
+		Seeder:      seeder2,
 	}
 }
