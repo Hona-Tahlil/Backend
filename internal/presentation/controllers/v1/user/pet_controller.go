@@ -2,6 +2,7 @@ package user
 
 import (
 	"hona/backend/internal/domain/enums"
+	"hona/backend/internal/infrastructure/storage"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -27,7 +28,20 @@ func (uc *UserPetController) AddPet(ctx *gin.Context) {
 		AboutPet  *string         `json:"aboutPet" validate:"omitempty,max=10000"`
 		// TODO: handle pic
 	}
+	file, err := ctx.FormFile("file")
+	if err != nil {
+		panic(err)
+	}
 
+	err = storage.NewS3Storage().UploadFile(enums.PetProfilePic, "testfile", file)
+	if err != nil {
+		panic(err)
+	}
+	url, err := storage.NewS3Storage().GetPresignedURL(enums.PetProfilePic, "testfile", time.Minute*20)
+	if err != nil {
+		panic(err)
+	}
+	ctx.JSON(200, url)
 }
 
 // TODO: Update Pet

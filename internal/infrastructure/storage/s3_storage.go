@@ -1,14 +1,17 @@
 package storage
 
 import (
+	"context"
 	"fmt"
 	"hona/backend/bootstrap"
 	"hona/backend/internal/domain/enums"
+	"mime/multipart"
 	"slices"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/credentials"
-	"github.com/aws/aws-sdk-go-v2/aws/session"
+	"github.com/aws/aws-sdk-go-v2/config"
+
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 )
 
@@ -25,24 +28,86 @@ func NewS3Storage() *S3Storage {
 	}
 }
 
-func (s3StorageS3Storage *S3Storage) setS3Client(bucketType enum.BucketType) error {
+func (s3Storage *S3Storage) setS3Client(bucketType enums.BucketType) error {
 	bucketTypes := enums.GetAllBucketTypes()
 	if !slices.Contains(bucketTypes, bucketType) {
 		return fmt.Errorf("bucket not exist")
 	}
-	if s3StorageS3Storage.client != nil {
+	if s3Storage.client != nil {
 		return nil
 	}
-	sess, err := session.NewSession(&aws.Config{
-		Credentials: credentials.NewStaticCredentials(s3StorageS3Storage.storage.AccessKey, s3StorageS3Storage.storage.SecretKey, ""),
-		Region:      aws.String(s3StorageS3Storage.storage.Region),
-		Endpoint:    aws.String(s3StorageS3Storage.storage.Endpoint),
-	})
-
+	cfg, err := config.LoadDefaultConfig(context.TODO(), config.WithRegion("us-west-2"))
 	if err != nil {
-		return fmt.Errorf("unable to create AWS session, %w", err)
+		return err
 	}
 
-	s3StorageS3Storage.clients = s3.New(sess)
+	s3Storage.client = s3.NewFromConfig(cfg, func(o *s3.Options) {
+		o.BaseEndpoint = aws.String(bootstrap.Run().Env.Storage.Endpoint)
+	})
 	return nil
+}
+
+func (s3Storage *S3Storage) UploadFile(bucketType enums.BucketType, key string, file *multipart.FileHeader) error {
+	err := s3Storage.setS3Client(bucketType)
+	if err != nil {
+		return err
+	}
+	bucket := s3Storage.buckets[bucketType]
+
+	fileReader, err := file.Open()
+	if err != nil {
+		return err
+	}
+	defer fileReader.Close()
+
+	_, err = s3Storage.client.PutObject(context.TODO(), &s3.PutObjectInput{
+		Bucket: aws.String(bucket),
+		Key:    aws.String(key),
+		Body:   fileReader,
+	})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s3Storage *S3Storage) DeleteObject(bucketType enums.BucketType, key string) error {
+	err := s3Storage.setS3Client(bucketType)
+	if err != nil {
+		return err
+	}
+	bucket := s3Storage.buckets[bucketType]
+
+	_, err = s3Storage.client.DeleteObject(context.TODO(), &s3.DeleteObjectInput{
+		Bucket: aws.String(bucket),
+		Key:    aws.String(key),
+	})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s3Storage *S3Storage) GetPresignedURL(bucketType enums.BucketType, key string, expiration time.Duration) (string, error) {
+	err := s3Storage.setS3Client(bucketType)
+	if err != nil {
+		return "", err
+	}
+	bucket := s3Storage.buckets[bucketType]
+
+	req := &s3.GetObjectInput{
+		Bucket: aws.String(bucket),
+		Key:    aws.String(key),
+	}
+
+	presigner := s3.NewPresignClient(s3Storage.client)
+
+	presignedURL, err := presigner.PresignGetObject(context.TODO(), req, s3.WithPresignExpires(expiration))
+	if err != nil {
+		return "", err
+	}
+
+	return presignedURL.URL, nil
 }
