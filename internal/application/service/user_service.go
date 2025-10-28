@@ -80,7 +80,9 @@ func (us *UserService) validateDuplicateEmail(email string) error {
 	}
 	user, err := us.FindUserByEmail(email)
 	if err != nil {
-		return err
+		if _, ok := err.(*exceptions.NotFoundError); !ok {
+			return err
+		}
 	}
 	if user != nil && user.IsVerified {
 		ce.Add(bootstrap.Run().Constants.ErrorFields.Email, bootstrap.Run().Constants.ErrorTags.AlreadyRegistered)
