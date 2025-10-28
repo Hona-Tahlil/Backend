@@ -43,6 +43,6 @@ func NewRedisDatabase(redisConfig *bootstrap.Redis) *RedisDatabase {
 	return rdbInstance
 }
 
-func (rdb *RedisDatabase) GetRDB() *redis.Client {
-	return rdbInstance.RDB
+func (rdb *RedisDatabase) GetRDB() redis.Client {
+	return *rdbInstance.RDB
 }

@@ -20,7 +20,7 @@ func NewUserCacheRepository(rdb persistence.Cache) *UserCacheRepository {
 	}
 }
 
-func (userCache *UserCacheRepository) Get(ctx context.Context, key string) (*user.OTPData, error) {
+func (userCache *UserCacheRepository) Get(ctx context.Context, key string) (*user.MLData, error) {
 	value, err := userCache.rdb.GetRDB().Get(ctx, key).Result()
 	if err != nil {
 		if err == redis.Nil {
@@ -28,28 +28,28 @@ func (userCache *UserCacheRepository) Get(ctx context.Context, key string) (*use
 		}
 		return nil, err
 	}
-	var otpData user.OTPData
-	if err = json.Unmarshal([]byte(value), &otpData); err != nil {
+	var mlData user.MLData
+	if err = json.Unmarshal([]byte(value), &mlData); err != nil {
 		return nil, err
 	}
 
-	return &otpData, nil
+	return &mlData, nil
 
 }
 
-func (userCache *UserCacheRepository) Set(ctx context.Context, key, otp string, expiration time.Duration) error {
-	otpData := user.OTPData{
-		OTP:      otp,
-		Attempts: 0,
+func (uc *UserCacheRepository) Set(ctx context.Context, key, token string, expiration time.Duration) error {
+	mldata := user.MLData{
+		Token: token,
 	}
-	value, err := json.Marshal(otpData)
+	value, err := json.Marshal(mldata)
 	if err != nil {
 		return err
 	}
-	err = userCache.rdb.GetRDB().Set(ctx, key, string(value), expiration).Err()
+	err = uc.rdb.GetRDB().Set(ctx, key, string(value), expiration).Err()
 	if err != nil {
 
 		return err
 	}
 	return nil
 }
+

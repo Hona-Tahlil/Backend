@@ -9,6 +9,7 @@ import (
 type Env struct {
 	PrimaryDB    Database
 	PrimaryRedis Redis
+	EmailConfig  EmailConfig
 }
 
 type Database struct {
@@ -24,6 +25,13 @@ type Redis struct {
 	Address   string
 	Password  string
 	RDBNumber string
+}
+type EmailConfig struct {
+	Host     string
+	Port     string
+	Username string
+	Password string
+	From     string
 }
 
 func NewEnv() *Env {
@@ -41,6 +49,13 @@ func NewEnv() *Env {
 			Address:   os.Getenv("RDB_ADDRESS"),
 			Password:  os.Getenv("RDB_PASSWORD"),
 			RDBNumber: os.Getenv("RDB_NUMBER"),
+		},
+		EmailConfig: EmailConfig{
+			Host:     os.Getenv("SMTP_HOST"),
+			Port:     os.Getenv("SMTP_PORT"),
+			Username: os.Getenv("SMTP_USERNAME"),
+			Password: os.Getenv("SMTP_PASSWORD"),
+			From:     os.Getenv("SMTP_FROM"),
 		},
 	}
 }

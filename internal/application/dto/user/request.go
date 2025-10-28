@@ -9,6 +9,7 @@ type RegisterRequest struct {
 	Email    string
 	Password string
 }
+
 type VerifyEmailRequest struct {
 	Email string
 	OTP   string
