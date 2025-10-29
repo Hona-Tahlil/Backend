@@ -16,24 +16,22 @@ func NewUserRepository(db *gorm.DB) *UserRepository {
 	}
 }
 
-  
 func (up *UserRepository) FindUserByEmail(email string) (*entities.User, error) {
-  var foundUser entities.User
+	var foundUser entities.User
 
-  if err := up.db.First(&foundUser, "email = ?", email); err.Error != nil {
-    if err.Error == gorm.ErrRecordNotFound {
-      return nil, nil
-    }
-    return nil, err.Error
-  }
-  return &foundUser, nil
+	if err := up.db.First(&foundUser, "email = ?", email); err.Error != nil {
+		if err.Error == gorm.ErrRecordNotFound {
+			return nil, nil
+		}
+		return nil, err.Error
+	}
+	return &foundUser, nil
 }
 
+func (up *UserRepository) CreateUser(user *entities.User) error {
+	return up.db.Create(user).Error
+}
 
 func (up *UserRepository) DeleteUserByEmail(email string) error {
-	return  nil
-}
-
-func (up *UserRepository) CreateUser(*entities.User) error {
-	return nil
+	return up.db.Where("email = ?", email).Delete(&entities.User{}).Error
 }

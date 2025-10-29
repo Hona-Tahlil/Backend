@@ -43,13 +43,15 @@ func (gc *GeneralUserController) Login(ctx *gin.Context) {
 
 func (gc *GeneralUserController) Register(ctx *gin.Context) {
 	type registerParams struct {
-		Name            string `json:"name" validate:"required"`
-		Email           string `json:"email" validate:"required"`
-		Password        string `json:"password" validate:"required"`
+		FirstName string `json:"firstName" validate:"required"`
+		LastName  string `json:"lastName" validate:"required"`
+		Email     string `json:"email" validate:"required"`
+		Password  string `json:"password" validate:"required,min=8,max=64"`
 	}
 	params := controllers.Receive[registerParams](ctx)
 	registerInfo := user.RegisterRequest{
-		Name:  params.Name,
+		FirstName: params.FirstName,
+		LastName:  params.LastName,
 		Email:     params.Email,
 		Password:  params.Password,
 	}

@@ -4,7 +4,6 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/base64"
-	"errors"
 	"hona/backend/bootstrap"
 	"hona/backend/internal/application/dto/user"
 	"hona/backend/internal/domain/entities"
@@ -92,14 +91,32 @@ func (us *UserService) validateDuplicateEmail(email string) error {
 }
 
 func (us *UserService) ValidatePasswordRegex(password string) error {
-	if len(password) < 12 {
-		return errors.New("password must be at least 12 characters long")
+	var ve exceptions.ValidationErrors
+	if len(password) < 8 {
+		ve.AddError(bootstrap.Run().Constants.ErrorFields.Password, bootstrap.Run().Constants.ErrorTags.MinimumLength)
 	}
-	pattern := `^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$`
-	re := regexp.MustCompile(pattern)
-	if !re.MatchString(password) {
-		return errors.New("رمز عبور باید حداقل ۸ کاراکتر و شامل حروف بزرگ، کوچک، عدد و کاراکتر خاص باشد")
+
+	hasLower := regexp.MustCompile(`[a-z]`).MatchString(password)
+	if !hasLower {
+		ve.AddError(bootstrap.Run().Constants.ErrorFields.Password, bootstrap.Run().Constants.ErrorTags.ContainsLowercase)
 	}
+	hasUpper := regexp.MustCompile(`[A-Z]`).MatchString(password)
+	if !hasUpper {
+		ve.AddError(bootstrap.Run().Constants.ErrorFields.Password, bootstrap.Run().Constants.ErrorTags.ContainsUppercase)
+	}
+	hasDigit := regexp.MustCompile(`\d`).MatchString(password)
+	if !hasDigit {
+		ve.AddError(bootstrap.Run().Constants.ErrorFields.Password, bootstrap.Run().Constants.ErrorTags.ContainsNumber)
+	}
+	hasSpecial := regexp.MustCompile(`[\W_]`).MatchString(password)
+	if !hasSpecial {
+		ve.AddError(bootstrap.Run().Constants.ErrorFields.Password, bootstrap.Run().Constants.ErrorTags.ContainsSpecialChar)
+	}
+
+	if !hasLower || !hasUpper || !hasDigit || !hasSpecial {
+		return &ve
+	}
+
 	return nil
 }
 
@@ -129,6 +146,7 @@ func (us *UserService) Register(registerInfo user.RegisterRequest) error {
 	if err != nil {
 		return err
 	}
+
 	hashesPasswordBytes, err := bcrypt.GenerateFromPassword([]byte(registerInfo.Password), bcrypt.DefaultCost)
 	if err != nil {
 		return err
@@ -139,7 +157,8 @@ func (us *UserService) Register(registerInfo user.RegisterRequest) error {
 			return err
 		}
 		user := &entities.User{
-			Name:       registerInfo.Name,
+			FirstName:  registerInfo.FirstName,
+			LastName:   registerInfo.LastName,
 			Email:      registerInfo.Email,
 			Password:   string(hashesPasswordBytes),
 			IsVerified: false,
