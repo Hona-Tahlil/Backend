@@ -1,6 +1,7 @@
 package persistence
 
 import (
+	domainpostgres "hona/backend/internal/domain/ports/postgres"
 	"hona/backend/internal/infrastructure/persistence/repository/postgres"
 
 	"gorm.io/gorm"
@@ -16,6 +17,10 @@ func NewRepositoryFactory(db *gorm.DB) *RepositoryFactory {
 	}
 }
 
-func (f *RepositoryFactory) UserRepository() *postgres.UserRepository {
+func (f *RepositoryFactory) UserRepository() domainpostgres.UserRepository {
 	return postgres.NewUserRepository(f.db)
+}
+
+func (f *RepositoryFactory) RBACRepository() domainpostgres.RBACRepository {
+	return postgres.NewRBACRepository(f.db)
 }

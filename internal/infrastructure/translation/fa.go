@@ -48,7 +48,8 @@ var Persian = map[string]interface{}{
 	"corporationReview":   "بازبینی شرکت",
 	"errors": map[string]interface{}{
 		"generic":                "خطایی رخ داده است، لطفا دوباره تلاش کنید.",
-		"numeric":                "`{0}` باید عدد باشد.",
+		"numeric":                "ورودی باید عدد باشد.",
+		"binding":                "فرمت ورودی نادرست است",
 		"fileRequired":           "وارد کردن فایل اجباری است.",
 		"minimumLength":          "باید از 7 کاراکتر بیشتر باشد.",
 		"containsLowercase":      "باید حتما دارای حرف کوچک باشد.",
@@ -179,6 +180,7 @@ var Persian = map[string]interface{}{
 		"deletePanel":               "پنل مورد نظر شما با موفقیت حذف شد.",
 		"editStaff":                 "مسئول مورد نظر شما با موفقیت به روزرسانی شد.",
 		"addStaff":                  "مسئول مورد نظر شما با موفقیت اضافه شد.",
+		"generic":                   "با موفقیت انجام شد",
 	},
 	"emailSubject": map[string]interface{}{
 		"emailConfirmation": "تأیید آدرس ایمیل شما",
