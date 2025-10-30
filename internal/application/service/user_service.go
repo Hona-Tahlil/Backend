@@ -19,8 +19,9 @@ type UserService struct {
 
 func NewUserService(unitOfWork ports.UnitOfWork, jwtService domainjwt.JWTService) *UserService {
 	return &UserService{
-		unitOfWork: unitOfWork,
-		jwtService: jwtService,
+		unitOfWork:  unitOfWork,
+		jwtService:  jwtService,
+		rbacService: rbacService,
 	}
 }
 
@@ -55,11 +56,8 @@ func (us *UserService) GetRolesResponse(user entities.User) []rbac.RoleResponse 
 }
 
 func (us *UserService) Login(loginInfo user.LoginRequest) (*user.LoginResponse, string, int, error) {
-	foundUser, err := us.findVerifiedUserByEmail(loginInfo.Email)
+	foundUser, err := us.FindUserByEmail(loginInfo.Email)
 	if err != nil {
-		if _, ok := err.(*exceptions.NotFoundError); ok {
-			err = exceptions.NewInvalidCredentialsError("no user found with that email")
-		}
 		return nil, "", 0, err
 	}
 

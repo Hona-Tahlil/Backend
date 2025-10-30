@@ -151,5 +151,9 @@ func NewConstants() *Constants {
 			AccessTokenType:  "access",
 			RefreshTokenType: "refresh",
 		},
+		JWTConstants: JWTConstants{
+			AccessTokenType:  "access",
+			RefreshTokenType: "refresh",
+		},
 	}
 }
