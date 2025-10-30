@@ -8,7 +8,7 @@ import (
 type RBACService interface {
 	GetRoleResponse(role entities.Role) *rbac.RoleResponse
 	GetUserInfosResponse(users []entities.User) []rbac.UserInfoResponse
-	GetAllRolesWithUsers() ([]rbac.RoleWithUsersResponse, error)
+	ListRolesWithUsers() ([]rbac.RoleWithUsersResponse, error)
 	GetRoleWithUsersByID(info rbac.GetRoleByIDRequest) (*rbac.RoleWithUsersResponse, error)
 	GetRoleWithUsersByType(info rbac.GetRoleByTypeRequest) (*rbac.RoleWithUsersResponse, error)
 	GetRoleByID(info rbac.GetRoleByIDRequest) (*rbac.RoleResponse, error)

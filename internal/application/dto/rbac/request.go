@@ -66,3 +66,8 @@ type RemovePermissionFromRoleRequest struct {
 type GetPermissionRolesRequest struct {
 	PermissionID uint
 }
+
+type ListRolesWithUsersRequest struct {
+	Page  int
+	Count int
+}

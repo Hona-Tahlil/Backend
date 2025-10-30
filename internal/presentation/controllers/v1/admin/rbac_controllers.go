@@ -18,8 +18,18 @@ func NewAdminRBACController(rbacService usecase.RBACService) *AdminRBACControlle
 	}
 }
 
-func (ac *AdminRBACController) GetAllRolesWithUsers(ctx *gin.Context) {
-	res, err := ac.rbacService.GetAllRolesWithUsers()
+// TODO: add pagination
+func (ac *AdminRBACController) ListRolesWithUsers(ctx *gin.Context) {
+	type ListRolesWithUsersParams struct {
+		Page  int `form:"page"`
+		Count int `form:"count"`
+	}
+	params := controllers.Receive[ListRolesWithUsersParams](ctx)
+	ListRolesWithUsersInfo := rbac.ListRolesWithUsersRequest{
+		Page:  params.Page,
+		Count: params.Count,
+	}
+	res, err := ac.rbacService.ListRolesWithUsers(ListRolesWithUsersInfo)
 	if err != nil {
 		panic(err)
 	}
