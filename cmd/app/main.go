@@ -20,6 +20,8 @@ func main() {
 		panic(err)
 	}
 
+	app.Seeder.DatabaseSeeder.SeedAll()
+
 	routes.SetUpRoutes(ginEngine, app)
 
 	ginEngine.Run()

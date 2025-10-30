@@ -29,13 +29,57 @@ func NewPostgresDatabase() *gorm.DB {
 		if err != nil {
 			panic(fmt.Errorf("failed to connect database"))
 		}
+
 		dbInstance = db
 
+		// db.Migrator().DropTable(
+		// 	&entities.User{},
+		// 	&entities.Role{},
+		// 	&entities.Permission{},
+		// 	&entities.Wallet{},
+		// 	&entities.Request{},
+		// 	&entities.CalenderSlot{},
+		// 	&entities.Pet{},
+		// 	&entities.PetSitter{},
+		// 	&entities.Reserve{},
+		// 	&entities.Service{},
+		// 	&entities.Chat{},
+		// 	&entities.Comment{},
+		// 	&entities.Address{},
+		// 	&entities.Province{},
+		// 	&entities.City{},
+		// 	&entities.TextMessage{},
+		// 	"user_roles",
+		// )
 		db.AutoMigrate(
+			&entities.User{},
 			&entities.Role{},
 			&entities.Permission{},
-			&entities.User{},
+			&entities.Wallet{},
+			&entities.Request{},
+			&entities.CalendarSlot{},
+			&entities.Pet{},
+			&entities.PetSitter{},
+			&entities.Service{},
+			&entities.Chat{},
+			&entities.Comment{},
+			&entities.Address{},
+			&entities.Province{},
+			&entities.City{},
+			&entities.TextMessage{},
+			&entities.Transaction{},
+			&entities.Transfer{},
 		)
+		// user := entities.User{
+		// 	Email: "test@email",
+		// }
+		// db.Create(&user)
+		// permission := entities.Permission{
+		// 	Type:     enums.RequestPermission,
+		// 	Category: enums.ReadPermissionCategory,
+		// }
+		// db.Create(&permission)
+
 	})
 
 	return dbInstance

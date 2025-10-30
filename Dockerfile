@@ -1,8 +1,8 @@
 # Use Go 1.25 Alpine image
 FROM golang:1.25-alpine
 
-# Install Air
-RUN go install github.com/air-verse/air@latest
+# Disable CGO to ensure static binary (required on Alpine)
+ENV CGO_ENABLED=0
 
 WORKDIR /app
 
@@ -13,8 +13,11 @@ RUN go mod download
 # Copy the rest of the source
 COPY . .
 
-# Expose app port for Gin
+# Build the binary
+RUN go build -o main ./cmd/app
+
+# Expose app port
 EXPOSE 8080
 
-# Run Air by default
-CMD ["air", "-c", ".air.toml"]
+# Run the binary
+CMD ["/app/main"]

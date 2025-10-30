@@ -8,9 +8,10 @@ import (
 
 type UserService interface {
 	Login(loginInfo user.LoginRequest) (*user.LoginResponse, string, int, error)
-	findVerifiedUserByEmail(email string) (*entities.User, error)
-	findVerifiedUserByID(id uint) (*entities.User, error)
-	findUserByID(id uint) (*entities.User, error)
+	// findVerifiedUserByEmail(email string) (*entities.User, error)
+	// findVerifiedUserByID(id uint) (*entities.User, error)
+	FindUserByID(id uint) (*entities.User, error)
+	FindUserByEmail(email string) (*entities.User, error)
 	// validateDuplicatePhone(email string) error
 	// passwordValidation(password string) error
 	// GenerateFromPassword(password string, cost int) error
@@ -18,4 +19,5 @@ type UserService interface {
 	// VerifyEmail(verifyEmailInfo user.VerifyEmailRequest) error
 	// ForgotPassword(forgetPasswordInfo user.ForgotPasswordRequest) error
 	RefreshTokens(refreshTokenInfo rbac.RefreshTokenRequest) (*rbac.RefreshTokenResponse, string, int, error)
+	GetRolesResponse(user entities.User) []rbac.RoleResponse
 }
