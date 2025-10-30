@@ -95,13 +95,6 @@ func (s *PetSeeder) Seed(count int) error {
 		}
 		weight = &w
 
-		// Random picture link (50% chance)
-		var pictureLink *string
-		if rand.Intn(2) == 1 {
-			link := faker.URL()
-			pictureLink = &link
-		}
-
 		// Random about text (70% chance)
 		var aboutPet *string
 		if rand.Intn(10) < 7 {
@@ -113,16 +106,16 @@ func (s *PetSeeder) Seed(count int) error {
 		name := generatePetName(kind)
 
 		pet := entities.Pet{
-			UserID:      user.ID,
-			Name:        name,
-			Kind:        kind,
-			Species:     species,
-			BirthDate:   &birthDate,
-			IsAdult:     isAdult,
-			Gender:      gender,
-			Weight:      weight,
-			PictureLink: pictureLink,
-			AboutPet:    aboutPet,
+			UserID:     user.ID,
+			Name:       name,
+			Kind:       kind,
+			Species:    species,
+			BirthDate:  &birthDate,
+			IsAdult:    isAdult,
+			Gender:     gender,
+			Weight:     weight,
+			PictureKey: nil,
+			AboutPet:   aboutPet,
 		}
 
 		pets = append(pets, pet)

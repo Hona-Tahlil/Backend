@@ -45,7 +45,8 @@ var Persian = map[string]interface{}{
 	"post":                "پست",
 	"like":                "لایک",
 	"unlike":              "حذف لایک",
-	"corporationReview":   "بازبینی شرکت",
+	"birthDate":           "تاریخ تولد",
+	"isAdult":             "وضعیت بلوغ پت",
 	"errors": map[string]interface{}{
 		"generic":                "خطایی رخ داده است، لطفا دوباره تلاش کنید.",
 		"numeric":                "ورودی باید عدد باشد.",
@@ -95,6 +96,7 @@ var Persian = map[string]interface{}{
 		"alreadyAccepted":        "این {0} قبلا قبول شده است.",
 		"alreadyDraft":           "این {0} قبلا در حالت پیش نویس قرار گرفته است.",
 		"bannedUser":             "حساب شما مسدود شده است. شما مجاز به انجام این عمل نیستید.",
+		"unacceptableInput":      "ورودی قابل قبول نیست",
 	},
 	"successMessage": map[string]interface{}{
 		"userRegister":              "ثبت نام موفق بود! لطفاً پیامک های خود را بررسی کنید تا حساب خود را تأیید کرده و فرآیند ثبت نام را تکمیل نمایید.",

@@ -25,6 +25,8 @@ type ErrorFields struct {
 	City       string
 	Role       string
 	Permission string
+	BirthDate  string
+	IsAdult    string
 }
 
 type ErrorTags struct {
@@ -67,6 +69,7 @@ type ErrorTags struct {
 	Binding                string
 	Generic                string
 	NotFound               string
+	UnacceptableInput      string
 }
 
 type JWTKeysPath struct {
@@ -105,6 +108,8 @@ func NewConstants() *Constants {
 			City:       "city",
 			Role:       "role",
 			Permission: "permission",
+			BirthDate:  "birthDate",
+			IsAdult:    "isAdult",
 		},
 		ErrorTags: ErrorTags{
 			AlreadyRegistered:      "alreadyRegistered",
@@ -146,6 +151,7 @@ func NewConstants() *Constants {
 			Binding:                "binding",
 			Generic:                "generic",
 			NotFound:               "notFound",
+			UnacceptableInput:      "unacceptableInput",
 		},
 		JWTConstants: JWTConstants{
 			AccessTokenType:  "access",
