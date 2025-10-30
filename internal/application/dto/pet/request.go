@@ -18,3 +18,16 @@ type AddPetRequest struct {
 	AboutPet   *string
 	ProfilePic *multipart.FileHeader
 }
+
+type UpdatePetRequest struct {
+	UserID     uint
+	Name       string
+	Kind       enums.PetKind
+	Species    enums.Species
+	BirthDate  *time.Time
+	IsAdult    bool
+	Gender     enums.PetGender
+	Weight     *float32
+	AboutPet   *string
+	ProfilePic *multipart.FileHeader
+}

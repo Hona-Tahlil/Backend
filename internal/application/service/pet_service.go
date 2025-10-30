@@ -41,6 +41,8 @@ func (ps *PetService) AddPet(info pet.AddPetRequest) error {
 		}
 	}
 
+	// TODO: validate duplicate name
+
 	pet := &entities.Pet{
 		UserID:     info.UserID,
 		Name:       info.Name,
@@ -60,6 +62,51 @@ func (ps *PetService) AddPet(info pet.AddPetRequest) error {
 	}
 
 	return nil
+}
+
+func (ps *PetService) UpdatePet(info pet.UpdatePetRequest) error {
+	// TODO: func to validate correct species
+	isAdult, err := ps.validateBirthDate(info.BirthDate, info.IsAdult, info.Kind)
+	if err != nil {
+		return err
+	}
+
+	info.IsAdult = isAdult
+	var profileKey *string
+	if info.ProfilePic != nil {
+		profileKeyValue := "profile-" + info.Name + "-" + fmt.Sprint(info.UserID)
+		profileKey = &profileKeyValue
+		if err := ps.storage.UploadFile(enums.PetProfilePic, *profileKey, info.ProfilePic); err != nil {
+			return err
+		}
+	}
+
+	// TODO: validate duplicate name
+
+	pet := &entities.Pet{
+		UserID:     info.UserID,
+		Name:       info.Name,
+		Kind:       info.Kind,
+		Species:    info.Species,
+		BirthDate:  info.BirthDate,
+		IsAdult:    info.IsAdult,
+		Gender:     info.Gender,
+		Weight:     info.Weight,
+		PictureKey: profileKey,
+		AboutPet:   info.AboutPet,
+	}
+	petRepo := ps.unitOfWork.Factory().PetRepository()
+	err = petRepo.CreatePet(pet)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (ps *PetService) findPet(name string, userID uint) (*entities.Pet, error) {
+	// TODO: implement
+	return nil, nil
 }
 
 func (ps *PetService) validateBirthDate(birthDate *time.Time, isAdultInput bool, kind enums.PetKind) (isAdult bool, err error) {

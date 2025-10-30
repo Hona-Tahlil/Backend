@@ -21,7 +21,6 @@ func NewUserPetController(petService *service.PetService) *UserPetController {
 	}
 }
 
-// TODO: Add Pet
 func (uc *UserPetController) AddPet(ctx *gin.Context) {
 	type AddPetParams struct {
 		Name      string          `json:"name" validate:"required,min=1,max=100"`
@@ -62,6 +61,44 @@ func (uc *UserPetController) AddPet(ctx *gin.Context) {
 }
 
 // TODO: Update Pet
+func (uc *UserPetController) UpdatePet(ctx *gin.Context) {
+	type UpdatePetParams struct {
+		Name      string          `json:"name" validate:"required,min=1,max=100"`
+		Kind      enums.PetKind   `json:"kind" validate:"required,min=1,max=20"`     // TODO: exact number for max
+		Species   enums.Species   `json:"species" validate:"required,min=1,max=100"` // TODO: exact number for max
+		BirthDate *time.Time      `json:"birthDate" validate:"omitempty,datetime"`
+		IsAdult   bool            `json:"isAdult" validate:"omitempty"`
+		Gender    enums.PetGender `json:"gender" validate:"omitempty,min=1,max=3"`
+		Weight    *float32        `json:"weight" validate:"omitempty,min=0.1,max=500"`
+		AboutPet  *string         `json:"aboutPet" validate:"omitempty,max=10000"`
+	}
+	file, err := ctx.FormFile(bootstrap.Run().Env.Storage.Buckets.PetProfilePic)
+	if err != nil {
+		file = nil
+	}
+	params := controllers.Receive[UpdatePetParams](ctx)
+	userID, _ := ctx.Get(bootstrap.Run().Constants.Context.ID)
+	UserID, _ := userID.(uint)
+	UpdatePetInfo := pet.UpdatePetRequest{
+		UserID:     UserID,
+		Name:       params.Name,
+		Kind:       params.Kind,
+		Species:    params.Species,
+		BirthDate:  params.BirthDate,
+		IsAdult:    params.IsAdult,
+		Gender:     params.Gender,
+		Weight:     params.Weight,
+		AboutPet:   params.AboutPet,
+		ProfilePic: file,
+	}
+	err = uc.petService.UpdatePet(UpdatePetInfo)
+	if err != nil {
+		panic(err)
+	}
+
+	msg := controllers.Message{}
+	controllers.Respond(ctx, 200, msg, nil)
+}
 
 // TODO: Remove Pet
 
