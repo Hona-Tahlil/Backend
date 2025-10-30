@@ -20,6 +20,6 @@ type UserService interface {
 	// ForgotPassword(forgetPasswordInfo user.ForgotPasswordRequest) error
 	RefreshTokens(refreshTokenInfo rbac.RefreshTokenRequest) (*rbac.RefreshTokenResponse, string, int, error)
 	GetRolesResponse(user entities.User) []rbac.RoleResponse
-	GetRoleUsersByID(roleID uint) ([]entities.User, error)
+	GetRoleUsersByID(roleID uint, limit, offset int) ([]entities.User, error)
 	GetUserInfosResponse(users []entities.User) []rbac.UserInfoResponse
 }

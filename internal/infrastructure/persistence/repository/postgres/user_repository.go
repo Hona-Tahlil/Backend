@@ -40,12 +40,15 @@ func (up *UserRepository) FindUserByID(userID uint) (*entities.User, error) {
 	return &foundUser, nil
 }
 
-func (up *UserRepository) GetRoleUsersByID(roleID uint) ([]entities.User, error) {
+func (up *UserRepository) GetRoleUsersByID(roleID uint, limit, offset int) ([]entities.User, error) {
 	var users []entities.User
+
 	err := up.db.
 		Joins("JOIN user_roles ur ON ur.user_id = users.id").
 		Where("ur.role_id = ?", roleID).
 		Preload("Roles").
+		Limit(limit).
+		Offset(offset).
 		Find(&users).Error
 
 	if err != nil {

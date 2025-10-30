@@ -18,11 +18,10 @@ func NewAdminRBACController(rbacService usecase.RBACService) *AdminRBACControlle
 	}
 }
 
-// TODO: add pagination
 func (ac *AdminRBACController) ListRolesWithUsers(ctx *gin.Context) {
 	type ListRolesWithUsersParams struct {
-		Page  int `form:"page"`
-		Count int `form:"count"`
+		Page  int `form:"page" validate:"min=0"`
+		Count int `form:"count" validate:"min=0,max=100"`
 	}
 	params := controllers.Receive[ListRolesWithUsersParams](ctx)
 	ListRolesWithUsersInfo := rbac.ListRolesWithUsersRequest{
@@ -40,12 +39,16 @@ func (ac *AdminRBACController) ListRolesWithUsers(ctx *gin.Context) {
 
 func (ac *AdminRBACController) GetRoleWithUsersByID(ctx *gin.Context) {
 	type GetRoleWithUsersByIDParams struct {
-		ID uint `uri:"id"`
+		ID    uint `uri:"id"`
+		Page  int  `form:"page" validate:"min=0"`
+		Count int  `form:"count" validate:"min=0,max=100"`
 	}
 	params := controllers.Receive[GetRoleWithUsersByIDParams](ctx)
 
-	GetRoleWithUsersByIDInfo := rbac.GetRoleByIDRequest{
-		ID: params.ID,
+	GetRoleWithUsersByIDInfo := rbac.GetRoleWithUsersByIDRequest{
+		ID:    params.ID,
+		Page:  params.Page,
+		Count: params.Count,
 	}
 	res, err := ac.rbacService.GetRoleWithUsersByID(GetRoleWithUsersByIDInfo)
 	if err != nil {
@@ -58,12 +61,16 @@ func (ac *AdminRBACController) GetRoleWithUsersByID(ctx *gin.Context) {
 
 func (ac *AdminRBACController) GetRoleWithUsersByType(ctx *gin.Context) {
 	type GetRoleWithUsersByTypeParams struct {
-		Type string `uri:"type"`
+		Type  string `uri:"type"`
+		Page  int    `form:"page" validate:"min=0"`
+		Count int    `form:"count" validate:"min=0,max=100"`
 	}
 	params := controllers.Receive[GetRoleWithUsersByTypeParams](ctx)
 
-	GetRoleWithUsersByTypeInfo := rbac.GetRoleByTypeRequest{
-		Type: params.Type,
+	GetRoleWithUsersByTypeInfo := rbac.GetRoleWithUsersByTypeRequest{
+		Type:  params.Type,
+		Page:  params.Page,
+		Count: params.Count,
 	}
 	res, err := ac.rbacService.GetRoleWithUsersByType(GetRoleWithUsersByTypeInfo)
 	if err != nil {

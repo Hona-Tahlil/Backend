@@ -1,5 +1,7 @@
 package translation
 
+// TODO: custom translations
+
 var Persian = map[string]interface{}{
 	"firstName":           "نام",
 	"lastName":            "نام خانوادگی",
