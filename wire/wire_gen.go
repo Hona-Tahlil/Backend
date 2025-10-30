@@ -28,8 +28,7 @@ func InitializeApplication(container *bootstrap.Config) (*Application, error) {
 	unitOfWork := persistence.NewUnitOfWork(db)
 	jwtKeyManager := jwt.NewJWTKeyManager()
 	jwtService := jwt.NewJWTService(jwtKeyManager)
-	rbacService := service.NewRBACService()
-	userService := service.NewUserService(unitOfWork, jwtService, rbacService)
+	userService := service.NewUserService(unitOfWork, jwtService)
 	generalUserController := general.NewGeneralUserController(userService)
 	generalControllers := &GeneralControllers{
 		GeneralUserController: generalUserController,

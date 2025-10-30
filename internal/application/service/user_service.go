@@ -19,9 +19,8 @@ type UserService struct {
 
 func NewUserService(unitOfWork ports.UnitOfWork, jwtService domainjwt.JWTService) *UserService {
 	return &UserService{
-		unitOfWork:  unitOfWork,
-		jwtService:  jwtService,
-		rbacService: rbacService,
+		unitOfWork: unitOfWork,
+		jwtService: jwtService,
 	}
 }
 
@@ -58,7 +57,11 @@ func (us *UserService) GetRolesResponse(user entities.User) []rbac.RoleResponse 
 func (us *UserService) Login(loginInfo user.LoginRequest) (*user.LoginResponse, string, int, error) {
 	foundUser, err := us.FindUserByEmail(loginInfo.Email)
 	if err != nil {
-		return nil, "", 0, err
+		if _, ok := err.(*exceptions.NotFoundError); !ok {
+			return nil, "", 0, err
+		}
+		invalidCredentialsErr := exceptions.NewInvalidCredentialsError("password is wrong")
+		return nil, "", 0, invalidCredentialsErr
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(foundUser.Password), []byte(loginInfo.Password)); err != nil {
