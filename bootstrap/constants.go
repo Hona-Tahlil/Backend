@@ -1,11 +1,31 @@
 package bootstrap
 
 type Constants struct {
-	Context      Context
-	JWTKeysPath  JWTKeysPath
-	ErrorFields  ErrorFields
-	ErrorTags    ErrorTags
-	JWTConstants JWTConstants
+	Context         Context
+	JWTKeysPath     JWTKeysPath
+	ErrorFields     ErrorFields
+	ErrorTags       ErrorTags
+	JWTConstants    JWTConstants
+	SuccessMessages SuccessMessages
+}
+
+type SuccessMessages struct {
+	Register          string
+	PhoneVerification string
+	Login             string
+	AddAddress        string
+	EditAddress       string
+	DeleteAddress     string
+	ChangePassword    string
+	ForgotPassword    string
+	RefreshToken      string
+	EmailVerification string
+	UpdateProfile     string
+	CreateRole        string
+	UpdateRole        string
+	DeleteRole        string
+	UpdateUserRole    string
+	Generic           string
 }
 
 type JWTConstants struct {
@@ -96,38 +116,56 @@ func NewConstants() *Constants {
 			Permission: "permission",
 		},
 		ErrorTags: ErrorTags{
-			AlreadyRegistered:      "alreadyRegistered",
-			MinimumLength:          "minimumLength",
-			ContainsLowercase:      "containsLowercase",
-			ContainsUppercase:      "containsUppercase",
-			ContainsNumber:         "containsNumber",
-			ContainsSpecialChar:    "containsSpecialChar",
-			Expired:                "Expired",
-			Invalid:                "invalid",
-			NotRegistered:          "notRegistered",
-			NotVerified:            "notVerified",
-			InvalidAuthCredentials: "invalidAuthCredentials",
-			ExpiredAuthToken:       "expiredAuthToken",
-			InvalidAuthToken:       "invalidAuthToken",
-			Unauthorized:           "unauthorized",
-			AwaitingApproval:       "awaitingApproval",
-			Rejected:               "rejected",
-			NotExist:               "notExist",
-			AlreadyExist:           "alreadyExist",
-			ForbiddenStatus:        "forbiddenStatus",
-			Pending:                "pending",
-			NotAccepted:            "notAccepted",
-			InvalidRecaptcha:       "invalidRecaptcha",
-			Required:               "required",
-			Numeric:                "numeric",
-			AccessDenied:           "accessDenied",
-			Binding:                "binding",
-			Generic:                "generic",
-			NotFound:               "notFound",
+			AlreadyRegistered:      "errors.alreadyRegistered",
+			MinimumLength:          "errors.minimumLength",
+			ContainsLowercase:      "errors.containsLowercase",
+			ContainsUppercase:      "errors.containsUppercase",
+			ContainsNumber:         "errors.containsNumber",
+			ContainsSpecialChar:    "errors.containsSpecialChar",
+			Expired:                "errors.Expired",
+			Invalid:                "errors.invalid",
+			NotRegistered:          "errors.notRegistered",
+			NotVerified:            "errors.notVerified",
+			InvalidAuthCredentials: "errors.invalidAuthCredentials",
+			ExpiredAuthToken:       "errors.expiredAuthToken",
+			InvalidAuthToken:       "errors.invalidAuthToken",
+			Unauthorized:           "errors.unauthorized",
+			AwaitingApproval:       "errors.awaitingApproval",
+			Rejected:               "errors.rejected",
+			NotExist:               "errors.notExist",
+			AlreadyExist:           "errors.alreadyExist",
+			ForbiddenStatus:        "errors.forbiddenStatus",
+			Pending:                "errors.pending",
+			NotAccepted:            "errors.notAccepted",
+			InvalidRecaptcha:       "errors.invalidRecaptcha",
+			Required:               "errors.required",
+			Numeric:                "errors.numeric",
+			AccessDenied:           "errors.accessDenied",
+			Binding:                "errors.binding",
+			Generic:                "errors.generic",
+			NotFound:               "errors.notFound",
 		},
 		JWTConstants: JWTConstants{
 			AccessTokenType:  "access",
 			RefreshTokenType: "refresh",
+		},
+		SuccessMessages: SuccessMessages{
+			Register:          "successMessage.userRegister",
+			PhoneVerification: "successMessage.phoneVerification",
+			Login:             "successMessage.login",
+			AddAddress:        "successMessage.addAddress",
+			EditAddress:       "successMessage.editAddress",
+			DeleteAddress:     "successMessage.deleteAddress",
+			ChangePassword:    "successMessage.changePassword",
+			ForgotPassword:    "successMessage.forgotPassword",
+			RefreshToken:      "successMessage.refreshToken",
+			EmailVerification: "successMessage.emailVerification",
+			UpdateProfile:     "successMessage.updateProfile",
+			CreateRole:        "successMessage.createRole",
+			UpdateRole:        "successMessage.updateRole",
+			DeleteRole:        "successMessage.deleteRole",
+			UpdateUserRole:    "successMessage.updateUserRoles",
+			Generic:           "successMessage.generic",
 		},
 	}
 }

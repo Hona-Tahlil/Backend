@@ -1,6 +1,7 @@
 package admin
 
 import (
+	"hona/backend/bootstrap"
 	"hona/backend/internal/application/dto/rbac"
 	"hona/backend/internal/application/usecase"
 	"hona/backend/internal/presentation/controllers"
@@ -17,6 +18,8 @@ func NewAdminRBACController(rbacService usecase.RBACService) *AdminRBACControlle
 		rbacService: rbacService,
 	}
 }
+
+var successMessages = bootstrap.Run().Constants.SuccessMessages
 
 func (ac *AdminRBACController) ListRolesWithUsers(ctx *gin.Context) {
 	type ListRolesWithUsersParams struct {
@@ -176,7 +179,7 @@ func (ac *AdminRBACController) RemoveRoleFromUserByID(ctx *gin.Context) {
 	}
 
 	msg := controllers.Message{
-		Text: "successMessage.generic",
+		Text: successMessages.UpdateUserRole,
 	}
 	controllers.Respond(ctx, 200, msg, nil)
 }
@@ -197,7 +200,7 @@ func (ac *AdminRBACController) RemoveRoleFromUserByEmail(ctx *gin.Context) {
 	}
 
 	msg := controllers.Message{
-		Text: "successMessage.generic",
+		Text: successMessages.UpdateUserRole,
 	}
 	controllers.Respond(ctx, 200, msg, nil)
 }
@@ -218,7 +221,7 @@ func (ac *AdminRBACController) AddRoleToUserByID(ctx *gin.Context) {
 	}
 
 	msg := controllers.Message{
-		Text: "successMessage.generic",
+		Text: successMessages.UpdateUserRole,
 	}
 	controllers.Respond(ctx, 200, msg, nil)
 }
@@ -239,7 +242,7 @@ func (ac *AdminRBACController) AddRoleToUserByEmail(ctx *gin.Context) {
 	}
 
 	msg := controllers.Message{
-		Text: "successMessage.generic",
+		Text: successMessages.UpdateUserRole,
 	}
 	controllers.Respond(ctx, 200, msg, nil)
 }
@@ -260,7 +263,7 @@ func (ac *AdminRBACController) AddRole(ctx *gin.Context) {
 	}
 
 	msg := controllers.Message{
-		Text: "successMessage.generic",
+		Text: successMessages.CreateRole,
 	}
 	controllers.Respond(ctx, 200, msg, nil)
 }
@@ -279,7 +282,7 @@ func (ac *AdminRBACController) RemoveRoleByID(ctx *gin.Context) {
 	}
 
 	msg := controllers.Message{
-		Text: "successMessage.generic",
+		Text: successMessages.DeleteRole,
 	}
 	controllers.Respond(ctx, 200, msg, nil)
 }
@@ -298,7 +301,7 @@ func (ac *AdminRBACController) RemoveRoleByType(ctx *gin.Context) {
 	}
 
 	msg := controllers.Message{
-		Text: "successMessage.generic",
+		Text: successMessages.DeleteRole,
 	}
 	controllers.Respond(ctx, 200, msg, nil)
 }
@@ -319,7 +322,7 @@ func (ac *AdminRBACController) AddPermissionToRole(ctx *gin.Context) {
 	}
 
 	msg := controllers.Message{
-		Text: "successMessage.generic",
+		Text: successMessages.UpdateRole,
 	}
 	controllers.Respond(ctx, 200, msg, nil)
 }
@@ -340,7 +343,7 @@ func (ac *AdminRBACController) RemovePermissionFromRole(ctx *gin.Context) {
 	}
 
 	msg := controllers.Message{
-		Text: "successMessage.generic",
+		Text: successMessages.UpdateRole,
 	}
 	controllers.Respond(ctx, 200, msg, nil)
 }
