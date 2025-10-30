@@ -51,12 +51,6 @@ func handleError(err error) ([]controllers.Message, int) {
 }
 
 func handleBindingError(bindingErr *exceptions.BindingError) ([]controllers.Message, int) {
-	// if _, ok := bindingErr.Err.(*strconv.NumError); ok {
-	// 	msg := controllers.Message{
-	// 		Text: "errors." + errTags.Numeric,
-	// 	}
-	// 	return []controllers.Message{msg}, 400
-	// }
 	msg := controllers.Message{
 		Text: "errors." + errTags.Binding,
 	}

@@ -18,7 +18,7 @@ type ErrorFields struct {
 	Phone      string
 	Email      string
 	Password   string
-	OTP        string
+	MagicLink  string
 	Address    string
 	Name       string
 	Province   string
@@ -38,7 +38,6 @@ type ErrorTags struct {
 	Invalid                string
 	NotRegistered          string
 	NotVerified            string
-	NotActive              string
 	InvalidAuthCredentials string
 	ExpiredAuthToken       string
 	InvalidAuthToken       string
@@ -49,17 +48,7 @@ type ErrorTags struct {
 	AlreadyExist           string
 	ForbiddenStatus        string
 	Pending                string
-	AlreadyBlocked         string
-	AlreadyActive          string
-	AlreadyResolved        string
-	AlreadyArchived        string
-	AlreadyCompleted       string
 	NotAccepted            string
-	StatusNotChange        string
-	AlreadyCanceled        string
-	AlreadyRejected        string
-	AlreadyAccepted        string
-	AlreadyDraft           string
 	InvalidRecaptcha       string
 	Required               string
 	Numeric                string
@@ -98,7 +87,7 @@ func NewConstants() *Constants {
 			Phone:      "phone",
 			Email:      "email",
 			Password:   "password",
-			OTP:        "otp",
+			MagicLink:  "magicLink",
 			Address:    "address",
 			Name:       "name",
 			Province:   "province",
@@ -117,7 +106,6 @@ func NewConstants() *Constants {
 			Invalid:                "invalid",
 			NotRegistered:          "notRegistered",
 			NotVerified:            "notVerified",
-			NotActive:              "notActive",
 			InvalidAuthCredentials: "invalidAuthCredentials",
 			ExpiredAuthToken:       "expiredAuthToken",
 			InvalidAuthToken:       "invalidAuthToken",
@@ -128,17 +116,7 @@ func NewConstants() *Constants {
 			AlreadyExist:           "alreadyExist",
 			ForbiddenStatus:        "forbiddenStatus",
 			Pending:                "pending",
-			AlreadyBlocked:         "alreadyBlocked",
-			AlreadyActive:          "alreadyActive",
-			AlreadyResolved:        "alreadyResolved",
-			AlreadyArchived:        "alreadyArchived",
-			AlreadyCompleted:       "alreadyCompleted",
 			NotAccepted:            "notAccepted",
-			StatusNotChange:        "statusNotChange",
-			AlreadyCanceled:        "alreadyCanceled",
-			AlreadyRejected:        "alreadyRejected",
-			AlreadyAccepted:        "alreadyAccepted",
-			AlreadyDraft:           "alreadyDraft",
 			InvalidRecaptcha:       "invalidRecaptcha",
 			Required:               "required",
 			Numeric:                "numeric",
