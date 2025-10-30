@@ -52,7 +52,8 @@ func (ac *AdminRBACController) GetRoleWithUsersByID(ctx *gin.Context) {
 		panic(err)
 	}
 
-	controllers.Respond(ctx, 200, controllers.Message{}, *res)
+	msg := controllers.Message{}
+	controllers.Respond(ctx, 200, msg, *res)
 }
 
 func (ac *AdminRBACController) GetRoleWithUsersByType(ctx *gin.Context) {
@@ -69,7 +70,8 @@ func (ac *AdminRBACController) GetRoleWithUsersByType(ctx *gin.Context) {
 		panic(err)
 	}
 
-	controllers.Respond(ctx, 200, controllers.Message{}, *res)
+	msg := controllers.Message{}
+	controllers.Respond(ctx, 200, msg, *res)
 }
 
 func (ac *AdminRBACController) GetRoleByID(ctx *gin.Context) {
@@ -85,7 +87,8 @@ func (ac *AdminRBACController) GetRoleByID(ctx *gin.Context) {
 	if err != nil {
 		panic(err)
 	}
-	controllers.Respond(ctx, 200, controllers.Message{}, *res)
+	msg := controllers.Message{}
+	controllers.Respond(ctx, 200, msg, *res)
 }
 
 func (ac *AdminRBACController) GetRoleByType(ctx *gin.Context) {
@@ -102,7 +105,8 @@ func (ac *AdminRBACController) GetRoleByType(ctx *gin.Context) {
 		panic(err)
 	}
 
-	controllers.Respond(ctx, 200, controllers.Message{}, *res)
+	msg := controllers.Message{}
+	controllers.Respond(ctx, 200, msg, *res)
 }
 
 func (ac *AdminRBACController) GetAllRoles(ctx *gin.Context) {
@@ -111,7 +115,8 @@ func (ac *AdminRBACController) GetAllRoles(ctx *gin.Context) {
 		panic(err)
 	}
 
-	controllers.Respond(ctx, 200, controllers.Message{}, res)
+	msg := controllers.Message{}
+	controllers.Respond(ctx, 200, msg, res)
 }
 
 func (ac *AdminRBACController) GetUserRolesByID(ctx *gin.Context) {
@@ -127,7 +132,8 @@ func (ac *AdminRBACController) GetUserRolesByID(ctx *gin.Context) {
 		panic(err)
 	}
 
-	controllers.Respond(ctx, 200, controllers.Message{}, res)
+	msg := controllers.Message{}
+	controllers.Respond(ctx, 200, msg, res)
 }
 
 func (ac *AdminRBACController) GetUserRolesByEmail(ctx *gin.Context) {
@@ -143,7 +149,8 @@ func (ac *AdminRBACController) GetUserRolesByEmail(ctx *gin.Context) {
 		panic(err)
 	}
 
-	controllers.Respond(ctx, 200, controllers.Message{}, res)
+	msg := controllers.Message{}
+	controllers.Respond(ctx, 200, msg, res)
 }
 
 func (ac *AdminRBACController) RemoveRoleFromUserByID(ctx *gin.Context) {
@@ -344,5 +351,6 @@ func (ac *AdminRBACController) GetPermissionRoles(ctx *gin.Context) {
 		panic(err)
 	}
 
-	controllers.Respond(ctx, 200, controllers.Message{}, res)
+	msg := controllers.Message{}
+	controllers.Respond(ctx, 200, msg, res)
 }

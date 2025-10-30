@@ -78,6 +78,25 @@ func (us *UserService) Login(loginInfo user.LoginRequest) (*user.LoginResponse, 
 	}, refreshToken, expireTime, nil
 }
 
+func (us *UserService) GetUserInfosResponse(users []entities.User) []rbac.UserInfoResponse {
+	r := make([]rbac.UserInfoResponse, 0)
+	for _, user := range users {
+		r = append(r, rbac.UserInfoResponse{
+			Email: user.Email,
+		})
+	}
+	return r
+}
+
+func (us *UserService) GetRoleUsersByID(roleID uint) ([]entities.User, error) {
+	userRepo := us.unitOfWork.Factory().UserRepository()
+	users, err := userRepo.GetRoleUsersByID(roleID)
+	if err != nil {
+		return nil, err
+	}
+	return users, nil
+}
+
 func (us *UserService) findVerifiedUserByEmail(email string) (*entities.User, error) {
 	foundUser, err := us.FindUserByEmail(email)
 	if err != nil {

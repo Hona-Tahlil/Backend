@@ -49,15 +49,15 @@ func (rs *RBACService) GetRoleResponse(role entities.Role) *rbac.RoleResponse {
 	return r
 }
 
-func (rs *RBACService) GetUserInfosResponse(users []entities.User) []rbac.UserInfoResponse {
-	r := make([]rbac.UserInfoResponse, 0)
-	for _, user := range users {
-		r = append(r, rbac.UserInfoResponse{
-			Email: user.Email,
-		})
-	}
-	return r
-}
+// func (rs *RBACService) GetUserInfosResponse(users []entities.User) []rbac.UserInfoResponse {
+// 	r := make([]rbac.UserInfoResponse, 0)
+// 	for _, user := range users {
+// 		r = append(r, rbac.UserInfoResponse{
+// 			Email: user.Email,
+// 		})
+// 	}
+// 	return r
+// }
 
 func (rs *RBACService) ListRolesWithUsers(info rbac.ListRolesWithUsersRequest) ([]rbac.RoleWithUsersResponse, error) {
 	r := make([]rbac.RoleWithUsersResponse, 0)
@@ -82,7 +82,7 @@ func (rs *RBACService) ListRolesWithUsers(info rbac.ListRolesWithUsersRequest) (
 
 func (rs *RBACService) getRoleWithUsers(role *entities.Role) (*rbac.RoleWithUsersResponse, error) {
 	rbacRepo := rs.unitOfWork.Factory().RBACRepository()
-	users, err := rbacRepo.GetRoleUsersByID(role.ID)
+	users, err := rs.userService.GetRoleUsersByID(role.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -93,7 +93,7 @@ func (rs *RBACService) getRoleWithUsers(role *entities.Role) (*rbac.RoleWithUser
 
 	return &rbac.RoleWithUsersResponse{
 		Role:  *rs.GetRoleResponse(*role),
-		Users: rs.GetUserInfosResponse(users),
+		Users: rs.userService.GetUserInfosResponse(users),
 	}, nil
 }
 
