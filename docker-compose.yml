@@ -24,7 +24,7 @@ services:
     ports:
       - "${SERVER_PORT}:8080"
     volumes:
-     - .:/app  
+      - .:/app  
 
 
 volumes:

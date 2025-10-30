@@ -52,7 +52,7 @@ func handleError(err error) ([]controllers.Message, int) {
 
 func handleBindingError(bindingErr *exceptions.BindingError) ([]controllers.Message, int) {
 	msg := controllers.Message{
-		Text: "errors." + errTags.Binding,
+		Text: errTags.Binding,
 	}
 	return []controllers.Message{msg}, 400
 }
@@ -61,7 +61,7 @@ func handleValidationErrors(validationErrs *exceptions.ValidationErrors) ([]cont
 	msgs := []controllers.Message{}
 	for _, fieldErr := range validationErrs.FieldErrors {
 		msgs = append(msgs, controllers.Message{
-			Text:   "errors." + fieldErr.Tag,
+			Text:   fieldErr.Tag,
 			Params: []string{fieldErr.Field},
 		})
 
@@ -71,14 +71,14 @@ func handleValidationErrors(validationErrs *exceptions.ValidationErrors) ([]cont
 
 func handleAuthError(authErr *exceptions.AuthError) ([]controllers.Message, int) {
 	msg := controllers.Message{
-		Text: "errors." + authErr.Type,
+		Text: authErr.Type,
 	}
 	return []controllers.Message{msg}, 401
 }
 
 func handleNotFoundError(notFoundErr *exceptions.NotFoundError) ([]controllers.Message, int) {
 	msg := controllers.Message{
-		Text:   "errors." + errTags.NotFound,
+		Text:   errTags.NotFound,
 		Params: []string{notFoundErr.Item},
 	}
 	return []controllers.Message{msg}, 404
@@ -88,7 +88,7 @@ func handleConflictErrors(conflictErrs exceptions.ConflictErrors) ([]controllers
 	msgs := []controllers.Message{}
 	for _, fieldErr := range conflictErrs.Errors {
 		msgs = append(msgs, controllers.Message{
-			Text:   "errors." + fieldErr.Tag,
+			Text:   fieldErr.Tag,
 			Params: []string{fieldErr.Field},
 		})
 
@@ -100,7 +100,7 @@ func unhandledErrors(err error) ([]controllers.Message, int) {
 	log.Println("an unhandled error occurred", err.Error())
 
 	msg := controllers.Message{
-		Text:   "errors." + errTags.Generic,
+		Text:   errTags.Generic,
 		Params: []string{},
 	}
 	return []controllers.Message{msg}, 500
