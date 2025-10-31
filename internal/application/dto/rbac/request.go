@@ -16,6 +16,18 @@ type GetUserRolesByIDRequest struct {
 	ID uint
 }
 
+type GetRoleWithUsersByTypeRequest struct {
+	Type  string
+	Page  int
+	Count int
+}
+
+type GetRoleWithUsersByIDRequest struct {
+	ID    uint
+	Page  int
+	Count int
+}
+
 type GetUserRolesByEmailRequest struct {
 	Email string
 }
@@ -65,4 +77,9 @@ type RemovePermissionFromRoleRequest struct {
 
 type GetPermissionRolesRequest struct {
 	PermissionID uint
+}
+
+type ListRolesWithUsersRequest struct {
+	Page  int
+	Count int
 }

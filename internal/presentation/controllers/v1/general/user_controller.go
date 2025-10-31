@@ -1,6 +1,7 @@
 package general
 
 import (
+	"hona/backend/bootstrap"
 	"hona/backend/internal/application/dto/rbac"
 	"hona/backend/internal/application/dto/user"
 	"hona/backend/internal/application/service"
@@ -11,14 +12,16 @@ import (
 
 type GeneralUserController struct {
 	userService *service.UserService
-	// constants   *bootstrap.Constants
 }
 
 func NewGeneralUserController(userService *service.UserService) *GeneralUserController {
 	return &GeneralUserController{
 		userService: userService,
 	}
+
 }
+
+var successMessages = bootstrap.Run().Constants.SuccessMessages
 
 func (gc *GeneralUserController) Login(ctx *gin.Context) {
 	type loginParams struct {
@@ -42,8 +45,7 @@ func (gc *GeneralUserController) Login(ctx *gin.Context) {
 	controllers.SetRefreshTokenCookie(ctx, refreshToken, expireTime)
 
 	msg := controllers.Message{
-		Text:   "successMessage.login",
-		Params: []string{},
+		Text: successMessages.Login,
 	}
 	controllers.Respond(ctx, 200, msg, *res)
 }

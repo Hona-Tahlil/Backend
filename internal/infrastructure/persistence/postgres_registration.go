@@ -53,6 +53,7 @@ func NewPostgresDatabase() *gorm.DB {
 		// )
 		db.AutoMigrate(
 			&entities.User{},
+			&entities.User{},
 			&entities.Role{},
 			&entities.Permission{},
 			&entities.Wallet{},

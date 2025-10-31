@@ -106,16 +106,15 @@ func (s *PetSeeder) Seed(count int) error {
 		name := generatePetName(kind)
 
 		pet := entities.Pet{
-			UserID:     user.ID,
-			Name:       name,
-			Kind:       kind,
-			Species:    species,
-			BirthDate:  &birthDate,
-			IsAdult:    isAdult,
-			Gender:     gender,
-			Weight:     weight,
-			PictureKey: nil,
-			AboutPet:   aboutPet,
+			UserID:    user.ID,
+			Name:      name,
+			Kind:      kind,
+			Species:   species,
+			BirthDate: &birthDate,
+			IsAdult:   isAdult,
+			Gender:    gender,
+			Weight:    weight,
+			AboutPet:  aboutPet,
 		}
 
 		pets = append(pets, pet)

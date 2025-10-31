@@ -1,6 +1,7 @@
 package admin
 
 import (
+	"hona/backend/bootstrap"
 	"hona/backend/internal/application/dto/rbac"
 	"hona/backend/internal/application/usecase"
 	"hona/backend/internal/presentation/controllers"
@@ -18,8 +19,19 @@ func NewAdminRBACController(rbacService usecase.RBACService) *AdminRBACControlle
 	}
 }
 
-func (ac *AdminRBACController) GetAllRolesWithUsers(ctx *gin.Context) {
-	res, err := ac.rbacService.GetAllRolesWithUsers()
+var successMessages = bootstrap.Run().Constants.SuccessMessages
+
+func (ac *AdminRBACController) ListRolesWithUsers(ctx *gin.Context) {
+	type ListRolesWithUsersParams struct {
+		Page  int `form:"page" validate:"min=0"`
+		Count int `form:"count" validate:"min=0,max=100"`
+	}
+	params := controllers.Receive[ListRolesWithUsersParams](ctx)
+	ListRolesWithUsersInfo := rbac.ListRolesWithUsersRequest{
+		Page:  params.Page,
+		Count: params.Count,
+	}
+	res, err := ac.rbacService.ListRolesWithUsers(ListRolesWithUsersInfo)
 	if err != nil {
 		panic(err)
 	}
@@ -30,36 +42,46 @@ func (ac *AdminRBACController) GetAllRolesWithUsers(ctx *gin.Context) {
 
 func (ac *AdminRBACController) GetRoleWithUsersByID(ctx *gin.Context) {
 	type GetRoleWithUsersByIDParams struct {
-		ID uint `uri:"id"`
+		ID    uint `uri:"id"`
+		Page  int  `form:"page" validate:"min=0"`
+		Count int  `form:"count" validate:"min=0,max=100"`
 	}
 	params := controllers.Receive[GetRoleWithUsersByIDParams](ctx)
 
-	GetRoleWithUsersByIDInfo := rbac.GetRoleByIDRequest{
-		ID: params.ID,
+	GetRoleWithUsersByIDInfo := rbac.GetRoleWithUsersByIDRequest{
+		ID:    params.ID,
+		Page:  params.Page,
+		Count: params.Count,
 	}
 	res, err := ac.rbacService.GetRoleWithUsersByID(GetRoleWithUsersByIDInfo)
 	if err != nil {
 		panic(err)
 	}
 
-	controllers.Respond(ctx, 200, controllers.Message{}, *res)
+	msg := controllers.Message{}
+	controllers.Respond(ctx, 200, msg, *res)
 }
 
 func (ac *AdminRBACController) GetRoleWithUsersByType(ctx *gin.Context) {
 	type GetRoleWithUsersByTypeParams struct {
-		Type string `uri:"type"`
+		Type  string `uri:"type"`
+		Page  int    `form:"page" validate:"min=0"`
+		Count int    `form:"count" validate:"min=0,max=100"`
 	}
 	params := controllers.Receive[GetRoleWithUsersByTypeParams](ctx)
 
-	GetRoleWithUsersByTypeInfo := rbac.GetRoleByTypeRequest{
-		Type: params.Type,
+	GetRoleWithUsersByTypeInfo := rbac.GetRoleWithUsersByTypeRequest{
+		Type:  params.Type,
+		Page:  params.Page,
+		Count: params.Count,
 	}
 	res, err := ac.rbacService.GetRoleWithUsersByType(GetRoleWithUsersByTypeInfo)
 	if err != nil {
 		panic(err)
 	}
 
-	controllers.Respond(ctx, 200, controllers.Message{}, *res)
+	msg := controllers.Message{}
+	controllers.Respond(ctx, 200, msg, *res)
 }
 
 func (ac *AdminRBACController) GetRoleByID(ctx *gin.Context) {
@@ -75,7 +97,8 @@ func (ac *AdminRBACController) GetRoleByID(ctx *gin.Context) {
 	if err != nil {
 		panic(err)
 	}
-	controllers.Respond(ctx, 200, controllers.Message{}, *res)
+	msg := controllers.Message{}
+	controllers.Respond(ctx, 200, msg, *res)
 }
 
 func (ac *AdminRBACController) GetRoleByType(ctx *gin.Context) {
@@ -92,7 +115,8 @@ func (ac *AdminRBACController) GetRoleByType(ctx *gin.Context) {
 		panic(err)
 	}
 
-	controllers.Respond(ctx, 200, controllers.Message{}, *res)
+	msg := controllers.Message{}
+	controllers.Respond(ctx, 200, msg, *res)
 }
 
 func (ac *AdminRBACController) GetAllRoles(ctx *gin.Context) {
@@ -101,7 +125,8 @@ func (ac *AdminRBACController) GetAllRoles(ctx *gin.Context) {
 		panic(err)
 	}
 
-	controllers.Respond(ctx, 200, controllers.Message{}, res)
+	msg := controllers.Message{}
+	controllers.Respond(ctx, 200, msg, res)
 }
 
 func (ac *AdminRBACController) GetUserRolesByID(ctx *gin.Context) {
@@ -117,7 +142,8 @@ func (ac *AdminRBACController) GetUserRolesByID(ctx *gin.Context) {
 		panic(err)
 	}
 
-	controllers.Respond(ctx, 200, controllers.Message{}, res)
+	msg := controllers.Message{}
+	controllers.Respond(ctx, 200, msg, res)
 }
 
 func (ac *AdminRBACController) GetUserRolesByEmail(ctx *gin.Context) {
@@ -133,7 +159,8 @@ func (ac *AdminRBACController) GetUserRolesByEmail(ctx *gin.Context) {
 		panic(err)
 	}
 
-	controllers.Respond(ctx, 200, controllers.Message{}, res)
+	msg := controllers.Message{}
+	controllers.Respond(ctx, 200, msg, res)
 }
 
 func (ac *AdminRBACController) RemoveRoleFromUserByID(ctx *gin.Context) {
@@ -152,7 +179,7 @@ func (ac *AdminRBACController) RemoveRoleFromUserByID(ctx *gin.Context) {
 	}
 
 	msg := controllers.Message{
-		Text: "successMessage.generic",
+		Text: successMessages.UpdateUserRole,
 	}
 	controllers.Respond(ctx, 200, msg, nil)
 }
@@ -173,7 +200,7 @@ func (ac *AdminRBACController) RemoveRoleFromUserByEmail(ctx *gin.Context) {
 	}
 
 	msg := controllers.Message{
-		Text: "successMessage.generic",
+		Text: successMessages.UpdateUserRole,
 	}
 	controllers.Respond(ctx, 200, msg, nil)
 }
@@ -194,7 +221,7 @@ func (ac *AdminRBACController) AddRoleToUserByID(ctx *gin.Context) {
 	}
 
 	msg := controllers.Message{
-		Text: "successMessage.generic",
+		Text: successMessages.UpdateUserRole,
 	}
 	controllers.Respond(ctx, 200, msg, nil)
 }
@@ -215,7 +242,7 @@ func (ac *AdminRBACController) AddRoleToUserByEmail(ctx *gin.Context) {
 	}
 
 	msg := controllers.Message{
-		Text: "successMessage.generic",
+		Text: successMessages.UpdateUserRole,
 	}
 	controllers.Respond(ctx, 200, msg, nil)
 }
@@ -236,7 +263,7 @@ func (ac *AdminRBACController) AddRole(ctx *gin.Context) {
 	}
 
 	msg := controllers.Message{
-		Text: "successMessage.generic",
+		Text: successMessages.CreateRole,
 	}
 	controllers.Respond(ctx, 200, msg, nil)
 }
@@ -255,7 +282,7 @@ func (ac *AdminRBACController) RemoveRoleByID(ctx *gin.Context) {
 	}
 
 	msg := controllers.Message{
-		Text: "successMessage.generic",
+		Text: successMessages.DeleteRole,
 	}
 	controllers.Respond(ctx, 200, msg, nil)
 }
@@ -274,7 +301,7 @@ func (ac *AdminRBACController) RemoveRoleByType(ctx *gin.Context) {
 	}
 
 	msg := controllers.Message{
-		Text: "successMessage.generic",
+		Text: successMessages.DeleteRole,
 	}
 	controllers.Respond(ctx, 200, msg, nil)
 }
@@ -295,7 +322,7 @@ func (ac *AdminRBACController) AddPermissionToRole(ctx *gin.Context) {
 	}
 
 	msg := controllers.Message{
-		Text: "successMessage.generic",
+		Text: successMessages.UpdateRole,
 	}
 	controllers.Respond(ctx, 200, msg, nil)
 }
@@ -316,7 +343,7 @@ func (ac *AdminRBACController) RemovePermissionFromRole(ctx *gin.Context) {
 	}
 
 	msg := controllers.Message{
-		Text: "successMessage.generic",
+		Text: successMessages.UpdateRole,
 	}
 	controllers.Respond(ctx, 200, msg, nil)
 }
@@ -334,5 +361,6 @@ func (ac *AdminRBACController) GetPermissionRoles(ctx *gin.Context) {
 		panic(err)
 	}
 
-	controllers.Respond(ctx, 200, controllers.Message{}, res)
+	msg := controllers.Message{}
+	controllers.Respond(ctx, 200, msg, res)
 }
