@@ -26,6 +26,9 @@ type SuccessMessages struct {
 	DeleteRole        string
 	UpdateUserRole    string
 	Generic           string
+	AddPet            string
+	RemovePet         string
+	UpdatePet         string
 }
 
 type JWTConstants struct {
@@ -175,6 +178,9 @@ func NewConstants() *Constants {
 			DeleteRole:        "successMessage.deleteRole",
 			UpdateUserRole:    "successMessage.updateUserRoles",
 			Generic:           "successMessage.generic",
+			AddPet:            "successMessage.addPet",
+			RemovePet:         "successMessage.removePet",
+			UpdatePet:         "successMessage.updatePet",
 		},
 	}
 }

@@ -21,6 +21,8 @@ func NewUserPetController(petService usecase.PetService) *UserPetController {
 	}
 }
 
+var successMessages = bootstrap.Run().Constants.SuccessMessages
+
 func (uc *UserPetController) AddPet(ctx *gin.Context) {
 	type AddPetParams struct {
 		Name      string          `json:"name" validate:"required,min=1,max=100"`
@@ -56,7 +58,9 @@ func (uc *UserPetController) AddPet(ctx *gin.Context) {
 		panic(err)
 	}
 
-	msg := controllers.Message{}
+	msg := controllers.Message{
+		Text: successMessages.AddPet,
+	}
 	controllers.Respond(ctx, 200, msg, nil)
 }
 
@@ -95,7 +99,9 @@ func (uc *UserPetController) UpdatePet(ctx *gin.Context) {
 		panic(err)
 	}
 
-	msg := controllers.Message{}
+	msg := controllers.Message{
+		Text: successMessages.UpdatePet,
+	}
 	controllers.Respond(ctx, 200, msg, nil)
 }
 
@@ -112,7 +118,9 @@ func (uc *UserPetController) RemovePet(ctx *gin.Context) {
 		panic(err)
 	}
 
-	msg := controllers.Message{}
+	msg := controllers.Message{
+		Text: successMessages.RemovePet,
+	}
 	controllers.Respond(ctx, 200, msg, nil)
 }
 

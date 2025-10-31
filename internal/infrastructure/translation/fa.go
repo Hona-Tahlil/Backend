@@ -65,5 +65,8 @@ var Persian = map[string]interface{}{
 		"updateRole":        "نقش مورد نظر با موفقیت به روزرسانی شد.",
 		"updateUserRoles":   "نقش های فرد مورد نظر به روزرسانی شد.",
 		"generic":           "با موفقیت انجام شد",
+		"addPet":            "پت با موفقیت اضافه شد",
+		"removePet":         "پت با موفقیت حذف شد",
+		"updatePet":         "مشخصات پت با موفقیت به روز شد",
 	},
 }
