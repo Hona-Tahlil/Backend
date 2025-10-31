@@ -18,7 +18,7 @@ func SetUpAdminRoutes(v1 *gin.RouterGroup, app *wire.Application) {
 		rbacGroup.DELETE("/roles/type/:type", app.Controllers.AdminControllers.AdminRBACController.RemoveRoleByType)
 
 		// ===== ROLES WITH USERS =====
-		rbacGroup.GET("/roles-with-users", app.Controllers.AdminControllers.AdminRBACController.GetAllRolesWithUsers)
+		rbacGroup.GET("/roles-with-users", app.Controllers.AdminControllers.AdminRBACController.ListRolesWithUsers)
 		rbacGroup.GET("/roles-with-users/:id", app.Controllers.AdminControllers.AdminRBACController.GetRoleWithUsersByID)
 		rbacGroup.GET("/roles-with-users/type/:type", app.Controllers.AdminControllers.AdminRBACController.GetRoleWithUsersByType)
 

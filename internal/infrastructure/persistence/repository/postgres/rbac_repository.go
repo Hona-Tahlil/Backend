@@ -40,21 +40,6 @@ func (rr *RBACRepository) GetRoleByType(roleType string) (*entities.Role, error)
 	return &foundRole, nil
 }
 
-func (rr *RBACRepository) GetRoleUsersByID(roleID uint) ([]entities.User, error) {
-	var users []entities.User
-	err := rr.db.
-		Joins("JOIN user_roles ur ON ur.user_id = users.id").
-		Where("ur.role_id = ?", roleID).
-		Preload("Roles").
-		Find(&users).Error
-
-	if err != nil {
-		return nil, err
-	}
-
-	return users, nil
-}
-
 func (rr *RBACRepository) GetAllRoles() ([]entities.Role, error) {
 	var roles []entities.Role
 	if err := rr.db.Find(&roles).Error; err != nil {

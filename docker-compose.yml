@@ -12,9 +12,7 @@ services:
       - pgdata:/var/lib/postgresql/data
 
   app:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    build: .
     depends_on:
       - db
     environment:
@@ -25,6 +23,7 @@ services:
       DB_PORT: ${DB_PORT}
     ports:
       - "${SERVER_PORT}:8080"
+
 
 volumes:
   pgdata:

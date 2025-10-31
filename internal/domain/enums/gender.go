@@ -1,6 +1,5 @@
 package enums
 
-// TODO: 2 enums
 type Gender uint
 
 const (

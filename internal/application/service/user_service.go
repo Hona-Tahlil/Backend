@@ -79,6 +79,25 @@ func (us *UserService) Login(loginInfo user.LoginRequest) (*user.LoginResponse, 
 	}, refreshToken, expireTime, nil
 }
 
+func (us *UserService) GetUserInfosResponse(users []entities.User) []rbac.UserInfoResponse {
+	r := make([]rbac.UserInfoResponse, 0)
+	for _, user := range users {
+		r = append(r, rbac.UserInfoResponse{
+			Email: user.Email,
+		})
+	}
+	return r
+}
+
+func (us *UserService) GetRoleUsersByID(roleID uint, limit, offset int) ([]entities.User, error) {
+	userRepo := us.unitOfWork.Factory().UserRepository()
+	users, err := userRepo.GetRoleUsersByID(roleID, limit, offset)
+	if err != nil {
+		return nil, err
+	}
+	return users, nil
+}
+
 func (us *UserService) findVerifiedUserByEmail(email string) (*entities.User, error) {
 	foundUser, err := us.FindUserByEmail(email)
 	if err != nil {
@@ -94,7 +113,8 @@ func (us *UserService) findVerifiedUserByEmail(email string) (*entities.User, er
 }
 
 func (us *UserService) FindUserByEmail(email string) (*entities.User, error) {
-	foundUser, err := us.unitOfWork.Factory().UserRepository().FindUserByEmail(email)
+	userRepo := us.unitOfWork.Factory().UserRepository()
+	foundUser, err := userRepo.FindUserByEmail(email)
 	if foundUser == nil {
 		NotFoundError := exceptions.NewNotFoundError(bootstrap.Run().Constants.ErrorFields.User)
 		return nil, NotFoundError
@@ -122,7 +142,8 @@ func (us *UserService) findVerifiedUserByID(id uint) (*entities.User, error) {
 }
 
 func (us *UserService) FindUserByID(id uint) (*entities.User, error) {
-	foundUser, err := us.unitOfWork.Factory().UserRepository().FindUserByID(id)
+	userRepo := us.unitOfWork.Factory().UserRepository()
+	foundUser, err := userRepo.FindUserByID(id)
 	if foundUser == nil {
 		NotFoundError := exceptions.NewNotFoundError(bootstrap.Run().Constants.ErrorFields.User)
 		return nil, NotFoundError

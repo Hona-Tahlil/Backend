@@ -51,7 +51,27 @@ func NewPostgresDatabase() *gorm.DB {
 		// 	&entities.TextMessage{},
 		// 	"user_roles",
 		// )
+		// db.Migrator().DropTable(
+		// 	&entities.User{},
+		// 	&entities.Role{},
+		// 	&entities.Permission{},
+		// 	&entities.Wallet{},
+		// 	&entities.Request{},
+		// 	&entities.CalenderSlot{},
+		// 	&entities.Pet{},
+		// 	&entities.PetSitter{},
+		// 	&entities.Reserve{},
+		// 	&entities.Service{},
+		// 	&entities.Chat{},
+		// 	&entities.Comment{},
+		// 	&entities.Address{},
+		// 	&entities.Province{},
+		// 	&entities.City{},
+		// 	&entities.TextMessage{},
+		// 	"user_roles",
+		// )
 		db.AutoMigrate(
+			&entities.User{},
 			&entities.User{},
 			&entities.Role{},
 			&entities.Permission{},
