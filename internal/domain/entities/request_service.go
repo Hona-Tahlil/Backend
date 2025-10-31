@@ -6,9 +6,9 @@ import (
 	"gorm.io/gorm"
 )
 
-type Service struct {
+type RequestService struct {
 	gorm.Model
-	PetSitterID uint              `gorm:"index"`
+	RequestID   uint
 	Type        enums.ServiceType `gorm:"index"`
 	Price       uint              `gorm:"index"`
 	Description *string
