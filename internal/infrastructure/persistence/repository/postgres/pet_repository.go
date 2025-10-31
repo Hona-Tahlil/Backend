@@ -19,3 +19,39 @@ func NewPetRepository(db *gorm.DB) *PetRepository {
 func (pr *PetRepository) CreatePet(pet *entities.Pet) error {
 	return pr.db.Create(pet).Error
 }
+
+func (pr *PetRepository) FindPet(name string, userID uint) (*entities.Pet, error) {
+	var pet entities.Pet
+	err := pr.db.Where("name = ? AND user_id = ?", name, userID).First(&pet).Error
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &pet, nil
+}
+
+func (pr *PetRepository) FindPetByID(id uint) (*entities.Pet, error) {
+	var pet entities.Pet
+	err := pr.db.First(&pet, id).Error
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &pet, nil
+}
+
+func (pr *PetRepository) UpdatePet(pet *entities.Pet) error {
+	return pr.db.Save(pet).Error
+}
+
+func (pr *PetRepository) RemovePet(pet *entities.Pet) error {
+	return pr.db.Delete(pet).Error
+}
+
+func (pr *PetRepository) PreloadUserPets(user *entities.User) error {
+	return pr.db.Preload("Pets").First(user, user.ID).Error
+}

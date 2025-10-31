@@ -60,9 +60,9 @@ func (uc *UserPetController) AddPet(ctx *gin.Context) {
 	controllers.Respond(ctx, 200, msg, nil)
 }
 
-// TODO: Update Pet
 func (uc *UserPetController) UpdatePet(ctx *gin.Context) {
 	type UpdatePetParams struct {
+		ID        uint            `json:"id" validate:"required"`
 		Name      string          `json:"name" validate:"required,min=1,max=100"`
 		Kind      enums.PetKind   `json:"kind" validate:"required,min=1,max=20"`     // TODO: exact number for max
 		Species   enums.Species   `json:"species" validate:"required,min=1,max=100"` // TODO: exact number for max
@@ -77,10 +77,8 @@ func (uc *UserPetController) UpdatePet(ctx *gin.Context) {
 		file = nil
 	}
 	params := controllers.Receive[UpdatePetParams](ctx)
-	userID, _ := ctx.Get(bootstrap.Run().Constants.Context.ID)
-	UserID, _ := userID.(uint)
 	UpdatePetInfo := pet.UpdatePetRequest{
-		UserID:     UserID,
+		ID:         params.ID,
 		Name:       params.Name,
 		Kind:       params.Kind,
 		Species:    params.Species,
@@ -91,6 +89,7 @@ func (uc *UserPetController) UpdatePet(ctx *gin.Context) {
 		AboutPet:   params.AboutPet,
 		ProfilePic: file,
 	}
+
 	err = uc.petService.UpdatePet(UpdatePetInfo)
 	if err != nil {
 		panic(err)
@@ -100,8 +99,51 @@ func (uc *UserPetController) UpdatePet(ctx *gin.Context) {
 	controllers.Respond(ctx, 200, msg, nil)
 }
 
-// TODO: Remove Pet
+func (uc *UserPetController) RemovePet(ctx *gin.Context) {
+	type RemovePetParams struct {
+		ID uint `uri:"id"`
+	}
+	params := controllers.Receive[RemovePetParams](ctx)
+	RemovePetInfo := pet.RemovePetRequest{
+		ID: params.ID,
+	}
+	err := uc.petService.RemovePet(RemovePetInfo)
+	if err != nil {
+		panic(err)
+	}
 
-// TODO: Get Pets Basic Data
+	msg := controllers.Message{}
+	controllers.Respond(ctx, 200, msg, nil)
+}
 
-// TODO: Get Pet's Full Data With ID
+func (uc *UserPetController) GetPetsBasicData(ctx *gin.Context) {
+	userID, _ := ctx.Get(bootstrap.Run().Constants.Context.ID)
+	UserID, _ := userID.(uint)
+	GetPetsBasicDataInfo := pet.GetPetsBasicDataRequest{
+		UserID: UserID,
+	}
+	res, err := uc.petService.GetPetsBasicData(GetPetsBasicDataInfo)
+	if err != nil {
+		panic(err)
+	}
+
+	msg := controllers.Message{}
+	controllers.Respond(ctx, 200, msg, res)
+}
+
+func (us *UserPetController) GetPetFullData(ctx *gin.Context) {
+	type GetPetFullDataParams struct {
+		ID uint `uri:"id"`
+	}
+	params := controllers.Receive[GetPetFullDataParams](ctx)
+	GetPetFullDataInfo := pet.GetPetFullDataRequest{
+		ID: params.ID,
+	}
+	res, err := us.petService.GetPetFullData(GetPetFullDataInfo)
+	if err != nil {
+		panic(err)
+	}
+
+	msg := controllers.Message{}
+	controllers.Respond(ctx, 200, msg, *res)
+}

@@ -20,7 +20,7 @@ type AddPetRequest struct {
 }
 
 type UpdatePetRequest struct {
-	UserID     uint
+	ID         uint
 	Name       string
 	Kind       enums.PetKind
 	Species    enums.Species
@@ -30,4 +30,16 @@ type UpdatePetRequest struct {
 	Weight     *float32
 	AboutPet   *string
 	ProfilePic *multipart.FileHeader
+}
+
+type RemovePetRequest struct {
+	ID uint
+}
+
+type GetPetsBasicDataRequest struct {
+	UserID uint
+}
+
+type GetPetFullDataRequest struct {
+	ID uint
 }
