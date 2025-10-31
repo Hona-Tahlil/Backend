@@ -3,7 +3,7 @@ package user
 import (
 	"hona/backend/bootstrap"
 	"hona/backend/internal/application/dto/pet"
-	"hona/backend/internal/application/service"
+	"hona/backend/internal/application/usecase"
 	"hona/backend/internal/domain/enums"
 	"hona/backend/internal/presentation/controllers"
 	"time"
@@ -12,10 +12,10 @@ import (
 )
 
 type UserPetController struct {
-	petService *service.PetService
+	petService usecase.PetService
 }
 
-func NewUserPetController(petService *service.PetService) *UserPetController {
+func NewUserPetController(petService usecase.PetService) *UserPetController {
 	return &UserPetController{
 		petService: petService,
 	}

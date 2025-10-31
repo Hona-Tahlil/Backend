@@ -25,6 +25,6 @@ func (f *RepositoryFactory) RBACRepository() domainpostgres.RBACRepository {
 	return postgres.NewRBACRepository(f.db)
 }
 
-func (f *RepositoryFactory) PetRepository() *postgres.PetRepository {
+func (f *RepositoryFactory) PetRepository() domainpostgres.PetRepository {
 	return postgres.NewPetRepository(f.db)
 }
