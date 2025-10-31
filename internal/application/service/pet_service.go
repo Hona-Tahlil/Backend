@@ -28,7 +28,10 @@ func NewPetService(unitOfWork ports.UnitOfWork, storage storage.S3Storage) *PetS
 }
 
 func (ps *PetService) AddPet(info pet.AddPetRequest) error {
-	// TODO: func to validate correct species
+	err := ps.validateSpecies(info.Species, info.Kind)
+	if err != nil {
+		return err
+	}
 	isAdult, err := ps.validateBirthDate(info.BirthDate, info.IsAdult, info.Kind)
 	if err != nil {
 		return err
@@ -37,7 +40,7 @@ func (ps *PetService) AddPet(info pet.AddPetRequest) error {
 	info.IsAdult = isAdult
 	var profileKey *string
 	if info.ProfilePic != nil {
-		profileKeyValue := "profile-" + info.Name + "-" + fmt.Sprint(info.UserID)
+		profileKeyValue := ps.getStorageKey(info.Name, info.UserID)
 		profileKey = &profileKeyValue
 		if err := ps.storage.UploadFile(enums.PetProfilePic, *profileKey, info.ProfilePic); err != nil {
 			return err
@@ -80,7 +83,10 @@ func (ps *PetService) UpdatePet(info pet.UpdatePetRequest) error {
 		return err
 	}
 
-	// TODO: func to validate correct species
+	err = ps.validateSpecies(info.Species, info.Kind)
+	if err != nil {
+		return err
+	}
 
 	isAdult, err := ps.validateBirthDate(info.BirthDate, info.IsAdult, info.Kind)
 	if err != nil {
@@ -90,7 +96,7 @@ func (ps *PetService) UpdatePet(info pet.UpdatePetRequest) error {
 	info.IsAdult = isAdult
 	var profileKey *string
 	if info.ProfilePic != nil {
-		profileKeyValue := "profile-" + info.Name + "-" + fmt.Sprint(foundPet.UserID)
+		profileKeyValue := ps.getStorageKey(info.Name, foundPet.UserID)
 		profileKey = &profileKeyValue
 		if err := ps.storage.UploadFile(enums.PetProfilePic, *profileKey, info.ProfilePic); err != nil {
 			return err
@@ -130,7 +136,7 @@ func (ps *PetService) RemovePet(info pet.RemovePetRequest) error {
 	if err != nil {
 		return err
 	}
-	profileKeyValue := "profile-" + foundPet.Name + "-" + fmt.Sprint(foundPet.UserID)
+	profileKeyValue := ps.getStorageKey(foundPet.Name, foundPet.UserID)
 	if err = ps.storage.DeleteObject(enums.PetProfilePic, profileKeyValue); err != nil {
 		log.Println(err)
 	}
@@ -168,7 +174,7 @@ func (ps *PetService) GetPetFullData(info pet.GetPetFullDataRequest) (*pet.PetFu
 	if err != nil {
 		return nil, err
 	}
-	profileKeyValue := "profile-" + foundPet.Name + "-" + fmt.Sprint(foundPet.UserID)
+	profileKeyValue := ps.getStorageKey(foundPet.Name, foundPet.UserID)
 	link, err := ps.storage.GetPresignedURL(enums.PetProfilePic, profileKeyValue, time.Minute*15)
 	if err != nil {
 		log.Println(err)
@@ -189,7 +195,7 @@ func (ps *PetService) GetPetFullData(info pet.GetPetFullDataRequest) (*pet.PetFu
 }
 
 func (ps *PetService) getPetBasicDataResponse(petEntity *entities.Pet) (*pet.PetBasicDataResponse, error) {
-	profileKeyValue := "profile-" + petEntity.Name + "-" + fmt.Sprint(petEntity.UserID)
+	profileKeyValue := ps.getStorageKey(petEntity.Name, petEntity.UserID)
 	link, err := ps.storage.GetPresignedURL(enums.PetProfilePic, profileKeyValue, time.Minute*15)
 	if err != nil {
 		log.Println(err)
@@ -253,4 +259,31 @@ func (ps *PetService) validateBirthDate(birthDate *time.Time, isAdultInput bool,
 	}
 	isAdult = isAdultInput
 	return
+}
+
+func (ps *PetService) getStorageKey(name string, userID uint) string {
+	return "profile-" + name + "-" + fmt.Sprint(userID)
+}
+
+func (ps *PetService) validateSpecies(species enums.Species, kind enums.PetKind) error {
+	if kind == enums.Dog {
+		if species > 6 {
+			var ce exceptions.ConflictErrors
+			ce.Add(bootstrap.Run().Constants.ErrorFields.Species, bootstrap.Run().Constants.ErrorTags.UnacceptableInput)
+			return ce
+		}
+	} else if kind == enums.Cat {
+		if species < 7 || species > 10 {
+			var ce exceptions.ConflictErrors
+			ce.Add(bootstrap.Run().Constants.ErrorFields.Species, bootstrap.Run().Constants.ErrorTags.UnacceptableInput)
+			return ce
+		}
+	} else if kind == enums.Bird {
+		if species < 11 {
+			var ce exceptions.ConflictErrors
+			ce.Add(bootstrap.Run().Constants.ErrorFields.Species, bootstrap.Run().Constants.ErrorTags.UnacceptableInput)
+			return ce
+		}
+	}
+	return nil
 }

@@ -5,17 +5,17 @@ type PetKind uint
 const (
 	Dog PetKind = iota + 1
 	Cat
-	Rabbit
+	Bird
 )
 
 func (petKind PetKind) String() string {
 	switch petKind {
 	case PetKind(Dog):
-		return "dog"
+		return "سگ"
 	case PetKind(Cat):
-		return "cat"
-	case PetKind(Rabbit):
-		return "rabbit"
+		return "گربه"
+	case PetKind(Bird):
+		return "پرنده"
 	}
 	return ""
 }
@@ -24,6 +24,6 @@ func GetAllPetKinds() []PetKind {
 	return []PetKind{
 		Dog,
 		Cat,
-		Rabbit,
+		Bird,
 	}
 }
