@@ -13,11 +13,18 @@ import (
 	"hona/backend/internal/infrastructure/jwt"
 	"hona/backend/internal/infrastructure/persistence"
 	"hona/backend/internal/infrastructure/persistence/seeder"
+	"hona/backend/internal/infrastructure/storage"
 	"hona/backend/internal/presentation/controllers/v1/admin"
 	"hona/backend/internal/presentation/controllers/v1/general"
+	"hona/backend/internal/presentation/controllers/v1/user"
 	"hona/backend/internal/presentation/middleware"
 
 	"github.com/google/wire"
+)
+
+var StorageProviderSet = wire.NewSet(
+	storage.NewS3Storage,
+	wire.Struct(new(Storage), "*"),
 )
 
 var RepositoryProviderSet = wire.NewSet(
@@ -27,15 +34,18 @@ var RepositoryProviderSet = wire.NewSet(
 	wire.Bind(new(ports.RepositoryFactory), new(*persistence.RepositoryFactory)),
 	wire.Bind(new(ports.UnitOfWork), new(*persistence.UnitOfWork)),
 )
+
 var ServiceProviderSet = wire.NewSet(
 	service.NewUserService,
 	jwt.NewJWTService,
 	jwt.NewJWTKeyManager,
 	service.NewRBACService,
+	service.NewPetService,
 	wire.Bind(new(domainjwt.JWTService), new(*jwt.JWTService)),
 	wire.Bind(new(domainjwt.JWTKeyManager), new(*jwt.JWTKeyManager)),
 	wire.Bind(new(usecase.RBACService), new(*service.RBACService)),
 	wire.Bind(new(usecase.UserService), new(*service.UserService)),
+	wire.Bind(new(usecase.PetService), new(*service.PetService)),
 )
 
 var GeneralControllersProviderSet = wire.NewSet(
@@ -46,6 +56,11 @@ var GeneralControllersProviderSet = wire.NewSet(
 var AdminControllersProviderSet = wire.NewSet(
 	admin.NewAdminRBACController,
 	wire.Struct(new(AdminControllers), "*"),
+)
+
+var UserControllersProviderSet = wire.NewSet(
+	user.NewUserPetController,
+	wire.Struct(new(UserControllers), "*"),
 )
 
 var ControllersProviderSet = wire.NewSet(
@@ -68,9 +83,11 @@ var ProviderSet = wire.NewSet(
 	ControllersProviderSet,
 	GeneralControllersProviderSet,
 	AdminControllersProviderSet,
+	UserControllersProviderSet,
 	ServiceProviderSet,
 	RepositoryProviderSet,
 	SeederProviderSet,
+	StorageProviderSet,
 )
 
 type GeneralControllers struct {
@@ -81,9 +98,14 @@ type AdminControllers struct {
 	AdminRBACController *admin.AdminRBACController
 }
 
+type UserControllers struct {
+	UserPetController *user.UserPetController
+}
+
 type Controllers struct {
 	GeneralControllers *GeneralControllers
 	AdminControllers   *AdminControllers
+	UserControllers    *UserControllers
 }
 
 type Middlewares struct {
@@ -95,17 +117,23 @@ type Seeder struct {
 	DatabaseSeeder *seeder.DatabaseSeeder
 }
 
+type Storage struct {
+	S3Storage *storage.S3Storage
+}
+
 type Application struct {
 	Controllers *Controllers
 	Middlewares *Middlewares
 	Seeder      *Seeder
+	Storage     *Storage
 }
 
-func NewApplication(controllers *Controllers, middlewares *Middlewares, seeder *Seeder) *Application {
+func NewApplication(controllers *Controllers, middlewares *Middlewares, seeder *Seeder, storage *Storage) *Application {
 	return &Application{
 		Controllers: controllers,
 		Middlewares: middlewares,
 		Seeder:      seeder,
+		Storage:     storage,
 	}
 }
 

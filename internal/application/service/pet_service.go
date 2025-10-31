@@ -16,11 +16,11 @@ import (
 
 type PetService struct {
 	unitOfWork  ports.UnitOfWork
-	storage     storage.S3Storage
+	storage     *storage.S3Storage
 	userService usecase.UserService
 }
 
-func NewPetService(unitOfWork ports.UnitOfWork, storage storage.S3Storage) *PetService {
+func NewPetService(unitOfWork ports.UnitOfWork, storage *storage.S3Storage) *PetService {
 	return &PetService{
 		unitOfWork: unitOfWork,
 		storage:    storage,
