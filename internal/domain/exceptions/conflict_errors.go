@@ -9,7 +9,7 @@ type ConflictErrors struct {
 	Errors []FieldError
 }
 
-func (ce ConflictErrors) Error() string {
+func (ce *ConflictErrors) Error() string {
 	buff := bytes.NewBufferString("")
 	for i := 0; i < len(ce.Errors); i++ {
 		buff.WriteString(ce.Errors[i].Error())

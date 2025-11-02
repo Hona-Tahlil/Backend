@@ -319,7 +319,7 @@ func (rs *RBACService) AddRole(info rbac.AddRoleRequest) error {
 	if err == nil {
 		var ce exceptions.ConflictErrors
 		ce.Add(bootstrap.Run().Constants.ErrorFields.Role, bootstrap.Run().Constants.ErrorTags.AlreadyExist)
-		return ce
+		return &ce
 	}
 
 	rbacRepo := rs.unitOfWork.Factory().RBACRepository()

@@ -50,9 +50,9 @@ func (ps *PetService) AddPet(info pet.AddPetRequest) error {
 
 	_, err = ps.findPet(info.Name, info.UserID)
 	if err == nil {
-		var ce exceptions.ConflictErrors
-		ce.Add(bootstrap.Run().Constants.ErrorFields.Pet, bootstrap.Run().Constants.ErrorTags.DuplicateName)
-		return ce
+		var ce exceptions.ValidationErrors
+		ce.AddError(bootstrap.Run().Constants.ErrorFields.Pet, bootstrap.Run().Constants.ErrorTags.DuplicateName)
+		return &ce
 	} else if _, ok := err.(*exceptions.NotFoundError); !ok {
 		return err
 	}
@@ -108,7 +108,7 @@ func (ps *PetService) UpdatePet(info pet.UpdatePetRequest) error {
 	if err == nil {
 		var ce exceptions.ConflictErrors
 		ce.Add(bootstrap.Run().Constants.ErrorFields.Pet, bootstrap.Run().Constants.ErrorTags.DuplicateName)
-		return ce
+		return &ce
 	} else if _, ok := err.(*exceptions.NotFoundError); !ok {
 		return err
 	}
@@ -251,9 +251,9 @@ func (ps *PetService) validateBirthDate(birthDate *time.Time, isAdultInput bool,
 			isAdult = false
 		}
 		if age > 100 || time.Now().Before(*birthDate) {
-			var ce exceptions.ConflictErrors
-			ce.Add(bootstrap.Run().Constants.ErrorFields.BirthDate, bootstrap.Run().Constants.ErrorTags.UnacceptableInput)
-			err = ce
+			var ce exceptions.ValidationErrors
+			ce.AddError(bootstrap.Run().Constants.ErrorFields.BirthDate, bootstrap.Run().Constants.ErrorTags.UnacceptableInput)
+			err = &ce
 		}
 
 		return
@@ -270,21 +270,21 @@ func (ps *PetService) validateSpecies(species enums.Species, kind enums.PetKind)
 	switch kind {
 	case enums.Dog:
 		if species > 6 {
-			var ce exceptions.ConflictErrors
-			ce.Add(bootstrap.Run().Constants.ErrorFields.Species, bootstrap.Run().Constants.ErrorTags.UnacceptableInput)
-			return ce
+			var ce exceptions.ValidationErrors
+			ce.AddError(bootstrap.Run().Constants.ErrorFields.Species, bootstrap.Run().Constants.ErrorTags.UnacceptableInput)
+			return &ce
 		}
 	case enums.Cat:
 		if species < 7 || species > 10 {
-			var ce exceptions.ConflictErrors
-			ce.Add(bootstrap.Run().Constants.ErrorFields.Species, bootstrap.Run().Constants.ErrorTags.UnacceptableInput)
-			return ce
+			var ce exceptions.ValidationErrors
+			ce.AddError(bootstrap.Run().Constants.ErrorFields.Species, bootstrap.Run().Constants.ErrorTags.UnacceptableInput)
+			return &ce
 		}
 	case enums.Bird:
 		if species < 11 {
-			var ce exceptions.ConflictErrors
-			ce.Add(bootstrap.Run().Constants.ErrorFields.Species, bootstrap.Run().Constants.ErrorTags.UnacceptableInput)
-			return ce
+			var ce exceptions.ValidationErrors
+			ce.AddError(bootstrap.Run().Constants.ErrorFields.Species, bootstrap.Run().Constants.ErrorTags.UnacceptableInput)
+			return &ce
 		}
 	}
 	return nil
