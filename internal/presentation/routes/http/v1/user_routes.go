@@ -8,6 +8,7 @@ import (
 
 func SetUpUserRoutes(v1 *gin.RouterGroup, app *wire.Application) {
 	pets := v1.Group("/pets")
+	pets.Use(app.Middlewares.AuthMiddleware.AuthRequired)
 	{
 		pets.POST("/", app.Controllers.UserControllers.UserPetController.AddPet)
 		pets.PUT("/", app.Controllers.UserControllers.UserPetController.UpdatePet)

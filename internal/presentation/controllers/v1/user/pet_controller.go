@@ -28,7 +28,7 @@ func (uc *UserPetController) AddPet(ctx *gin.Context) {
 		Name      string          `json:"name" validate:"required,min=1,max=100"`
 		Kind      enums.PetKind   `json:"kind" validate:"required,min=1,max=20"`     // TODO: exact number for max
 		Species   enums.Species   `json:"species" validate:"required,min=1,max=100"` // TODO: exact number for max
-		BirthDate *time.Time      `json:"birthDate" validate:"omitempty,datetime"`
+		BirthDate *time.Time      `json:"birthDate"`
 		IsAdult   bool            `json:"isAdult" validate:"omitempty"`
 		Gender    enums.PetGender `json:"gender" validate:"omitempty,min=1,max=3"`
 		Weight    *float32        `json:"weight" validate:"omitempty,min=0.1,max=500"`

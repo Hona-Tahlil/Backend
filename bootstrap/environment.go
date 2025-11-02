@@ -39,9 +39,6 @@ type Database struct {
 }
 
 func NewEnv() *Env {
-	LongRefreshHours, _ := strconv.Atoi(os.Getenv("LONG_REFRESH_HOURS"))
-	ShortRefreshHours, _ := strconv.Atoi(os.Getenv("SHORT_REFRESH_HOURS"))
-	AccessMinutes, _ := strconv.Atoi(os.Getenv("ACCESS_MINUTES"))
 	godotenv.Load(".env")
 	return &Env{
 		PrimaryDB: Database{
@@ -52,9 +49,9 @@ func NewEnv() *Env {
 			Port:     os.Getenv("DB_PORT"),
 		},
 		TokenExpires: TokenExpires{
-			LongRefreshHours:  LongRefreshHours,
-			ShortRefreshHours: ShortRefreshHours,
-			AccessMinutes:     AccessMinutes,
+			LongRefreshHours:  getEnvInt("LONG_REFRESH_HOURS", 168),
+			ShortRefreshHours: getEnvInt("SHORT_REFRESH_HOURS", 48),
+			AccessMinutes:     getEnvInt("ACCESS_MINUTES", 500),
 		},
 		Storage: Storage{
 			Endpoint:  os.Getenv("STORAGE_ENDPOINT"),
@@ -65,4 +62,13 @@ func NewEnv() *Env {
 			},
 		},
 	}
+}
+
+func getEnvInt(key string, defaultVal int) int {
+	if val := os.Getenv(key); val != "" {
+		if parsed, err := strconv.Atoi(val); err == nil {
+			return parsed
+		}
+	}
+	return defaultVal
 }

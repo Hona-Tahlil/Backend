@@ -48,6 +48,7 @@ var Persian = map[string]interface{}{
 		"pending":                "این {0} حال بررسی است.",
 		"email":                  "فرمت ایمیل نادرست است.",
 		"duplicateName":          "نام تکراری مجاز نیست",
+		"unacceptableInput":      "ورودی قابل قبول نیست",
 	},
 	"successMessage": map[string]interface{}{
 		"userRegister":      "ثبت نام موفق بود! لطفاً پیامک های خود را بررسی کنید تا حساب خود را تأیید کرده و فرآیند ثبت نام را تکمیل نمایید.",

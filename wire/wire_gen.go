@@ -41,7 +41,7 @@ func InitializeApplication(container *bootstrap.Config) (*Application, error) {
 		AdminRBACController: adminRBACController,
 	}
 	s3Storage := storage.NewS3Storage()
-	petService := service.NewPetService(unitOfWork, s3Storage)
+	petService := service.NewPetService(unitOfWork, s3Storage, userService)
 	userPetController := user.NewUserPetController(petService)
 	userControllers := &UserControllers{
 		UserPetController: userPetController,
@@ -53,9 +53,13 @@ func InitializeApplication(container *bootstrap.Config) (*Application, error) {
 	}
 	localizationMiddleware := middleware.NewLocalizationMiddleware()
 	recoveryMiddleware := middleware.NewRecoveryMiddleware()
+	authMiddleware := middleware.NewAuthMiddleware(jwtService)
+	rbacMiddleware := middleware.NewRBACMiddleware(unitOfWork)
 	middlewares := &Middlewares{
 		LocalizationMiddleware: localizationMiddleware,
 		RecoveryMiddleware:     recoveryMiddleware,
+		AuthMiddleware:         authMiddleware,
+		RBACMiddleware:         rbacMiddleware,
 	}
 	databaseSeeder := seeder.NewDatabaseSeeder(db)
 	wireSeeder := &Seeder{
@@ -84,7 +88,7 @@ var UserControllersProviderSet = wire.NewSet(user.NewUserPetController, wire.Str
 
 var ControllersProviderSet = wire.NewSet(wire.Struct(new(Controllers), "*"))
 
-var MiddlewaresProviderSet = wire.NewSet(middleware.NewLocalizationMiddleware, middleware.NewRecoveryMiddleware, wire.Struct(new(Middlewares), "*"))
+var MiddlewaresProviderSet = wire.NewSet(middleware.NewLocalizationMiddleware, middleware.NewRecoveryMiddleware, middleware.NewRBACMiddleware, middleware.NewAuthMiddleware, wire.Struct(new(Middlewares), "*"))
 
 var SeederProviderSet = wire.NewSet(seeder.NewDatabaseSeeder, wire.Struct(new(Seeder), "*"))
 
@@ -121,6 +125,8 @@ type Controllers struct {
 type Middlewares struct {
 	LocalizationMiddleware *middleware.LocalizationMiddleware
 	RecoveryMiddleware     *middleware.RecoveryMiddleware
+	AuthMiddleware         *middleware.AuthMiddleware
+	RBACMiddleware         *middleware.RBACMiddleware
 }
 
 type Seeder struct {

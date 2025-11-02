@@ -20,10 +20,11 @@ type PetService struct {
 	userService usecase.UserService
 }
 
-func NewPetService(unitOfWork ports.UnitOfWork, storage *storage.S3Storage) *PetService {
+func NewPetService(unitOfWork ports.UnitOfWork, storage *storage.S3Storage, userService usecase.UserService) *PetService {
 	return &PetService{
-		unitOfWork: unitOfWork,
-		storage:    storage,
+		unitOfWork:  unitOfWork,
+		storage:     storage,
+		userService: userService,
 	}
 }
 
@@ -266,19 +267,20 @@ func (ps *PetService) getStorageKey(name string, userID uint) string {
 }
 
 func (ps *PetService) validateSpecies(species enums.Species, kind enums.PetKind) error {
-	if kind == enums.Dog {
+	switch kind {
+	case enums.Dog:
 		if species > 6 {
 			var ce exceptions.ConflictErrors
 			ce.Add(bootstrap.Run().Constants.ErrorFields.Species, bootstrap.Run().Constants.ErrorTags.UnacceptableInput)
 			return ce
 		}
-	} else if kind == enums.Cat {
+	case enums.Cat:
 		if species < 7 || species > 10 {
 			var ce exceptions.ConflictErrors
 			ce.Add(bootstrap.Run().Constants.ErrorFields.Species, bootstrap.Run().Constants.ErrorTags.UnacceptableInput)
 			return ce
 		}
-	} else if kind == enums.Bird {
+	case enums.Bird:
 		if species < 11 {
 			var ce exceptions.ConflictErrors
 			ce.Add(bootstrap.Run().Constants.ErrorFields.Species, bootstrap.Run().Constants.ErrorTags.UnacceptableInput)

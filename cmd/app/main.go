@@ -22,6 +22,9 @@ func main() {
 
 	app.Seeder.DatabaseSeeder.SeedAll()
 
+	// accessToken, _, _ := jwt.NewJWTService(jwt.NewJWTKeyManager()).GenerateTokens(1, true)
+	// log.Println(accessToken)
+
 	routes.SetUpRoutes(ginEngine, app)
 
 	ginEngine.Run()

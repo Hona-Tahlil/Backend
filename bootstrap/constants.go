@@ -157,6 +157,7 @@ func NewConstants() *Constants {
 			Binding:                "errors.binding",
 			Generic:                "errors.generic",
 			NotFound:               "errors.notFound",
+			UnacceptableInput:      "errors.unacceptableInput",
 			DuplicateName:          "errors.duplicateName",
 		},
 		JWTConstants: JWTConstants{
