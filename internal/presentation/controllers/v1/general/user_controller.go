@@ -1,20 +1,18 @@
 package general
 
 import (
-	"hona/backend/bootstrap"
 	"hona/backend/internal/application/dto/user"
-	"hona/backend/internal/application/service"
+	"hona/backend/internal/application/usecase"
 	"hona/backend/internal/presentation/controllers"
 
 	"github.com/gin-gonic/gin"
 )
 
 type GeneralUserController struct {
-	generalService *service.UserService
-	constants      *bootstrap.Constants
+	generalService usecase.UserService
 }
 
-func NewGeneralUserController(generalService *service.UserService) *GeneralUserController {
+func NewGeneralUserController(generalService usecase.UserService) *GeneralUserController {
 	return &GeneralUserController{
 		generalService: generalService,
 	}
@@ -86,16 +84,16 @@ func (gc *GeneralUserController) Register(ctx *gin.Context) {
 
 // }
 
-func (gc *GeneralUserController) ForgotPassword(ctx *gin.Context) {
-	type forgotPasswordParams struct {
-		Email string `json:"Email" validate:"required,e164"`
-	}
-	params := controllers.Receive[forgotPasswordParams](ctx)
-	forgotPasswordInfo := user.ForgotPasswordRequest{
-		Email: params.Email,
-	}
-	if err := gc.generalService.ForgotPassword(forgotPasswordInfo); err != nil {
-		panic(err)
-	}
+// func (gc *GeneralUserController) ForgotPassword(ctx *gin.Context) {
+// 	type forgotPasswordParams struct {
+// 		Email string `json:"Email" validate:"required,e164"`
+// 	}
+// 	params := controllers.Receive[forgotPasswordParams](ctx)
+// 	forgotPasswordInfo := user.ForgotPasswordRequest{
+// 		Email: params.Email,
+// 	}
+// 	if err := gc.generalService.ForgotPassword(forgotPasswordInfo); err != nil {
+// 		panic(err)
+// 	}
 
-}
+// }

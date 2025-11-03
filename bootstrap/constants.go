@@ -3,12 +3,18 @@ package bootstrap
 import "fmt"
 
 type Constants struct {
-	Context      Context
-	JWTKeysPath  JWTKeysPath
-	ErrorFields  ErrorFields
-	ErrorTags    ErrorTags
-	JWTConstants JWTConstants
-	RedisKey     RedisKey
+	Context       Context
+	JWTKeysPath   JWTKeysPath
+	ErrorFields   ErrorFields
+	ErrorTags     ErrorTags
+	JWTConstants  JWTConstants
+	RedisKey      RedisKey
+	TemplatesPath TemplatesPath
+}
+
+type TemplatesPath struct {
+	Path              string
+	EmailVerification string
 }
 
 type RedisKey struct {
@@ -156,6 +162,10 @@ func NewConstants() *Constants {
 		JWTConstants: JWTConstants{
 			AccessTokenType:  "access",
 			RefreshTokenType: "refresh",
+		},
+		TemplatesPath: TemplatesPath{
+			Path:              "./internal/infrastructure/mail/",
+			EmailVerification: "email_verification.html",
 		},
 	}
 }

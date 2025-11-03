@@ -8,9 +8,9 @@ import (
 	"hona/backend/internal/application/dto/user"
 	"hona/backend/internal/domain/entities"
 	"hona/backend/internal/domain/exceptions"
+	"hona/backend/internal/domain/ports"
+	domainredis "hona/backend/internal/domain/ports/redis"
 	"hona/backend/internal/infrastructure/mail"
-	"hona/backend/internal/infrastructure/persistence"
-	"hona/backend/internal/infrastructure/persistence/repository/redis"
 	"regexp"
 	"time"
 
@@ -18,16 +18,16 @@ import (
 )
 
 type UserService struct {
-	unitOfWork          *persistence.UnitOfWork
-	userCacheRepository *redis.UserCacheRepository
-	sendMLEmail         *mail.EmailService
+	unitOfWork          ports.UnitOfWork
+	userCacheRepository domainredis.UserCacheRepository
+	emailService        *mail.EmailService
 }
 
-func NewGeneralService(unitOfWork *persistence.UnitOfWork, userCacheRepository *redis.UserCacheRepository, sendMLEmail *mail.EmailService) *UserService {
+func NewGeneralService(unitOfWork ports.UnitOfWork, userCacheRepository domainredis.UserCacheRepository, emailService *mail.EmailService) *UserService {
 	return &UserService{
 		unitOfWork:          unitOfWork,
 		userCacheRepository: userCacheRepository,
-		sendMLEmail:         sendMLEmail,
+		emailService:        emailService,
 	}
 }
 
@@ -58,7 +58,7 @@ func (us *UserService) FindVerifiedUserByEmail(email string) (*entities.User, er
 		return nil, err
 	}
 
-	if !foundUser.IsVerified {
+	if !foundUser.IsEmailVerified {
 		notVerifiedErr := exceptions.NewNotVerifiedError()
 		return nil, notVerifiedErr
 	}
@@ -83,7 +83,7 @@ func (us *UserService) validateDuplicateEmail(email string) error {
 			return err
 		}
 	}
-	if user != nil && user.IsVerified {
+	if user != nil && user.IsEmailVerified {
 		ce.Add(bootstrap.Run().Constants.ErrorFields.Email, bootstrap.Run().Constants.ErrorTags.AlreadyRegistered)
 		return ce
 	}
@@ -129,12 +129,9 @@ func (us *UserService) generateRandomToken() (string, error) {
 	return base64.URLEncoding.EncodeToString(tokenBytes), nil
 }
 
-func (us *UserService) CreateMagicLink(email string) (string, error) {
-	token, err := us.generateRandomToken()
-	if err != nil {
-		return "", err
-	}
-	return token, nil
+func (us *UserService) CreateMagicLink(token string) string {
+	baseURL := bootstrap.Run().Env.URLs.BaseURL
+	return baseURL + "/auth/verify/email?token=" + token
 }
 
 func (us *UserService) Register(registerInfo user.RegisterRequest) error {
@@ -151,35 +148,41 @@ func (us *UserService) Register(registerInfo user.RegisterRequest) error {
 	if err != nil {
 		return err
 	}
-	err = us.unitOfWork.WithTransaction(func(rf *persistence.RepositoryFactory) error {
-		err = us.unitOfWork.Factory().UserRepository().DeleteUserByEmail(registerInfo.Email)
+	err = us.unitOfWork.WithTransaction(func(rf ports.RepositoryFactory) error {
+		err = rf.UserRepository().DeleteUserByEmail(registerInfo.Email)
 		if err != nil {
 			return err
 		}
 		user := &entities.User{
-			FirstName:  registerInfo.FirstName,
-			LastName:   registerInfo.LastName,
-			Email:      registerInfo.Email,
-			Password:   string(hashesPasswordBytes),
-			IsVerified: false,
+			FirstName:       registerInfo.FirstName,
+			LastName:        registerInfo.LastName,
+			Email:           registerInfo.Email,
+			Password:        string(hashesPasswordBytes),
+			IsEmailVerified: false,
 		}
-		err = us.unitOfWork.Factory().UserRepository().CreateUser(user)
+		err = rf.UserRepository().CreateUser(user)
 		if err != nil {
 			return err
 		}
-		token, err := us.CreateMagicLink(user.Email)
+		token, err := us.generateRandomToken()
 		if err != nil {
 			return err
 		}
-		redisKey := bootstrap.Run().Constants.RedisKey.GenerateMLKey(user.Email)
-		err = us.userCacheRepository.Set(context.Background(), redisKey, token, time.Duration(2)*time.Minute)
-		if err != nil {
-			return err
+		link := us.CreateMagicLink(token)
+		data := struct {
+			FirstName    string
+			LastName     string
+			MagicLink    string
+			ExpiryMinute int
+			Year         int
+		}{
+			FirstName:    registerInfo.FirstName,
+			LastName:     registerInfo.LastName,
+			MagicLink:    link,
+			ExpiryMinute: bootstrap.Run().Env.EmailVerification.ExpireMinutes,
+			Year:         time.Now().Year(),
 		}
-		err = us.sendMLEmail.SendMLEmail(user.Email, token)
-		if err != nil {
-			return err
-		}
+		us.emailService.SendEmail(registerInfo.Email, "Email Verification", bootstrap.Run().Constants.TemplatesPath.EmailVerification, data)
 
 		return nil
 	})

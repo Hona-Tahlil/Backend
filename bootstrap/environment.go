@@ -2,14 +2,25 @@ package bootstrap
 
 import (
 	"os"
+	"strconv"
 
 	"github.com/joho/godotenv"
 )
 
 type Env struct {
-	PrimaryDB    Database
-	PrimaryRedis Redis
-	EmailConfig  EmailConfig
+	PrimaryDB         Database
+	PrimaryRedis      Redis
+	EmailConfig       EmailConfig
+	URLs              URLs
+	EmailVerification EmailVerification
+}
+
+type EmailVerification struct {
+	ExpireMinutes int
+}
+
+type URLs struct {
+	BaseURL string
 }
 
 type Database struct {
@@ -36,6 +47,7 @@ type EmailConfig struct {
 
 func NewEnv() *Env {
 	godotenv.Load(".env")
+	expireMinutes, _ := strconv.Atoi(os.Getenv("EMAIL_EXPIRE_MINUTES"))
 	return &Env{
 		PrimaryDB: Database{
 			Host:     os.Getenv("DB_HOST"),
@@ -56,6 +68,12 @@ func NewEnv() *Env {
 			Username: os.Getenv("SMTP_USERNAME"),
 			Password: os.Getenv("SMTP_PASSWORD"),
 			From:     os.Getenv("SMTP_FROM"),
+		},
+		URLs: URLs{
+			BaseURL: os.Getenv("BASE_URL"),
+		},
+		EmailVerification: EmailVerification{
+			ExpireMinutes: expireMinutes,
 		},
 	}
 }
