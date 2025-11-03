@@ -63,37 +63,70 @@ func (gc *GeneralUserController) Register(ctx *gin.Context) {
 	controllers.Respond(ctx, 200, msg, nil)
 }
 
-// func (gc *GeneralUserController) VerifyEmail(ctx *gin.Context) {
-// 	type verifyPhoneParams struct {
-// 		Email string `json:"phone" validate:"required,e164"`
-// 		OTP   string `json:"otp" validate:"required"`
-// 	}
-// 	params := controllers.Receive[verifyPhoneParams](ctx)
-// 	verifyOTPInfo := user.VerifyEmailRequest{
-// 		Email: params.Email,
-// 		OTP:   params.OTP,
-// 	}
-// 	if err := gc.generalService.VerifyEmail(verifyOTPInfo); err != nil {
-// 		panic(err)
-// 	}
-// 	msg := controllers.Message{
-// 		Text:   "success.emailVerification",
-// 		Params: []string{},
-// 	}
-// 	controllers.Respond(ctx, 200, msg, nil)
+func (gc *GeneralUserController) VerifyEmail(ctx *gin.Context) {
+	type verifyEmailParams struct {
+		Email string `form:"email" validate:"required"`
+		Token string `form:"token" validate:"required"`
+	}
+	params := controllers.Receive[verifyEmailParams](ctx)
+	verifyEmailInfo := user.VerifyEmailRequest{
+		Email: params.Email,
+		Token: params.Token,
+	}
+	if err := gc.generalService.VerifyEmail(verifyEmailInfo); err != nil {
+		panic(err)
+	}
+	msg := controllers.Message{
+		Text:   "success.emailVerification",
+		Params: []string{},
+	}
+	controllers.Respond(ctx, 200, msg, nil)
+}
 
-// }
+func (gc *GeneralUserController) SendVerificationEmail(ctx *gin.Context) {
+	type sendVerificationEmailParams struct {
+		Email string `form:"email" validate:"required"`
+	}
+	params := controllers.Receive[sendVerificationEmailParams](ctx)
+	SendVerificationEmailInfo := user.SendVerificationEmailRequest{
+		Email: params.Email,
+	}
+	if err := gc.generalService.SendVerificationEmail(SendVerificationEmailInfo); err != nil {
+		panic(err)
+	}
+	msg := controllers.Message{
+	}
+	controllers.Respond(ctx, 200, msg, nil)
 
-// func (gc *GeneralUserController) ForgotPassword(ctx *gin.Context) {
-// 	type forgotPasswordParams struct {
-// 		Email string `json:"Email" validate:"required,e164"`
-// 	}
-// 	params := controllers.Receive[forgotPasswordParams](ctx)
-// 	forgotPasswordInfo := user.ForgotPasswordRequest{
-// 		Email: params.Email,
-// 	}
-// 	if err := gc.generalService.ForgotPassword(forgotPasswordInfo); err != nil {
-// 		panic(err)
-// 	}
+}
 
-// }
+func (gc *GeneralUserController) ForgotPassword(ctx *gin.Context) {
+	type forgotPasswordParams struct {
+		Email string `json:"Email" validate:"required"`
+	}
+	params := controllers.Receive[forgotPasswordParams](ctx)
+	forgotPasswordInfo := user.ForgotPasswordRequest{
+		Email: params.Email,
+	}
+	if err := gc.generalService.ForgotPassword(forgotPasswordInfo); err != nil {
+		panic(err)
+	}
+
+}
+
+func (gc *GeneralUserController) ResetPassword(ctx *gin.Context) {
+	type resetPasswordParams struct {
+		Email    string `form:"email" validate:"required"`
+		Token    string `form:"token" validate:"required"`
+		Password string `json:"password" validate:"required,min=8,max=64"`
+	}
+	params := controllers.Receive[resetPasswordParams](ctx)
+	resetPasswordInfo := user.ResetPasswordRequest{
+		Email:    params.Email,
+		Token:    params.Token,
+		Password: params.Password,
+	}
+	if err := gc.generalService.ResetPassword(resetPasswordInfo); err != nil {
+		panic(err)
+	}
+}

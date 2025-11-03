@@ -13,8 +13,18 @@ type RegisterRequest struct {
 
 type VerifyEmailRequest struct {
 	Email string
-	OTP   string
+	Token string
 }
 type ForgotPasswordRequest struct {
+	Email string
+}
+
+type ResetPasswordRequest struct {
+	Email    string
+	Password string
+	Token    string
+}
+
+type SendVerificationEmailRequest struct {
 	Email string
 }

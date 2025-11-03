@@ -35,3 +35,8 @@ func (up *UserRepository) CreateUser(user *entities.User) error {
 func (up *UserRepository) DeleteUserByEmail(email string) error {
 	return up.db.Where("email = ?", email).Delete(&entities.User{}).Error
 }
+
+
+func (up *UserRepository) SaveUser(user *entities.User) error {
+	return up.db.Save(user).Error
+}

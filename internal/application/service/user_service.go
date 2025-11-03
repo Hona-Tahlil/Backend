@@ -129,9 +129,9 @@ func (us *UserService) generateRandomToken() (string, error) {
 	return base64.URLEncoding.EncodeToString(tokenBytes), nil
 }
 
-func (us *UserService) CreateMagicLink(token string) string {
+func (us *UserService) CreateMagicLink(token, email string) string {
 	baseURL := bootstrap.Run().Env.URLs.BaseURL
-	return baseURL + "/auth/verify/email?token=" + token
+	return baseURL + "/auth/verify/email?token=" + token + "?email=" + email
 }
 
 func (us *UserService) Register(registerInfo user.RegisterRequest) error {
@@ -153,43 +153,166 @@ func (us *UserService) Register(registerInfo user.RegisterRequest) error {
 		if err != nil {
 			return err
 		}
-		user := &entities.User{
+		newUser := &entities.User{
 			FirstName:       registerInfo.FirstName,
 			LastName:        registerInfo.LastName,
 			Email:           registerInfo.Email,
 			Password:        string(hashesPasswordBytes),
 			IsEmailVerified: false,
 		}
-		err = rf.UserRepository().CreateUser(user)
+		err = rf.UserRepository().CreateUser(newUser)
 		if err != nil {
 			return err
 		}
-		token, err := us.generateRandomToken()
+
+		err = us.SendVerificationEmail(user.SendVerificationEmailRequest{Email: newUser.Email})
 		if err != nil {
 			return err
 		}
-		link := us.CreateMagicLink(token)
-		data := struct {
-			FirstName    string
-			LastName     string
-			MagicLink    string
-			ExpiryMinute int
-			Year         int
-		}{
-			FirstName:    registerInfo.FirstName,
-			LastName:     registerInfo.LastName,
-			MagicLink:    link,
-			ExpiryMinute: bootstrap.Run().Env.EmailVerification.ExpireMinutes,
-			Year:         time.Now().Year(),
-		}
-		us.emailService.SendEmail(registerInfo.Email, "Email Verification", bootstrap.Run().Constants.TemplatesPath.EmailVerification, data)
 
 		return nil
 	})
 
 	return err
 }
+func (us *UserService) CreateFPLink(token string, email string) string {
+	baseURL := bootstrap.Run().Env.URLs.BaseURL
+	return baseURL + "/auth/reset-password?token=" + token + "?email=" + email
+}
+
+func (us *UserService) SendRestPassEmail(email string) error {
+	user, err := us.FindUserByEmail(email)
+	if err != nil {
+		return err
+	}
+	token, err := us.generateRandomToken()
+	if err != nil {
+		return err
+	}
+	redisKey := bootstrap.Run().Constants.RedisKey.GenerateFPKey(user.Email)
+	err = us.userCacheRepository.Set(context.Background(), redisKey, token, time.Duration(bootstrap.Run().Env.EmailVerification.ExpireMinutes))
+	if err != nil {
+		return err
+	}
+	link := us.CreateFPLink(token, email)
+	data := struct {
+		FirstName    string
+		LastName     string
+		ResetLink    string
+		ExpiryMinute int
+		Year         int
+	}{
+		FirstName:    user.FirstName,
+		LastName:     user.LastName,
+		ResetLink:    link,
+		ExpiryMinute: bootstrap.Run().Env.EmailVerification.ExpireMinutes,
+		Year:         time.Now().Year(),
+	}
+	us.emailService.SendEmail(user.Email, "Reset Password", "forget_password.html", data)
+
+	return nil
+}
 
 func (us *UserService) ForgotPassword(forgetPasswordInfo user.ForgotPasswordRequest) error {
+	_, err := us.FindUserByEmail(forgetPasswordInfo.Email)
+	if err != nil {
+		return err
+	}
+	err = us.SendRestPassEmail(forgetPasswordInfo.Email)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (us *UserService) ResetPassword(resetPasswordInfo user.ResetPasswordRequest) error {
+	RPData, err := us.userCacheRepository.Get(context.Background(), bootstrap.Run().Constants.RedisKey.GenerateMLKey(resetPasswordInfo.Email))
+	if err != nil {
+		return err
+	}
+	if RPData == nil {
+		return exceptions.NewNotFoundError("token")
+	}
+	if RPData.Token != resetPasswordInfo.Token {
+		var ve exceptions.ValidationErrors
+		ve.AddError("token", "wrongToken")
+		return &ve
+	}
+	user, err := us.FindUserByEmail(resetPasswordInfo.Email)
+	if err != nil {
+		return err
+	}
+	err = us.ValidatePasswordRegex(resetPasswordInfo.Password)
+	if err != nil {
+		return err
+	}
+	hashesPasswordBytes, err := bcrypt.GenerateFromPassword([]byte(resetPasswordInfo.Password), bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
+	user.Password = string(hashesPasswordBytes)
+	err = us.unitOfWork.Factory().UserRepository().SaveUser(user)
+	if err != nil {
+		return err
+	}
+	return nil
+
+}
+
+func (us *UserService) VerifyEmail(info user.VerifyEmailRequest) error {
+	mlData, err := us.userCacheRepository.Get(context.Background(), bootstrap.Run().Constants.RedisKey.GenerateMLKey(info.Email))
+	if err != nil {
+		return err
+	}
+	if mlData == nil {
+		return exceptions.NewNotFoundError("token")
+	}
+	if mlData.Token != info.Token {
+		var ve exceptions.ValidationErrors
+		ve.AddError("token", "wrongToken")
+		return &ve
+	}
+
+	user, err := us.FindUserByEmail(info.Email)
+	if err != nil {
+		return err
+	}
+	user.IsEmailVerified = true
+	us.unitOfWork.Factory().UserRepository().SaveUser(user)
+
+	return nil
+}
+
+func (us *UserService) SendVerificationEmail(info user.SendVerificationEmailRequest) error {
+	user, err := us.FindUserByEmail(info.Email)
+	if err != nil {
+		return err
+	}
+	token, err := us.generateRandomToken()
+	if err != nil {
+		return err
+	}
+	redisKey := bootstrap.Run().Constants.RedisKey.GenerateMLKey(user.Email)
+	err = us.userCacheRepository.Set(context.Background(), redisKey, token, time.Duration(bootstrap.Run().Env.EmailVerification.ExpireMinutes))
+	if err != nil {
+		return err
+	}
+
+	link := us.CreateMagicLink(token, user.Email)
+	data := struct {
+		FirstName    string
+		LastName     string
+		MagicLink    string
+		ExpiryMinute int
+		Year         int
+	}{
+		FirstName:    user.FirstName,
+		LastName:     user.LastName,
+		MagicLink:    link,
+		ExpiryMinute: bootstrap.Run().Env.EmailVerification.ExpireMinutes,
+		Year:         time.Now().Year(),
+	}
+	us.emailService.SendEmail(user.Email, "Email Verification", bootstrap.Run().Constants.TemplatesPath.EmailVerification, data)
+
 	return nil
 }

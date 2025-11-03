@@ -24,7 +24,10 @@ func SetUpRoutes(v1 *gin.RouterGroup) {
 	{
 		auth.POST("/login", uc.Login)
 		auth.POST("/register", uc.Register)
-		// auth.POST("/verify", uc.VerifyEmail)
-		// auth.POST("/forgotpassword", uc.ForgotPassword)
+		auth.POST("/verify", uc.VerifyEmail)
+		auth.POST("/forgot-password", uc.ForgotPassword)
+		auth.PUT("/reset-password", uc.ResetPassword)
+
+
 	}
 }

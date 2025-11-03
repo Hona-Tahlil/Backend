@@ -173,3 +173,7 @@ func NewConstants() *Constants {
 func (r *RedisKey) GenerateMLKey(value string) string {
 	return fmt.Sprintf("ML:%s", value)
 }
+
+func (r *RedisKey) GenerateFPKey(value string) string {
+	return fmt.Sprintf("FP:%s", value)
+}
