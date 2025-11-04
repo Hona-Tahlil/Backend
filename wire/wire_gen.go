@@ -16,8 +16,10 @@ import (
 	"hona/backend/internal/infrastructure/jwt"
 	"hona/backend/internal/infrastructure/persistence"
 	"hona/backend/internal/infrastructure/persistence/seeder"
+	"hona/backend/internal/infrastructure/storage"
 	"hona/backend/internal/presentation/controllers/v1/admin"
 	"hona/backend/internal/presentation/controllers/v1/general"
+	"hona/backend/internal/presentation/controllers/v1/user"
 	"hona/backend/internal/presentation/middleware"
 )
 
@@ -38,37 +40,57 @@ func InitializeApplication(container *bootstrap.Config) (*Application, error) {
 	adminControllers := &AdminControllers{
 		AdminRBACController: adminRBACController,
 	}
+	s3Storage := storage.NewS3Storage()
+	petService := service.NewPetService(unitOfWork, s3Storage, userService)
+	userPetController := user.NewUserPetController(petService)
+	userControllers := &UserControllers{
+		UserPetController: userPetController,
+	}
 	controllers := &Controllers{
 		GeneralControllers: generalControllers,
 		AdminControllers:   adminControllers,
+		UserControllers:    userControllers,
 	}
 	localizationMiddleware := middleware.NewLocalizationMiddleware()
 	recoveryMiddleware := middleware.NewRecoveryMiddleware()
+	authMiddleware := middleware.NewAuthMiddleware(jwtService)
+	rbacMiddleware := middleware.NewRBACMiddleware(unitOfWork)
 	middlewares := &Middlewares{
 		LocalizationMiddleware: localizationMiddleware,
 		RecoveryMiddleware:     recoveryMiddleware,
+		AuthMiddleware:         authMiddleware,
+		RBACMiddleware:         rbacMiddleware,
 	}
 	databaseSeeder := seeder.NewDatabaseSeeder(db)
 	wireSeeder := &Seeder{
 		DatabaseSeeder: databaseSeeder,
 	}
-	application := NewApplication(controllers, middlewares, wireSeeder)
+	wireStorage := &Storage{
+		S3Storage: s3Storage,
+	}
+	application := NewApplication(controllers, middlewares, wireSeeder, wireStorage)
 	return application, nil
 }
 
 // wire.go:
 
+var StorageProviderSet = wire.NewSet(storage.NewS3Storage, wire.Struct(new(Storage), "*"))
+
 var RepositoryProviderSet = wire.NewSet(persistence.NewRepositoryFactory, persistence.NewUnitOfWork, persistence.NewPostgresDatabase, wire.Bind(new(ports.RepositoryFactory), new(*persistence.RepositoryFactory)), wire.Bind(new(ports.UnitOfWork), new(*persistence.UnitOfWork)))
 
-var ServiceProviderSet = wire.NewSet(service.NewUserService, jwt.NewJWTService, jwt.NewJWTKeyManager, service.NewRBACService, wire.Bind(new(domainjwt.JWTService), new(*jwt.JWTService)), wire.Bind(new(domainjwt.JWTKeyManager), new(*jwt.JWTKeyManager)), wire.Bind(new(usecase.RBACService), new(*service.RBACService)), wire.Bind(new(usecase.UserService), new(*service.UserService)))
+var ServiceProviderSet = wire.NewSet(service.NewUserService, jwt.NewJWTService, jwt.NewJWTKeyManager, service.NewRBACService, service.NewPetService, wire.Bind(new(domainjwt.JWTService), new(*jwt.JWTService)), wire.Bind(new(domainjwt.JWTKeyManager), new(*jwt.JWTKeyManager)), wire.Bind(new(usecase.RBACService), new(*service.RBACService)), wire.Bind(new(usecase.UserService), new(*service.UserService)), wire.Bind(new(usecase.PetService), new(*service.PetService)))
 
 var GeneralControllersProviderSet = wire.NewSet(general.NewGeneralUserController, wire.Struct(new(GeneralControllers), "*"))
 
 var AdminControllersProviderSet = wire.NewSet(admin.NewAdminRBACController, wire.Struct(new(AdminControllers), "*"))
 
+var UserControllersProviderSet = wire.NewSet(user.NewUserPetController, wire.Struct(new(UserControllers), "*"))
+
 var ControllersProviderSet = wire.NewSet(wire.Struct(new(Controllers), "*"))
 
-var MiddlewaresProviderSet = wire.NewSet(middleware.NewLocalizationMiddleware, middleware.NewRecoveryMiddleware, wire.Struct(new(Middlewares), "*"))
+var MiddlewaresProviderSet = wire.NewSet(middleware.NewLocalizationMiddleware, middleware.NewRecoveryMiddleware, middleware.NewRBACMiddleware, middleware.NewAuthMiddleware, wire.Struct(new(Middlewares), "*"))
+
+var SeederProviderSet = wire.NewSet(seeder.NewDatabaseSeeder, wire.Struct(new(Seeder), "*"))
 
 var SeederProviderSet = wire.NewSet(seeder.NewDatabaseSeeder, wire.Struct(new(Seeder), "*"))
 
@@ -77,9 +99,11 @@ var ProviderSet = wire.NewSet(
 	ControllersProviderSet,
 	GeneralControllersProviderSet,
 	AdminControllersProviderSet,
+	UserControllersProviderSet,
 	ServiceProviderSet,
 	RepositoryProviderSet,
 	SeederProviderSet,
+	StorageProviderSet,
 )
 
 type GeneralControllers struct {
@@ -90,14 +114,29 @@ type AdminControllers struct {
 	AdminRBACController *admin.AdminRBACController
 }
 
+type UserControllers struct {
+	UserPetController *user.UserPetController
+}
+
 type Controllers struct {
 	GeneralControllers *GeneralControllers
 	AdminControllers   *AdminControllers
+	UserControllers    *UserControllers
 }
 
 type Middlewares struct {
 	LocalizationMiddleware *middleware.LocalizationMiddleware
 	RecoveryMiddleware     *middleware.RecoveryMiddleware
+	AuthMiddleware         *middleware.AuthMiddleware
+	RBACMiddleware         *middleware.RBACMiddleware
+}
+
+type Seeder struct {
+	DatabaseSeeder *seeder.DatabaseSeeder
+}
+
+type Storage struct {
+	S3Storage *storage.S3Storage
 }
 
 type Seeder struct {
@@ -108,12 +147,14 @@ type Application struct {
 	Controllers *Controllers
 	Middlewares *Middlewares
 	Seeder      *Seeder
+	Storage     *Storage
 }
 
-func NewApplication(controllers *Controllers, middlewares *Middlewares, seeder2 *Seeder) *Application {
+func NewApplication(controllers *Controllers, middlewares *Middlewares, seeder2 *Seeder, storage2 *Storage) *Application {
 	return &Application{
 		Controllers: controllers,
 		Middlewares: middlewares,
 		Seeder:      seeder2,
+		Storage:     storage2,
 	}
 }

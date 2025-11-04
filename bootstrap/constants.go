@@ -26,6 +26,9 @@ type SuccessMessages struct {
 	DeleteRole        string
 	UpdateUserRole    string
 	Generic           string
+	AddPet            string
+	RemovePet         string
+	UpdatePet         string
 }
 
 type JWTConstants struct {
@@ -45,6 +48,10 @@ type ErrorFields struct {
 	City       string
 	Role       string
 	Permission string
+	BirthDate  string
+	IsAdult    string
+	Pet        string
+	Species    string
 }
 
 type ErrorTags struct {
@@ -76,6 +83,8 @@ type ErrorTags struct {
 	Binding                string
 	Generic                string
 	NotFound               string
+	UnacceptableInput      string
+	DuplicateName          string
 }
 
 type JWTKeysPath struct {
@@ -114,6 +123,10 @@ func NewConstants() *Constants {
 			City:       "city",
 			Role:       "role",
 			Permission: "permission",
+			BirthDate:  "birthDate",
+			IsAdult:    "isAdult",
+			Pet:        "pet",
+			Species:    "species",
 		},
 		ErrorTags: ErrorTags{
 			AlreadyRegistered:      "errors.alreadyRegistered",
@@ -144,6 +157,8 @@ func NewConstants() *Constants {
 			Binding:                "errors.binding",
 			Generic:                "errors.generic",
 			NotFound:               "errors.notFound",
+			UnacceptableInput:      "errors.unacceptableInput",
+			DuplicateName:          "errors.duplicateName",
 		},
 		JWTConstants: JWTConstants{
 			AccessTokenType:  "access",
@@ -166,6 +181,9 @@ func NewConstants() *Constants {
 			DeleteRole:        "successMessage.deleteRole",
 			UpdateUserRole:    "successMessage.updateUserRoles",
 			Generic:           "successMessage.generic",
+			AddPet:            "successMessage.addPet",
+			RemovePet:         "successMessage.removePet",
+			UpdatePet:         "successMessage.updatePet",
 		},
 	}
 }

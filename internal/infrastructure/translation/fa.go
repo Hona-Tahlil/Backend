@@ -14,6 +14,8 @@ var Persian = map[string]interface{}{
 	"role":       "نقش",
 	"permission": "دسترسی",
 	"magicLink":  "لینک تایید ایمیل",
+	"pet":        "پت",
+	"species":    "نژاد",
 	"errors": map[string]interface{}{
 		"generic":                "خطایی رخ داده است، لطفا دوباره تلاش کنید.",
 		"binding":                "فرمت ورودی نادرست است",
@@ -45,6 +47,8 @@ var Persian = map[string]interface{}{
 		"forbiddenStatus":        "اجازه انجام این کار را در این وضعیت ندارید.",
 		"pending":                "این {0} حال بررسی است.",
 		"email":                  "فرمت ایمیل نادرست است.",
+		"duplicateName":          "نام تکراری مجاز نیست",
+		"unacceptableInput":      "ورودی قابل قبول نیست",
 	},
 	"successMessage": map[string]interface{}{
 		"userRegister":      "ثبت نام موفق بود! لطفاً پیامک های خود را بررسی کنید تا حساب خود را تأیید کرده و فرآیند ثبت نام را تکمیل نمایید.",
@@ -63,5 +67,8 @@ var Persian = map[string]interface{}{
 		"updateRole":        "نقش مورد نظر با موفقیت به روزرسانی شد.",
 		"updateUserRoles":   "نقش های فرد مورد نظر به روزرسانی شد.",
 		"generic":           "با موفقیت انجام شد",
+		"addPet":            "پت با موفقیت اضافه شد",
+		"removePet":         "پت با موفقیت حذف شد",
+		"updatePet":         "مشخصات پت با موفقیت به روز شد",
 	},
 }

@@ -14,4 +14,5 @@ func SetUpRoutes(ginEngine *gin.Engine, app *wire.Application) {
 	v1 := ginEngine.Group("/v1")
 	httpv1.SetUpGeneralRoutes(v1, app)
 	httpv1.SetUpAdminRoutes(v1, app)
+	httpv1.SetUpUserRoutes(v1, app)
 }

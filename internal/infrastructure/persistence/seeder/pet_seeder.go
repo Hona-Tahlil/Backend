@@ -64,8 +64,6 @@ func (s *PetSeeder) Seed(count int) error {
 				enums.BritishShorthair,
 			}
 			species = catSpecies[rand.Intn(len(catSpecies))]
-		case enums.Rabbit:
-			species = 0 // No specific breed for rabbits in your enum
 		}
 
 		// Random gender
@@ -83,24 +81,15 @@ func (s *PetSeeder) Seed(count int) error {
 		isAdult := yearsAgo >= 2
 
 		// Random weight based on pet kind (in appropriate units)
-		var weight *uint
-		var w uint
+		var weight *float32
+		var w float32
 		switch kind {
 		case enums.Dog:
-			w = uint(10 + rand.Intn(40)) // 10-50 kg for dogs
+			w = float32(10 + rand.Intn(40)) // 10-50 kg for dogs
 		case enums.Cat:
-			w = uint(3 + rand.Intn(7)) // 3-10 kg for cats
-		case enums.Rabbit:
-			w = uint(2 + rand.Intn(5)) // 2-7 kg for rabbits
+			w = float32(3 + rand.Intn(7)) // 3-10 kg for cats
 		}
 		weight = &w
-
-		// Random picture link (50% chance)
-		var pictureLink *string
-		if rand.Intn(2) == 1 {
-			link := faker.URL()
-			pictureLink = &link
-		}
 
 		// Random about text (70% chance)
 		var aboutPet *string
@@ -113,16 +102,15 @@ func (s *PetSeeder) Seed(count int) error {
 		name := generatePetName(kind)
 
 		pet := entities.Pet{
-			UserID:      user.ID,
-			Name:        name,
-			Kind:        kind,
-			Species:     species,
-			BirthDate:   &birthDate,
-			IsAdult:     isAdult,
-			Gender:      gender,
-			Weight:      weight,
-			PictureLink: pictureLink,
-			AboutPet:    aboutPet,
+			UserID:    user.ID,
+			Name:      name,
+			Kind:      kind,
+			Species:   species,
+			BirthDate: &birthDate,
+			IsAdult:   isAdult,
+			Gender:    gender,
+			Weight:    weight,
+			AboutPet:  aboutPet,
 		}
 
 		pets = append(pets, pet)
@@ -148,18 +136,11 @@ func generatePetName(kind enums.PetKind) string {
 		"اسکار", "میلو", "فلیکس", "گارفیلد", "پرنس", "پرنسس", "شادو", "میسی",
 	}
 
-	rabbitNames := []string{
-		"خرگوشی", "پنبه", "برفی", "توپولی", "گوشی", "هاپی", "بانی", "کلوور",
-		"پاپکورن", "تامپر", "کوکی", "مارشملو", "اسنوبال", "کاتن", "ورق", "پیتر",
-	}
-
 	switch kind {
 	case enums.Dog:
 		return dogNames[rand.Intn(len(dogNames))]
 	case enums.Cat:
 		return catNames[rand.Intn(len(catNames))]
-	case enums.Rabbit:
-		return rabbitNames[rand.Intn(len(rabbitNames))]
 	default:
 		return faker.FirstName()
 	}
@@ -187,23 +168,11 @@ func generatePetAbout(kind enums.PetKind) string {
 		"عاشق بلندی‌هاست و دوست دارد روی قفسه‌ها بنشیند.",
 	}
 
-	rabbitAbouts := []string{
-		"خرگوش آرام و دوست‌داشتنی که عاشق هویج است.",
-		"بسیار تمیز و به راحتی آموزش می‌بیند.",
-		"دوست دارد آزادانه در خانه بگردد و کاوش کند.",
-		"با حیوانات دیگر کنار می‌آید و اجتماعی است.",
-		"نیاز به فضای امن برای پرش و بازی دارد.",
-		"بسیار ملایم و برای کودکان مناسب است.",
-		"عاشق سبزیجات تازه و علف است.",
-	}
-
 	switch kind {
 	case enums.Dog:
 		return dogAbouts[rand.Intn(len(dogAbouts))]
 	case enums.Cat:
 		return catAbouts[rand.Intn(len(catAbouts))]
-	case enums.Rabbit:
-		return rabbitAbouts[rand.Intn(len(rabbitAbouts))]
 	default:
 		return "حیوان خانگی دوست‌داشتنی و مهربان."
 	}
