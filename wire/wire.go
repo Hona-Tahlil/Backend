@@ -124,10 +124,6 @@ type Storage struct {
 	S3Storage *storage.S3Storage
 }
 
-type Seeder struct {
-	DatabaseSeeder *seeder.DatabaseSeeder
-}
-
 type Application struct {
 	Controllers *Controllers
 	Middlewares *Middlewares

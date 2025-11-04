@@ -92,8 +92,6 @@ var MiddlewaresProviderSet = wire.NewSet(middleware.NewLocalizationMiddleware, m
 
 var SeederProviderSet = wire.NewSet(seeder.NewDatabaseSeeder, wire.Struct(new(Seeder), "*"))
 
-var SeederProviderSet = wire.NewSet(seeder.NewDatabaseSeeder, wire.Struct(new(Seeder), "*"))
-
 var ProviderSet = wire.NewSet(
 	MiddlewaresProviderSet,
 	ControllersProviderSet,
@@ -137,10 +135,6 @@ type Seeder struct {
 
 type Storage struct {
 	S3Storage *storage.S3Storage
-}
-
-type Seeder struct {
-	DatabaseSeeder *seeder.DatabaseSeeder
 }
 
 type Application struct {
