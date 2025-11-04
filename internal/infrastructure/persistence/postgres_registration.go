@@ -50,7 +50,7 @@ func NewPostgresDatabase() *gorm.DB {
 		// 	&entities.City{},
 		// 	&entities.TextMessage{},
 		// 	"user_roles",
-		// )
+    // )
 		db.AutoMigrate(
 			&entities.User{},
 			&entities.User{},

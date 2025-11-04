@@ -34,7 +34,6 @@ var RepositoryProviderSet = wire.NewSet(
 	wire.Bind(new(ports.RepositoryFactory), new(*persistence.RepositoryFactory)),
 	wire.Bind(new(ports.UnitOfWork), new(*persistence.UnitOfWork)),
 )
-
 var ServiceProviderSet = wire.NewSet(
 	service.NewUserService,
 	jwt.NewJWTService,
@@ -123,6 +122,10 @@ type Seeder struct {
 
 type Storage struct {
 	S3Storage *storage.S3Storage
+}
+
+type Seeder struct {
+	DatabaseSeeder *seeder.DatabaseSeeder
 }
 
 type Application struct {
