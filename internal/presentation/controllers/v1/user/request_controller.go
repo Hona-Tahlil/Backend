@@ -1,0 +1,66 @@
+package user
+
+import (
+	"hona/backend/internal/application/dto/request"
+	"hona/backend/internal/application/service"
+	"hona/backend/internal/presentation/controllers"
+	"time"
+
+	"github.com/gin-gonic/gin"
+)
+
+type UserRequestController struct {
+	requestService *service.RequestService
+}
+
+func NewUserRequestController(requestService *service.RequestService) *UserRequestController {
+	return &UserRequestController{
+		requestService: requestService,
+	}
+}
+
+// TODO: Initialize Request / Rbac (Verified Email) / Validation / Email Sending? / chat / Status / Notification?
+func (rc *UserRequestController) CreateRequest(ctx *gin.Context) {
+	type CalendarSlot struct {
+		StartTime        time.Time `json:"startTime" validate:"required"`
+		EndTime          time.Time `json:"endTime" validate:"required"`
+		IsDailyRepeated  bool      `json:"isDailyRepeated"`
+		IsWeeklyRepeated bool      `json:"isWeeklyRepeated"`
+	}
+	type Params struct {
+		PetSitterID   uint         `json:"petSitterID" validate:"required"`
+		CalenderSlots CalendarSlot `json:"calendarSlots" validate:"required"`
+		PetIDs        []uint       `json:"petIDs" validate:"required"`
+		Notes         *string      `json:"notes"`
+		AddressID     uint         `json:"addressID" validate:"required"`
+		ServiceIDs    []uint       `json:"serviceIDs" validate:"required"`
+	}
+	params := controllers.Receive[Params](ctx)
+	UserID := controllers.GetID(ctx)
+	info := request.CreateRequestRequest{
+		UserID:      UserID,
+		PetSitterID: params.PetSitterID,
+		CalenderSlots: request.RequestCalendarSlotRequest{
+			StartTime:        params.CalenderSlots.StartTime,
+			EndTime:          params.CalenderSlots.EndTime,
+			IsDailyRepeated:  params.CalenderSlots.IsDailyRepeated,
+			IsWeeklyRepeated: params.CalenderSlots.IsWeeklyRepeated,
+		},
+		PetIDs:     params.PetIDs,
+		Notes:      params.Notes,
+		AddressID:  params.AddressID,
+		ServiceIDs: params.ServiceIDs,
+	}
+
+	if err := rc.requestService.CreateRequest(info); err != nil {
+		panic(err)
+	}
+	msg := controllers.Message{}
+	controllers.Respond(ctx, 200, msg, nil)
+}
+
+// TODO: Edit Request / Status (Suspend?) / Less Errors / Email? / Notification? / Before PetSitter Response
+
+// TODO: Cancel Request / Email? / Policy
+
+// TODO: View Requests With Different Filters -> Accepted - Pending - Rejected - Canceled - ... / Different Sorts / Pagination
