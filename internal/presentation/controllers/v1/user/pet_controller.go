@@ -39,8 +39,7 @@ func (uc *UserPetController) AddPet(ctx *gin.Context) {
 		file = nil
 	}
 	params := controllers.Receive[AddPetParams](ctx)
-	userID, _ := ctx.Get(bootstrap.Run().Constants.Context.ID)
-	UserID, _ := userID.(uint)
+	UserID := controllers.GetID(ctx)
 	AddPetInfo := pet.AddPetRequest{
 		UserID:     UserID,
 		Name:       params.Name,
@@ -125,8 +124,7 @@ func (uc *UserPetController) RemovePet(ctx *gin.Context) {
 }
 
 func (uc *UserPetController) GetPetsBasicData(ctx *gin.Context) {
-	userID, _ := ctx.Get(bootstrap.Run().Constants.Context.ID)
-	UserID, _ := userID.(uint)
+	UserID := controllers.GetID(ctx)
 	GetPetsBasicDataInfo := pet.GetPetsBasicDataRequest{
 		UserID: UserID,
 	}
