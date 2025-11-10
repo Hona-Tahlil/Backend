@@ -61,7 +61,7 @@ func handleValidationErrors(validationErrs *exceptions.ValidationErrors) ([]cont
 	msgs := []controllers.Message{}
 	for _, fieldErr := range validationErrs.FieldErrors {
 		msgs = append(msgs, controllers.Message{
-			Text:   fieldErr.Tag,
+			Text:   "errors." + fieldErr.Tag,
 			Params: []string{fieldErr.Field},
 		})
 
