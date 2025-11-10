@@ -13,8 +13,8 @@ type CreateRequestRequest struct {
 }
 
 type RequestCalendarSlotRequest struct {
-	StartTime        time.Time
-	EndTime          time.Time
-	IsDailyRepeated  bool
-	IsWeeklyRepeated bool
+	StartTime time.Time
+	EndTime   time.Time
+	// IsDailyRepeated  bool
+	// IsWeeklyRepeated bool
 }

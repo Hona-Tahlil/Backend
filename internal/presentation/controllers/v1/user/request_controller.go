@@ -22,10 +22,10 @@ func NewUserRequestController(requestService *service.RequestService) *UserReque
 // TODO: Initialize Request / Rbac (Verified Email) / Validation / Email Sending? / chat / Status / Notification?
 func (rc *UserRequestController) CreateRequest(ctx *gin.Context) {
 	type CalendarSlot struct {
-		StartTime        time.Time `json:"startTime" validate:"required"`
-		EndTime          time.Time `json:"endTime" validate:"required"`
-		IsDailyRepeated  bool      `json:"isDailyRepeated"`
-		IsWeeklyRepeated bool      `json:"isWeeklyRepeated"`
+		StartTime time.Time `json:"startTime" validate:"required"`
+		EndTime   time.Time `json:"endTime" validate:"required"`
+		// IsDailyRepeated  bool      `json:"isDailyRepeated"`
+		// IsWeeklyRepeated bool      `json:"isWeeklyRepeated"`
 	}
 	type Params struct {
 		PetSitterID   uint         `json:"petSitterID" validate:"required"`
@@ -41,10 +41,10 @@ func (rc *UserRequestController) CreateRequest(ctx *gin.Context) {
 		UserID:      UserID,
 		PetSitterID: params.PetSitterID,
 		CalenderSlots: request.RequestCalendarSlotRequest{
-			StartTime:        params.CalenderSlots.StartTime,
-			EndTime:          params.CalenderSlots.EndTime,
-			IsDailyRepeated:  params.CalenderSlots.IsDailyRepeated,
-			IsWeeklyRepeated: params.CalenderSlots.IsWeeklyRepeated,
+			StartTime: params.CalenderSlots.StartTime,
+			EndTime:   params.CalenderSlots.EndTime,
+			// IsDailyRepeated:  params.CalenderSlots.IsDailyRepeated,
+			// IsWeeklyRepeated: params.CalenderSlots.IsWeeklyRepeated,
 		},
 		PetIDs:     params.PetIDs,
 		Notes:      params.Notes,
@@ -58,6 +58,8 @@ func (rc *UserRequestController) CreateRequest(ctx *gin.Context) {
 	msg := controllers.Message{}
 	controllers.Respond(ctx, 200, msg, nil)
 }
+
+// TODO: Create New Request Address
 
 // TODO: Edit Request / Status (Suspend?) / Less Errors / Email? / Notification? / Before PetSitter Response
 
