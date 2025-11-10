@@ -12,8 +12,8 @@ type Request struct {
 	PetSitterID   uint `gorm:"index"`
 	Status        enums.RequestStatus
 	Chat          Chat `gorm:"foreignKey:RequestID;not null"`
-	TransferID    uint
-	CalenderSlots []CalendarSlot `gorm:"foreignKey:Refer;not null"`
+	TransferID    *uint
+	CalendarSlots []CalendarSlot `gorm:"foreignKey:Refer;not null"`
 	Pets          []RequestPet   `gorm:"foreignKey:RequestID;not null"`
 	TotalPrice    uint
 	Notes         *string
