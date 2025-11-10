@@ -1,11 +1,11 @@
 package middleware
 
 import (
-	"hona/backend/bootstrap"
 	"hona/backend/internal/domain/entities"
 	"hona/backend/internal/domain/enums"
 	"hona/backend/internal/domain/exceptions"
 	"hona/backend/internal/infrastructure/persistence"
+	"hona/backend/internal/presentation/controllers"
 
 	"github.com/gin-gonic/gin"
 )
@@ -22,8 +22,8 @@ func NewRBACMiddleware(uintOfWork *persistence.UnitOfWork) *RBACMiddleware {
 
 func (rm *RBACMiddleware) NeedsPermission(allowedPermissions []enums.Permission) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		userID, _ := ctx.Get(bootstrap.Run().Constants.Context.ID)
-		user, err := rm.uintOfWork.Factory().UserRepository().FindUserByID(userID.(uint))
+		UserID := controllers.GetID(ctx)
+		user, err := rm.uintOfWork.Factory().UserRepository().FindUserByID(UserID)
 		if err != nil {
 			unauthorizedError := exceptions.NewUnauthorizedError("user not found")
 			panic(unauthorizedError)

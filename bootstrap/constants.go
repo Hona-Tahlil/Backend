@@ -97,6 +97,7 @@ type Context struct {
 	ID             string
 	RefreshToken   string
 	AcceptLanguage string
+	Authorization  string
 }
 
 func NewConstants() *Constants {
@@ -106,6 +107,7 @@ func NewConstants() *Constants {
 			ID:             "id",
 			RefreshToken:   "refreshToken",
 			AcceptLanguage: "Accept-Language",
+			Authorization:  "Authorization",
 		},
 		JWTKeysPath: JWTKeysPath{
 			PublicKey:  "./internal/infrastructure/jwt/public_key.pem",
