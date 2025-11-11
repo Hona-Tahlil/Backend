@@ -28,28 +28,30 @@ func (rc *UserRequestController) CreateRequest(ctx *gin.Context) {
 		// IsWeeklyRepeated bool      `json:"isWeeklyRepeated"`
 	}
 	type Params struct {
-		PetSitterID   uint         `json:"petSitterID" validate:"required"`
-		CalenderSlots CalendarSlot `json:"calendarSlots" validate:"required"`
-		PetIDs        []uint       `json:"petIDs" validate:"required"`
-		Notes         *string      `json:"notes"`
-		AddressID     uint         `json:"addressID" validate:"required"`
-		ServiceIDs    []uint       `json:"serviceIDs" validate:"required"`
+		PetSitterUserID uint           `json:"petSitterUserID" validate:"required"`
+		CalenderSlots   []CalendarSlot `json:"calendarSlots" validate:"required"`
+		PetIDs          []uint         `json:"petIDs" validate:"required"`
+		Notes           *string        `json:"notes"`
+		AddressID       uint           `json:"addressID" validate:"required"`
+		ServiceIDs      []uint         `json:"serviceIDs" validate:"required"`
 	}
 	params := controllers.Receive[Params](ctx)
 	UserID := controllers.GetID(ctx)
+	slots := make([]request.RequestCalendarSlotRequest, 0)
+	for _, slot := range params.CalenderSlots {
+		slots = append(slots, request.RequestCalendarSlotRequest{
+			StartTime: slot.StartTime,
+			EndTime:   slot.EndTime,
+		})
+	}
 	info := request.CreateRequestRequest{
-		UserID:      UserID,
-		PetSitterID: params.PetSitterID,
-		CalenderSlots: request.RequestCalendarSlotRequest{
-			StartTime: params.CalenderSlots.StartTime,
-			EndTime:   params.CalenderSlots.EndTime,
-			// IsDailyRepeated:  params.CalenderSlots.IsDailyRepeated,
-			// IsWeeklyRepeated: params.CalenderSlots.IsWeeklyRepeated,
-		},
-		PetIDs:     params.PetIDs,
-		Notes:      params.Notes,
-		AddressID:  params.AddressID,
-		ServiceIDs: params.ServiceIDs,
+		UserID:          UserID,
+		PetSitterUserID: params.PetSitterUserID,
+		CalenderSlots:   slots,
+		PetIDs:          params.PetIDs,
+		Notes:           params.Notes,
+		AddressID:       params.AddressID,
+		ServiceIDs:      params.ServiceIDs,
 	}
 
 	if err := rc.requestService.CreateRequest(info); err != nil {
