@@ -21,6 +21,7 @@ func NewUserRequestController(requestService *service.RequestService) *UserReque
 
 // TODO: Initialize Request / Rbac (Verified Email) / Validation / Email Sending? / chat / Status / Notification?
 func (rc *UserRequestController) CreateRequest(ctx *gin.Context) {
+	// TODO: calendar slot needs edit
 	type CalendarSlot struct {
 		StartTime time.Time `json:"startTime" validate:"required"`
 		EndTime   time.Time `json:"endTime" validate:"required"`
@@ -32,8 +33,9 @@ func (rc *UserRequestController) CreateRequest(ctx *gin.Context) {
 		CalenderSlots   []CalendarSlot `json:"calendarSlots" validate:"required"`
 		PetIDs          []uint         `json:"petIDs" validate:"required"`
 		Notes           *string        `json:"notes"`
-		AddressID       uint           `json:"addressID" validate:"required"`
-		ServiceIDs      []uint         `json:"serviceIDs" validate:"required"`
+		// TODO: make address
+		AddressID  uint   `json:"addressID" validate:"required"`
+		ServiceIDs []uint `json:"serviceIDs" validate:"required"`
 	}
 	params := controllers.Receive[Params](ctx)
 	UserID := controllers.GetID(ctx)
@@ -61,10 +63,10 @@ func (rc *UserRequestController) CreateRequest(ctx *gin.Context) {
 	controllers.Respond(ctx, 200, msg, nil)
 }
 
-// TODO: Create New Request Address
-
-// TODO: Edit Request / Status (Suspend?) / Less Errors / Email? / Notification? / Before PetSitter Response
+// TODO: Edit Request / Status / Less Errors / Email? / Notification? / Before PetSitter Response
 
 // TODO: Cancel Request / Email? / Policy
 
 // TODO: View Requests With Different Filters -> Accepted - Pending - Rejected - Canceled - ... / Different Sorts / Pagination
+
+// TODO: Policy: Cancel - Price - calendar (warning)

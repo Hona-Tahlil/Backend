@@ -2,6 +2,8 @@ package entities
 
 import "gorm.io/gorm"
 
+// TODO: polymorphism
+
 type RequestAddress struct {
 	gorm.Model
 	RequestID     uint
