@@ -13,9 +13,10 @@ import (
 	"hona/backend/internal/application/usecase"
 	"hona/backend/internal/domain/jwt"
 	"hona/backend/internal/domain/ports"
+	"hona/backend/internal/domain/storage"
 	"hona/backend/internal/infrastructure/jwt"
 	"hona/backend/internal/infrastructure/persistence"
-	"hona/backend/internal/infrastructure/persistence/seeder"
+	"hona/backend/internal/infrastructure/seeder"
 	"hona/backend/internal/infrastructure/storage"
 	"hona/backend/internal/presentation/controllers/v1/admin"
 	"hona/backend/internal/presentation/controllers/v1/general"
@@ -55,11 +56,13 @@ func InitializeApplication(container *bootstrap.Config) (*Application, error) {
 	recoveryMiddleware := middleware.NewRecoveryMiddleware()
 	authMiddleware := middleware.NewAuthMiddleware(jwtService)
 	rbacMiddleware := middleware.NewRBACMiddleware(unitOfWork)
+	corsMiddleware := middleware.NewCORSMiddleware()
 	middlewares := &Middlewares{
 		LocalizationMiddleware: localizationMiddleware,
 		RecoveryMiddleware:     recoveryMiddleware,
 		AuthMiddleware:         authMiddleware,
 		RBACMiddleware:         rbacMiddleware,
+		CORSMiddleware:         corsMiddleware,
 	}
 	databaseSeeder := seeder.NewDatabaseSeeder(db)
 	wireSeeder := &Seeder{
@@ -74,7 +77,7 @@ func InitializeApplication(container *bootstrap.Config) (*Application, error) {
 
 // wire.go:
 
-var StorageProviderSet = wire.NewSet(storage.NewS3Storage, wire.Struct(new(Storage), "*"))
+var StorageProviderSet = wire.NewSet(storage.NewS3Storage, wire.Bind(new(domainstorage.Storage), new(*storage.S3Storage)), wire.Struct(new(Storage), "*"))
 
 var RepositoryProviderSet = wire.NewSet(persistence.NewRepositoryFactory, persistence.NewUnitOfWork, persistence.NewPostgresDatabase, wire.Bind(new(ports.RepositoryFactory), new(*persistence.RepositoryFactory)), wire.Bind(new(ports.UnitOfWork), new(*persistence.UnitOfWork)))
 
@@ -88,7 +91,7 @@ var UserControllersProviderSet = wire.NewSet(user.NewUserPetController, wire.Str
 
 var ControllersProviderSet = wire.NewSet(wire.Struct(new(Controllers), "*"))
 
-var MiddlewaresProviderSet = wire.NewSet(middleware.NewLocalizationMiddleware, middleware.NewRecoveryMiddleware, middleware.NewRBACMiddleware, middleware.NewAuthMiddleware, wire.Struct(new(Middlewares), "*"))
+var MiddlewaresProviderSet = wire.NewSet(middleware.NewLocalizationMiddleware, middleware.NewRecoveryMiddleware, middleware.NewRBACMiddleware, middleware.NewAuthMiddleware, middleware.NewCORSMiddleware, wire.Struct(new(Middlewares), "*"))
 
 var SeederProviderSet = wire.NewSet(seeder.NewDatabaseSeeder, wire.Struct(new(Seeder), "*"))
 
@@ -127,6 +130,7 @@ type Middlewares struct {
 	RecoveryMiddleware     *middleware.RecoveryMiddleware
 	AuthMiddleware         *middleware.AuthMiddleware
 	RBACMiddleware         *middleware.RBACMiddleware
+	CORSMiddleware         *middleware.CORSMiddleware
 }
 
 type Seeder struct {

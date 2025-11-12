@@ -8,9 +8,16 @@ import (
 	ut "github.com/go-playground/universal-translator"
 )
 
+type Translator struct {
+}
+
+func NewTranslator() *Translator {
+	return &Translator{}
+}
+
 var translationMap map[string]map[string]string
 
-func GetTranslator(locale string) ut.Translator {
+func (t *Translator) GetTranslator(locale string) ut.Translator {
 	uniTrans := ut.New(fa_IR.New(), en.New(), fa_IR.New())
 
 	addTranslations("fa_IR", Persian, uniTrans)
