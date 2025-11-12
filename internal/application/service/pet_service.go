@@ -9,18 +9,18 @@ import (
 	"hona/backend/internal/domain/enums"
 	"hona/backend/internal/domain/exceptions"
 	"hona/backend/internal/domain/ports"
-	"hona/backend/internal/infrastructure/storage"
+	domainstorage "hona/backend/internal/domain/storage"
 	"log"
 	"time"
 )
 
 type PetService struct {
 	unitOfWork  ports.UnitOfWork
-	storage     *storage.S3Storage
+	storage     domainstorage.Storage
 	userService usecase.UserService
 }
 
-func NewPetService(unitOfWork ports.UnitOfWork, storage *storage.S3Storage, userService usecase.UserService) *PetService {
+func NewPetService(unitOfWork ports.UnitOfWork, storage domainstorage.Storage, userService usecase.UserService) *PetService {
 	return &PetService{
 		unitOfWork:  unitOfWork,
 		storage:     storage,

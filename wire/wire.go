@@ -10,9 +10,10 @@ import (
 	"hona/backend/internal/application/usecase"
 	domainjwt "hona/backend/internal/domain/jwt"
 	"hona/backend/internal/domain/ports"
+	domainstorage "hona/backend/internal/domain/storage"
 	"hona/backend/internal/infrastructure/jwt"
 	"hona/backend/internal/infrastructure/persistence"
-	"hona/backend/internal/infrastructure/persistence/seeder"
+	"hona/backend/internal/infrastructure/seeder"
 	"hona/backend/internal/infrastructure/storage"
 	"hona/backend/internal/presentation/controllers/v1/admin"
 	"hona/backend/internal/presentation/controllers/v1/general"
@@ -24,6 +25,7 @@ import (
 
 var StorageProviderSet = wire.NewSet(
 	storage.NewS3Storage,
+	wire.Bind(new(domainstorage.Storage), new(*storage.S3Storage)),
 	wire.Struct(new(Storage), "*"),
 )
 
@@ -71,6 +73,7 @@ var MiddlewaresProviderSet = wire.NewSet(
 	middleware.NewRecoveryMiddleware,
 	middleware.NewRBACMiddleware,
 	middleware.NewAuthMiddleware,
+	middleware.NewCORSMiddleware,
 	wire.Struct(new(Middlewares), "*"),
 )
 
@@ -114,6 +117,7 @@ type Middlewares struct {
 	RecoveryMiddleware     *middleware.RecoveryMiddleware
 	AuthMiddleware         *middleware.AuthMiddleware
 	RBACMiddleware         *middleware.RBACMiddleware
+	CORSMiddleware         *middleware.CORSMiddleware
 }
 
 type Seeder struct {

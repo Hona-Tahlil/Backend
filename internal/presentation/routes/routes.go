@@ -8,6 +8,7 @@ import (
 )
 
 func SetUpRoutes(ginEngine *gin.Engine, app *wire.Application) {
+	ginEngine.Use(app.Middlewares.CORSMiddleware.CORS())
 	ginEngine.Use(app.Middlewares.LocalizationMiddleware.AddTranslator)
 	ginEngine.Use(app.Middlewares.RecoveryMiddleware.Recover)
 
