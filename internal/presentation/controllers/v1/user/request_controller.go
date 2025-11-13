@@ -20,9 +20,26 @@ func NewUserRequestController(requestService *service.RequestService) *UserReque
 	}
 }
 
-// TODO: get info for request creation
+func (rc *UserRequestController) GetCreateRequestInfo(ctx *gin.Context) {
+	type Params struct {
+		PetSitterUserID uint `form:"petSitterUserID" validate:"required"`
+	}
+	params := controllers.Receive[Params](ctx)
+	UserID := controllers.GetID(ctx)
 
-// TODO: Initialize Request / Rbac (Verified Email) / Validation / Email Sending? / chat / Status / Notification?
+	info := request.GetCreateRequestInfoRequest{
+		UserID:          UserID,
+		PetSitterUserID: params.PetSitterUserID,
+	}
+	res, err := rc.requestService.GetCreateRequestInfo(info)
+	if err != nil {
+		panic(err)
+	}
+	msg := controllers.Message{}
+	controllers.Respond(ctx, 200, msg, *res)
+}
+
+// TODO Email Sending?
 func (rc *UserRequestController) CreateRequest(ctx *gin.Context) {
 	type CalendarSlot struct {
 		Date  time.Time    `json:"date" validate:"required"`

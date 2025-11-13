@@ -29,3 +29,8 @@ type RequestCalendarSlotRequest struct {
 	Date  time.Time
 	Slots []enums.Slot
 }
+
+type GetCreateRequestInfoRequest struct {
+	PetSitterUserID uint
+	UserID          uint
+}

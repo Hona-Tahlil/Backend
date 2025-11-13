@@ -2,6 +2,7 @@ package service
 
 import (
 	"fmt"
+	"hona/backend/internal/application/dto/pet"
 	"hona/backend/internal/application/dto/request"
 	"hona/backend/internal/application/usecase"
 	"hona/backend/internal/domain/entities"
@@ -10,13 +11,14 @@ import (
 )
 
 type RequestService struct {
-	userService     usecase.UserService
-	provinceService usecase.ProvinceService
-	cityService     usecase.CityService
-	addressService  usecase.AddressService
-	petService      usecase.PetService
-	serviceService  usecase.ServiceService
-	unitOfWork      ports.UnitOfWork
+	userService      usecase.UserService
+	provinceService  usecase.ProvinceService
+	cityService      usecase.CityService
+	addressService   usecase.AddressService
+	petService       usecase.PetService
+	serviceService   usecase.ServiceService
+	petSitterService usecase.PetSitterService
+	unitOfWork       ports.UnitOfWork
 }
 
 func NewRequestService(userService usecase.UserService, unitOfWork ports.UnitOfWork, provinceService usecase.ProvinceService, addressService usecase.AddressService, petService usecase.PetService) *RequestService {
@@ -31,6 +33,11 @@ func NewRequestService(userService usecase.UserService, unitOfWork ports.UnitOfW
 
 func (rs *RequestService) CreateRequest(info request.CreateRequestRequest) error {
 	petSitterUser, err := rs.userService.FindUserByID(info.PetSitterUserID)
+	if err != nil {
+		return err
+	}
+	userRepo := rs.unitOfWork.Factory().UserRepository()
+	err = userRepo.PreloadPetSitter(petSitterUser)
 	if err != nil {
 		return err
 	}
@@ -138,22 +145,53 @@ func (rs *RequestService) CreateRequest(info request.CreateRequestRequest) error
 	return nil
 }
 
-func (rs *RequestService) validateCalendarSlots(petSitterSlots []entities.CalendarSlot, requestSlots []request.RequestCalendarSlotRequest) error {
-	freeSlots := make(map[enums.Slot]bool)
-
-	for _, sitter := range petSitterSlots {
-		if sitter.Status != enums.Free {
-			continue
-		}
-		for _, slot := range sitter.Slots {
-			freeSlots[slot] = true
-		}
+func (rs *RequestService) GetCreateRequestInfo(info request.GetCreateRequestInfoRequest) (*request.CreateRequestInfoResponse, error) {
+	addresses, err := rs.addressService.GetUserAddressesInfo(info.UserID)
+	if err != nil {
+		return nil, err
 	}
 
+	petsData, err := rs.petService.GetPetsBasicData(pet.GetPetsBasicDataRequest{
+		UserID: info.UserID,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	freeSlots, err := rs.petSitterService.GetPetSitterFreeSlotsResponse(info.PetSitterUserID)
+	if err != nil {
+		return nil, err
+	}
+
+	servicesData, err := rs.petSitterService.GetServicesResponse(info.PetSitterUserID)
+	if err != nil {
+		return nil, err
+	}
+
+	return &request.CreateRequestInfoResponse{
+		Services:          servicesData,
+		Addresses:         addresses,
+		Pets:              petsData,
+		FreeCalendarSlots: freeSlots,
+	}, nil
+}
+
+func (rs *RequestService) validateCalendarSlots(petSitterSlots []entities.CalendarSlot, requestSlots []request.RequestCalendarSlotRequest) error {
 	for _, req := range requestSlots {
 		for _, userSlot := range req.Slots {
-			if ok, found := freeSlots[userSlot]; !found || !ok {
-				return fmt.Errorf("pet sitter is not free at requested time: %v", userSlot)
+			flag := false
+			for _, petSitterSlot := range petSitterSlots {
+				if petSitterSlot.Date.Equal(req.Date) {
+					for _, sitterSlot := range petSitterSlot.Slots {
+						if sitterSlot == userSlot {
+							flag = true
+							break
+						}
+					}
+				}
+			}
+			if !flag {
+				return fmt.Errorf("invalid calendar slots")
 			}
 		}
 	}

@@ -61,3 +61,7 @@ func (up *UserRepository) GetRoleUsersByID(roleID uint, limit, offset int) ([]en
 func (up *UserRepository) PreloadPets(user *entities.User) error {
 	return up.db.Preload("Pets").First(user, user.ID).Error
 }
+
+func (up *UserRepository) PreloadPetSitter(user *entities.User) error {
+	return up.db.Preload("PetSitter").First(user, user.ID).Error
+}

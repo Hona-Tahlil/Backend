@@ -7,4 +7,5 @@ type UserRepository interface {
 	FindUserByID(userID uint) (*entities.User, error)
 	GetRoleUsersByID(roleID uint, limit, offset int) ([]entities.User, error)
 	PreloadPets(user *entities.User) error
+	PreloadPetSitter(user *entities.User) error
 }

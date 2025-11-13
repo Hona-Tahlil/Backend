@@ -19,3 +19,7 @@ func NewPetSitterRepository(db *gorm.DB) *PetSitterRepository {
 func (pr *PetSitterRepository) PreloadSchedule(petSitter *entities.PetSitter) error {
 	return pr.db.Preload("Schedule").First(petSitter, petSitter.ID).Error
 }
+
+func (pr *PetSitterRepository) PreloadServices(petSitter *entities.PetSitter) error {
+	return pr.db.Preload("Services").First(petSitter, petSitter.ID).Error
+}
