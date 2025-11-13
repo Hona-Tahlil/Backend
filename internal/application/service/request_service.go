@@ -176,6 +176,123 @@ func (rs *RequestService) GetCreateRequestInfo(info request.GetCreateRequestInfo
 	}, nil
 }
 
+func (rs *RequestService) EditRequest(info request.EditRequestRequest) error {
+	requestRepo := rs.unitOfWork.Factory().RequestRepository()
+	foundRequest, err := requestRepo.GetRequestByID(info.RequestID)
+	if err != nil {
+		return err
+	}
+	if foundRequest == nil {
+		return fmt.Errorf("request not found")
+	}
+	if foundRequest.Status != enums.Pending {
+		return fmt.Errorf("invalid edit attempt")
+	}
+
+	petSitterUser, err := rs.userService.FindUserByID(foundRequest.PetSitterUserID)
+	if err != nil {
+		return err
+	}
+	userRepo := rs.unitOfWork.Factory().UserRepository()
+	err = userRepo.PreloadPetSitter(petSitterUser)
+	if err != nil {
+		return err
+	}
+	if petSitterUser.PetSitter == nil {
+		return fmt.Errorf("invalid pet sitter")
+	}
+	petSitter := petSitterUser.PetSitter
+	if !petSitter.IsVerified {
+		return fmt.Errorf("invalid pet sitter")
+	}
+
+	// petSitterRepo := rs.unitOfWork.Factory().PetSitterRepository()
+	// err = petSitterRepo.PreloadSchedule(petSitter)
+	// if err != nil {
+	// 	return err
+	// }
+
+	// err = rs.validateCalendarSlots(petSitter.Schedule, info.CalenderSlots)
+	// if err != nil {
+	// 	return err
+	// }
+
+	user, err := rs.userService.FindUserByID(info.UserID)
+	if err != nil {
+		return err
+	}
+	if !user.IsEmailVerified {
+		return fmt.Errorf("invalid user")
+	}
+
+	err = rs.validateRequestPets(user, petSitter, info.PetIDs)
+	if err != nil {
+		return err
+	}
+
+	pets, err := rs.makeRequestPets(info.PetIDs)
+	if err != nil {
+		return err
+	}
+
+	var address *entities.Address
+	if info.AddressInfo != nil {
+		province, err := rs.provinceService.FindProvinceByName(info.AddressInfo.ProvinceName)
+		if err != nil {
+			return err
+		}
+
+		city, err := rs.cityService.FindCityByNameInProvince(info.AddressInfo.CityName, province)
+		if err != nil {
+			return err
+		}
+
+		address = &entities.Address{
+			Province:      *province,
+			City:          *city,
+			StreetAddress: info.AddressInfo.StreetAddress,
+			HouseNumber:   info.AddressInfo.HouseNumber,
+			Unit:          info.AddressInfo.Unit,
+			PostalCode:    info.AddressInfo.PostalCode,
+		}
+	} else if info.AddressID != nil {
+		address, err = rs.addressService.FindAddressByID(*info.AddressID)
+		if err != nil {
+			return err
+		}
+	} else {
+		return fmt.Errorf("either address info or address ID must be provided")
+	}
+
+	err = rs.validateRequestServices(petSitter, info.ServiceIDs)
+	if err != nil {
+		return err
+	}
+
+	services, err := rs.makeRequestServices(info.ServiceIDs)
+	if err != nil {
+		return err
+	}
+
+	totalPrice := rs.calculateTotalPrice(services, petSitter.Schedule, len(pets))
+
+	calendarSlots := rs.makeCalendarSlots(info.CalenderSlots)
+
+	foundRequest.CalendarSlots = calendarSlots
+	foundRequest.Pets = pets
+	foundRequest.Notes = info.Notes
+	foundRequest.Address = *address
+	foundRequest.Services = services
+	foundRequest.TotalPrice = uint(totalPrice)
+
+	err = requestRepo.EditRequest(foundRequest)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (rs *RequestService) validateCalendarSlots(petSitterSlots []entities.CalendarSlot, requestSlots []request.RequestCalendarSlotRequest) error {
 	for _, req := range requestSlots {
 		for _, userSlot := range req.Slots {

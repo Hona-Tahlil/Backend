@@ -16,6 +16,17 @@ type CreateRequestRequest struct {
 	ServiceIDs      []uint
 }
 
+type EditRequestRequest struct {
+	RequestID     uint
+	UserID        uint
+	CalenderSlots []RequestCalendarSlotRequest
+	PetIDs        []uint
+	Notes         *string
+	AddressInfo   *AddressInfoRequest
+	AddressID     *uint
+	ServiceIDs    []uint
+}
+
 type AddressInfoRequest struct {
 	ProvinceName  enums.Province
 	CityName      enums.City
