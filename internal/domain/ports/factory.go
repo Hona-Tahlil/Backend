@@ -12,4 +12,6 @@ type RepositoryFactory interface {
 	ProvinceRepository() domainpostgres.ProvinceRepository
 	CityRepository() domainpostgres.CityRepository
 	AddressRepository() domainpostgres.AddressRepository
+	ServiceRepository() domainpostgres.ServiceRepository
+	RequestRepository() domainpostgres.RequestRepository
 }

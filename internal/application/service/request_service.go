@@ -14,17 +14,21 @@ type RequestService struct {
 	provinceService usecase.ProvinceService
 	cityService     usecase.CityService
 	addressService  usecase.AddressService
+	petService      usecase.PetService
+	serviceService  usecase.ServiceService
 	unitOfWork      ports.UnitOfWork
 }
 
-func NewRequestService(userService usecase.UserService, unitOfWork ports.UnitOfWork, provinceService usecase.ProvinceService, addressService usecase.AddressService) *RequestService {
+func NewRequestService(userService usecase.UserService, unitOfWork ports.UnitOfWork, provinceService usecase.ProvinceService, addressService usecase.AddressService, petService usecase.PetService) *RequestService {
 	return &RequestService{
 		userService:     userService,
 		unitOfWork:      unitOfWork,
 		provinceService: provinceService,
 		addressService:  addressService,
+		petService:      petService,
 	}
 }
+
 func (rs *RequestService) CreateRequest(info request.CreateRequestRequest) error {
 	petSitterUser, err := rs.userService.FindUserByID(info.PetSitterUserID)
 	if err != nil {
@@ -44,7 +48,7 @@ func (rs *RequestService) CreateRequest(info request.CreateRequestRequest) error
 		return err
 	}
 
-	err = rs.ValidateCalendarSlots(petSitter.Schedule, info.CalenderSlots)
+	err = rs.validateCalendarSlots(petSitter.Schedule, info.CalenderSlots)
 	if err != nil {
 		return err
 	}
@@ -58,6 +62,11 @@ func (rs *RequestService) CreateRequest(info request.CreateRequestRequest) error
 	}
 
 	err = rs.validateRequestPets(user, petSitter, info.PetIDs)
+	if err != nil {
+		return err
+	}
+
+	pets, err := rs.makeRequestPets(info.PetIDs)
 	if err != nil {
 		return err
 	}
@@ -91,18 +100,45 @@ func (rs *RequestService) CreateRequest(info request.CreateRequestRequest) error
 		return fmt.Errorf("either address info or address ID must be provided")
 	}
 
-	_ = address
+	err = rs.validateRequestServices(petSitter, info.ServiceIDs)
+	if err != nil {
+		return err
+	}
 
-	// requestRepo := rs.unitOfWork.Factory().RequestRepository()
-	// err = requestRepo.CreateRequest(info, user, petSitterUser, address)
-	// if err != nil {
-	// 	return err
-	// }
+	services, err := rs.makeRequestServices(info.ServiceIDs)
+	if err != nil {
+		return err
+	}
+
+	totalPrice := rs.calculateTotalPrice(services, petSitter.Schedule, len(pets))
+
+	calendarSlots := rs.makeCalendarSlots(info.CalenderSlots)
+
+	newRequest := &entities.Request{
+		UserID:          info.UserID,
+		PetSitterUserID: info.PetSitterUserID,
+		Status:          enums.Pending,
+		Chat:            entities.Chat{},
+		TransferID:      nil,
+		CalendarSlots:   calendarSlots,
+		Pets:            pets,
+		TotalPrice:      uint(totalPrice),
+		Notes:           info.Notes,
+		Comment:         nil,
+		Address:         *address,
+		Services:        services,
+	}
+
+	requestRepo := rs.unitOfWork.Factory().RequestRepository()
+	err = requestRepo.CreateRequest(newRequest)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
 
-func (rs *RequestService) ValidateCalendarSlots(petSitterSlots []entities.CalendarSlot, requestSlots []request.RequestCalendarSlotRequest) error {
+func (rs *RequestService) validateCalendarSlots(petSitterSlots []entities.CalendarSlot, requestSlots []request.RequestCalendarSlotRequest) error {
 	freeSlots := make(map[enums.Slot]bool)
 
 	for _, sitter := range petSitterSlots {
@@ -161,4 +197,101 @@ func (rs *RequestService) validateRequestPets(user *entities.User, petSitter *en
 	}
 
 	return nil
+}
+
+func (rs *RequestService) makeRequestPets(petIDs []uint) ([]entities.Pet, error) {
+	pets := make([]entities.Pet, 0)
+
+	for _, petID := range petIDs {
+		pet, err := rs.petService.FindPetByID(petID)
+		if err != nil {
+			return nil, err
+		}
+		requestPet := &entities.Pet{
+			UserID:     pet.UserID,
+			Name:       pet.Name,
+			Kind:       pet.Kind,
+			Species:    pet.Species,
+			BirthDate:  pet.BirthDate,
+			IsAdult:    pet.IsAdult,
+			Gender:     pet.Gender,
+			Weight:     pet.Weight,
+			PictureKey: pet.PictureKey,
+			AboutPet:   pet.AboutPet,
+			Type:       "request",
+		}
+
+		pets = append(pets, *requestPet)
+	}
+
+	return pets, nil
+}
+
+func (rs *RequestService) validateRequestServices(petSitter *entities.PetSitter, serviceIDs []uint) error {
+	for _, serviceID := range serviceIDs {
+		flag := false
+		for _, service := range petSitter.Services {
+			if service.ID == serviceID {
+				flag = true
+				break
+			}
+		}
+		if !flag {
+			return fmt.Errorf("wrong service selected")
+		}
+	}
+
+	return nil
+}
+
+func (rs *RequestService) makeRequestServices(serviceIDs []uint) ([]entities.Service, error) {
+	services := make([]entities.Service, 0)
+
+	for _, serviceID := range serviceIDs {
+		service, err := rs.serviceService.FindServiceByID(serviceID)
+		if err != nil {
+			return nil, err
+		}
+		requestService := &entities.Service{
+			PetSitterID: service.PetSitterID,
+			Description: service.Description,
+			Price:       service.Price,
+			Type:        service.Type,
+			PetKinds:    service.PetKinds,
+			Kind:        "request",
+		}
+
+		services = append(services, *requestService)
+	}
+
+	return services, nil
+}
+
+func (rs *RequestService) calculateTotalPrice(services []entities.Service, slots []entities.CalendarSlot, petCount int) int {
+	totalPrice := 0
+	for _, service := range services {
+		servicePrice := int(service.Price) * petCount
+		totalPrice += servicePrice
+	}
+
+	for _, slot := range slots {
+		slotHours := len(slot.Slots) / 2
+		totalPrice *= slotHours
+	}
+
+	return totalPrice
+}
+
+func (rs *RequestService) makeCalendarSlots(calendarSlots []request.RequestCalendarSlotRequest) []entities.CalendarSlot {
+	slots := make([]entities.CalendarSlot, 0)
+
+	for _, slot := range calendarSlots {
+		calendarSlot := &entities.CalendarSlot{
+			Date:  slot.Date,
+			Slots: slot.Slots,
+		}
+		slots = append(slots, *calendarSlot)
+	}
+
+	return slots
 }

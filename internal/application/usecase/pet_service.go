@@ -1,6 +1,9 @@
 package usecase
 
-import "hona/backend/internal/application/dto/pet"
+import (
+	"hona/backend/internal/application/dto/pet"
+	"hona/backend/internal/domain/entities"
+)
 
 type PetService interface {
 	AddPet(info pet.AddPetRequest) error
@@ -8,4 +11,5 @@ type PetService interface {
 	RemovePet(info pet.RemovePetRequest) error
 	GetPetsBasicData(info pet.GetPetsBasicDataRequest) ([]pet.PetBasicDataResponse, error)
 	GetPetFullData(info pet.GetPetFullDataRequest) (*pet.PetFullDataResponse, error)
+	FindPetByID(id uint) (*entities.Pet, error)
 }

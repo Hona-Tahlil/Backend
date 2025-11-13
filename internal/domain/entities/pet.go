@@ -20,4 +20,5 @@ type Pet struct {
 	Weight     *float32
 	PictureKey *string
 	AboutPet   *string
+	Type       string `gorm:"default:'regular'"` // regular, request
 }

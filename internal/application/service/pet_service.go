@@ -79,7 +79,7 @@ func (ps *PetService) AddPet(info pet.AddPetRequest) error {
 }
 
 func (ps *PetService) UpdatePet(info pet.UpdatePetRequest) error {
-	foundPet, err := ps.findPetByID(info.ID)
+	foundPet, err := ps.FindPetByID(info.ID)
 	if err != nil {
 		return err
 	}
@@ -133,7 +133,7 @@ func (ps *PetService) UpdatePet(info pet.UpdatePetRequest) error {
 }
 
 func (ps *PetService) RemovePet(info pet.RemovePetRequest) error {
-	foundPet, err := ps.findPetByID(info.ID)
+	foundPet, err := ps.FindPetByID(info.ID)
 	if err != nil {
 		return err
 	}
@@ -171,7 +171,7 @@ func (ps *PetService) GetPetsBasicData(info pet.GetPetsBasicDataRequest) ([]pet.
 }
 
 func (ps *PetService) GetPetFullData(info pet.GetPetFullDataRequest) (*pet.PetFullDataResponse, error) {
-	foundPet, err := ps.findPetByID(info.ID)
+	foundPet, err := ps.FindPetByID(info.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -225,7 +225,7 @@ func (ps *PetService) findPet(name string, userID uint) (*entities.Pet, error) {
 	return foundPet, nil
 }
 
-func (ps *PetService) findPetByID(id uint) (*entities.Pet, error) {
+func (ps *PetService) FindPetByID(id uint) (*entities.Pet, error) {
 	petRepo := ps.unitOfWork.Factory().PetRepository()
 	foundPet, err := petRepo.FindPetByID(id)
 	if err != nil {
