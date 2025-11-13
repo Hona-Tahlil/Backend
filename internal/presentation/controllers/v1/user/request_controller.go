@@ -20,20 +20,30 @@ func NewUserRequestController(requestService *service.RequestService) *UserReque
 	}
 }
 
+// TODO: get info for request creation
+
 // TODO: Initialize Request / Rbac (Verified Email) / Validation / Email Sending? / chat / Status / Notification?
 func (rc *UserRequestController) CreateRequest(ctx *gin.Context) {
 	type CalendarSlot struct {
 		Date  time.Time    `json:"date" validate:"required"`
 		Slots []enums.Slot `json:"slots" validate:"required"`
 	}
+	type AddressInfo struct {
+		ProvinceName  enums.Province
+		CityName      enums.City
+		StreetAddress string
+		HouseNumber   uint
+		Unit          uint
+		PostalCode    *string
+	}
 	type Params struct {
 		PetSitterUserID uint           `json:"petSitterUserID" validate:"required"`
 		CalenderSlots   []CalendarSlot `json:"calendarSlots" validate:"required"`
 		PetIDs          []uint         `json:"petIDs" validate:"required"`
 		Notes           *string        `json:"notes"`
-		// TODO: make address
-		AddressID  uint   `json:"addressID" validate:"required"`
-		ServiceIDs []uint `json:"serviceIDs" validate:"required"`
+		AddressInfo     *AddressInfo   `json:"addressInfo"`
+		AddressID       *uint          `json:"addressID" validate:"required"`
+		ServiceIDs      []uint         `json:"serviceIDs" validate:"required"`
 	}
 	params := controllers.Receive[Params](ctx)
 	UserID := controllers.GetID(ctx)
@@ -50,6 +60,7 @@ func (rc *UserRequestController) CreateRequest(ctx *gin.Context) {
 		CalenderSlots:   slots,
 		PetIDs:          params.PetIDs,
 		Notes:           params.Notes,
+		AddressInfo:     (*request.AddressInfoRequest)(params.AddressInfo),
 		AddressID:       params.AddressID,
 		ServiceIDs:      params.ServiceIDs,
 	}

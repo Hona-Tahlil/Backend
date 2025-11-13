@@ -11,8 +11,18 @@ type CreateRequestRequest struct {
 	CalenderSlots   []RequestCalendarSlotRequest
 	PetIDs          []uint
 	Notes           *string
-	AddressID       uint
+	AddressInfo     *AddressInfoRequest
+	AddressID       *uint
 	ServiceIDs      []uint
+}
+
+type AddressInfoRequest struct {
+	ProvinceName  enums.Province
+	CityName      enums.City
+	StreetAddress string
+	HouseNumber   uint
+	Unit          uint
+	PostalCode    *string
 }
 
 type RequestCalendarSlotRequest struct {
