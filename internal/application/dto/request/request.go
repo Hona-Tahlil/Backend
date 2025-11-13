@@ -1,6 +1,9 @@
 package request
 
-import "time"
+import (
+	"hona/backend/internal/domain/enums"
+	"time"
+)
 
 type CreateRequestRequest struct {
 	UserID          uint
@@ -13,8 +16,6 @@ type CreateRequestRequest struct {
 }
 
 type RequestCalendarSlotRequest struct {
-	StartTime time.Time
-	EndTime   time.Time
-	// IsDailyRepeated  bool
-	// IsWeeklyRepeated bool
+	Date  time.Time
+	Slots []enums.Slot
 }

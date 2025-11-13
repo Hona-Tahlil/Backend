@@ -13,7 +13,7 @@ type PetSitter struct {
 	IsVerified      bool            `gorm:"default=false"`
 	Requests        []Request       `gorm:"foreignKey:PetSitterID"`
 	Services        []Service       `gorm:"foreignKey:PetSitterID"`
-	PetKinds        []enums.PetKind `gorm:"not null"`
+	PetKinds        []enums.PetKind `gorm:"type:integer[];not null"`
 	Schedule        []CalendarSlot  `gorm:"foreignKey:Refer"`
 	Comments        []Comment       `gorm:"foreignKey:PetSitterID"`
 	Bio             *string

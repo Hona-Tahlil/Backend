@@ -3,6 +3,7 @@ package user
 import (
 	"hona/backend/internal/application/dto/request"
 	"hona/backend/internal/application/service"
+	"hona/backend/internal/domain/enums"
 	"hona/backend/internal/presentation/controllers"
 	"time"
 
@@ -21,12 +22,9 @@ func NewUserRequestController(requestService *service.RequestService) *UserReque
 
 // TODO: Initialize Request / Rbac (Verified Email) / Validation / Email Sending? / chat / Status / Notification?
 func (rc *UserRequestController) CreateRequest(ctx *gin.Context) {
-	// TODO: calendar slot needs edit
 	type CalendarSlot struct {
-		StartTime time.Time `json:"startTime" validate:"required"`
-		EndTime   time.Time `json:"endTime" validate:"required"`
-		// IsDailyRepeated  bool      `json:"isDailyRepeated"`
-		// IsWeeklyRepeated bool      `json:"isWeeklyRepeated"`
+		Date  time.Time    `json:"date" validate:"required"`
+		Slots []enums.Slot `json:"slots" validate:"required"`
 	}
 	type Params struct {
 		PetSitterUserID uint           `json:"petSitterUserID" validate:"required"`
@@ -42,8 +40,8 @@ func (rc *UserRequestController) CreateRequest(ctx *gin.Context) {
 	slots := make([]request.RequestCalendarSlotRequest, 0)
 	for _, slot := range params.CalenderSlots {
 		slots = append(slots, request.RequestCalendarSlotRequest{
-			StartTime: slot.StartTime,
-			EndTime:   slot.EndTime,
+			Date:  slot.Date,
+			Slots: slot.Slots,
 		})
 	}
 	info := request.CreateRequestRequest{

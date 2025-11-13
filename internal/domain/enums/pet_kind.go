@@ -1,5 +1,11 @@
 package enums
 
+import (
+	"database/sql/driver"
+	"encoding/json"
+	"fmt"
+)
+
 type PetKind uint
 
 const (
@@ -26,4 +32,22 @@ func GetAllPetKinds() []PetKind {
 		Cat,
 		Bird,
 	}
+}
+
+type PetKindSlice []PetKind
+
+func (PetKindSlice) GormDataType() string {
+	return "jsonb"
+}
+
+func (p PetKindSlice) Value() (driver.Value, error) {
+	return json.Marshal(p)
+}
+
+func (p *PetKindSlice) Scan(value any) error {
+	b, ok := value.([]byte)
+	if !ok {
+		return fmt.Errorf("cannot convert %T to []byte", value)
+	}
+	return json.Unmarshal(b, p)
 }

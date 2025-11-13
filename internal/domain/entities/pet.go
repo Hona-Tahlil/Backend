@@ -10,6 +10,7 @@ import (
 type Pet struct {
 	gorm.Model
 	UserID     uint          `gorm:"index"`
+	RequestID  *uint         `gorm:"index"`
 	Name       string        `gorm:"not null"`
 	Kind       enums.PetKind `gorm:"index"`
 	Species    enums.Species
