@@ -82,7 +82,7 @@ func (ps *PetSitterService) GetServicesResponse(id uint) ([]servicedto.ServiceIn
 	for _, service := range petSitter.Services {
 		r = append(r, servicedto.ServiceInfoResponse{
 			ID:          service.ID,
-			Type:        service.Type,
+			Type:        service.Type.String(),
 			Description: service.Description,
 			Price:       service.Price,
 		})

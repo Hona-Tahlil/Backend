@@ -17,7 +17,7 @@ type Request struct {
 	Pets            []Pet          `gorm:"foreignKey:RequestID;not null"`
 	TotalPrice      uint
 	Notes           *string
-	Comment         *Comment  `gorm:"foreignKey:RequestID"`
-	Address         Address   `gorm:"polymorphicType:Type;polymorphicId:Refer;polymorphicValue:Request"`
-	Services        []Service `gorm:"foreignKey:RequestID;not null"`
+	Comment         *Comment `gorm:"foreignKey:RequestID"`
+	Address         Address  `gorm:"polymorphicType:Type;polymorphicId:Refer;polymorphicValue:Request"`
+	Service         Service  `gorm:"foreignKey:RequestID;not null"`
 }

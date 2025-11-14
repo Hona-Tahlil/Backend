@@ -2,6 +2,7 @@ package service
 
 import (
 	"fmt"
+	"hona/backend/internal/application/dto/servicedto"
 	"hona/backend/internal/domain/entities"
 	"hona/backend/internal/domain/ports"
 )
@@ -27,4 +28,14 @@ func (ss *ServiceService) FindServiceByID(id uint) (*entities.Service, error) {
 	}
 
 	return service, nil
+}
+
+func (ss *ServiceService) GetServiceResponse(serviceEntity *entities.Service) servicedto.ServiceInfoResponse {
+	return servicedto.ServiceInfoResponse{
+		ID:          serviceEntity.ID,
+		Type:        serviceEntity.Type.String(),
+		Description: serviceEntity.Description,
+		Price:       serviceEntity.Price,
+		PetKinds:    serviceEntity.PetKinds,
+	}
 }

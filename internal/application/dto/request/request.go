@@ -13,7 +13,7 @@ type CreateRequestRequest struct {
 	Notes           *string
 	AddressInfo     *AddressInfoRequest
 	AddressID       *uint
-	ServiceIDs      []uint
+	ServiceID       uint
 }
 
 type EditRequestRequest struct {
@@ -24,7 +24,7 @@ type EditRequestRequest struct {
 	Notes         *string
 	AddressInfo   *AddressInfoRequest
 	AddressID     *uint
-	ServiceIDs    []uint
+	ServiceID     uint
 }
 
 type AddressInfoRequest struct {
@@ -44,4 +44,14 @@ type RequestCalendarSlotRequest struct {
 type GetCreateRequestInfoRequest struct {
 	PetSitterUserID uint
 	UserID          uint
+}
+
+type CancelRequestRequest struct {
+	RequestID uint
+	UserID    uint
+}
+
+type GetRequestFullDataRequest struct {
+	RequestID uint
+	UserID    uint
 }

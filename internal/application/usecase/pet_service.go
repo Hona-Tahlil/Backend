@@ -12,4 +12,5 @@ type PetService interface {
 	GetPetsBasicData(info pet.GetPetsBasicDataRequest) ([]pet.PetBasicDataResponse, error)
 	GetPetFullData(info pet.GetPetFullDataRequest) (*pet.PetFullDataResponse, error)
 	FindPetByID(id uint) (*entities.Pet, error)
+	GetPetsBasicDataResponse(pets []entities.Pet) ([]pet.PetBasicDataResponse, error)
 }

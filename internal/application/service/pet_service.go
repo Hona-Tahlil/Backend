@@ -150,7 +150,6 @@ func (ps *PetService) RemovePet(info pet.RemovePetRequest) error {
 }
 
 func (ps *PetService) GetPetsBasicData(info pet.GetPetsBasicDataRequest) ([]pet.PetBasicDataResponse, error) {
-	r := make([]pet.PetBasicDataResponse, 0)
 	user, err := ps.userService.FindUserByID(info.UserID)
 	if err != nil {
 		return nil, err
@@ -160,14 +159,7 @@ func (ps *PetService) GetPetsBasicData(info pet.GetPetsBasicDataRequest) ([]pet.
 	if err != nil {
 		return nil, err
 	}
-	for _, pet := range user.Pets {
-		res, err := ps.getPetBasicDataResponse(&pet)
-		if err != nil {
-			return nil, err
-		}
-		r = append(r, *res)
-	}
-	return r, nil
+	return ps.GetPetsBasicDataResponse(user.Pets)
 }
 
 func (ps *PetService) GetPetFullData(info pet.GetPetFullDataRequest) (*pet.PetFullDataResponse, error) {
@@ -288,4 +280,18 @@ func (ps *PetService) validateSpecies(species enums.Species, kind enums.PetKind)
 		}
 	}
 	return nil
+}
+
+func (ps *PetService) GetPetsBasicDataResponse(pets []entities.Pet) ([]pet.PetBasicDataResponse, error) {
+	r := make([]pet.PetBasicDataResponse, 0)
+
+	for _, petEntity := range pets {
+		res, err := ps.getPetBasicDataResponse(&petEntity)
+		if err != nil {
+			return nil, err
+		}
+		r = append(r, *res)
+	}
+
+	return r, nil
 }

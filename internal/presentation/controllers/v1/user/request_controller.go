@@ -60,7 +60,7 @@ func (rc *UserRequestController) CreateRequest(ctx *gin.Context) {
 		Notes           *string        `json:"notes"`
 		AddressInfo     *AddressInfo   `json:"addressInfo"`
 		AddressID       *uint          `json:"addressID" validate:"required"`
-		ServiceIDs      []uint         `json:"serviceIDs" validate:"required"`
+		ServiceID       uint           `json:"serviceID" validate:"required"`
 	}
 	params := controllers.Receive[Params](ctx)
 	UserID := controllers.GetID(ctx)
@@ -79,7 +79,7 @@ func (rc *UserRequestController) CreateRequest(ctx *gin.Context) {
 		Notes:           params.Notes,
 		AddressInfo:     (*request.AddressInfoRequest)(params.AddressInfo),
 		AddressID:       params.AddressID,
-		ServiceIDs:      params.ServiceIDs,
+		ServiceID:       params.ServiceID,
 	}
 
 	if err := rc.requestService.CreateRequest(info); err != nil {
@@ -110,7 +110,7 @@ func (rc *UserRequestController) EditRequest(ctx *gin.Context) {
 		Notes         *string        `json:"notes"`
 		AddressInfo   *AddressInfo   `json:"addressInfo"`
 		AddressID     *uint          `json:"addressID" validate:"required"`
-		ServiceIDs    []uint         `json:"serviceIDs" validate:"required"`
+		ServiceID     uint           `json:"serviceID" validate:"required"`
 	}
 	params := controllers.Receive[Params](ctx)
 	UserID := controllers.GetID(ctx)
@@ -129,7 +129,7 @@ func (rc *UserRequestController) EditRequest(ctx *gin.Context) {
 		Notes:         params.Notes,
 		AddressInfo:   (*request.AddressInfoRequest)(params.AddressInfo),
 		AddressID:     params.AddressID,
-		ServiceIDs:    params.ServiceIDs,
+		ServiceID:     params.ServiceID,
 	}
 
 	if err := rc.requestService.EditRequest(info); err != nil {
@@ -139,7 +139,44 @@ func (rc *UserRequestController) EditRequest(ctx *gin.Context) {
 	controllers.Respond(ctx, 200, msg, nil)
 }
 
-// TODO: Cancel Request / Email? / Policy
+// TODO: Email? / Policy
+func (rc *UserRequestController) CancelRequest(ctx *gin.Context) {
+	type Params struct {
+		RequestID uint `json:"requestID"`
+	}
+	params := controllers.Receive[Params](ctx)
+	UserID := controllers.GetID(ctx)
+
+	info := request.CancelRequestRequest{
+		RequestID: params.RequestID,
+		UserID:    UserID,
+	}
+
+	if err := rc.requestService.CancelRequest(info); err != nil {
+		panic(err)
+	}
+	msg := controllers.Message{}
+	controllers.Respond(ctx, 200, msg, nil)
+}
+
+func (rc *UserRequestController) GetRequestFullData(ctx *gin.Context) {
+	type Params struct {
+		RequestID uint `uri:"requestID"`
+	}
+	params := controllers.Receive[Params](ctx)
+	UserID := controllers.GetID(ctx)
+
+	info := request.GetRequestFullDataRequest{
+		RequestID: params.RequestID,
+		UserID:    UserID,
+	}
+	res, err := rc.requestService.GetRequestFullData(info)
+	if err != nil {
+		panic(err)
+	}
+	msg := controllers.Message{}
+	controllers.Respond(ctx, 200, msg, *res)
+}
 
 // TODO: View Requests With Different Filters -> Accepted - Pending - Rejected - Canceled - ... / Different Sorts / Pagination
 
