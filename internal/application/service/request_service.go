@@ -295,7 +295,7 @@ func (rs *RequestService) CancelRequest(info request.CancelRequestRequest) error
 	if foundRequest == nil {
 		return fmt.Errorf("request not found")
 	}
-	if foundRequest.UserID != info.UserID {
+	if foundRequest.UserID != info.UserID || foundRequest.PetSitterUserID == info.UserID {
 		return fmt.Errorf("wrong user trying to cancel request")
 	}
 
@@ -345,6 +345,33 @@ func (rs *RequestService) GetRequestFullData(info request.GetRequestFullDataRequ
 		TransferID:      foundRequest.TransferID,
 		CalendarSlots:   rs.calendarSlotService.GetCalendarSlotsResponse(foundRequest.CalendarSlots),
 	}, nil
+}
+
+func (rs *RequestService) RespondToRequest(info request.RespondToRequestRequest) error {
+	requestRepo := rs.unitOfWork.Factory().RequestRepository()
+	foundRequest, err := requestRepo.GetRequestByID(info.RequestID)
+	if err != nil {
+		return err
+	}
+	if foundRequest == nil {
+		return fmt.Errorf("request not found")
+	}
+	if foundRequest.Status != enums.Pending {
+		return fmt.Errorf("can't respond to this request")
+	}
+	if foundRequest.PetSitterUserID != info.UserID {
+		return fmt.Errorf("you can't respond to this request")
+	}
+
+	if info.Accept {
+		foundRequest.Status = enums.Accepted
+	} else {
+		foundRequest.Status = enums.Dismissed
+	}
+
+	requestRepo.EditRequest(foundRequest)
+
+	return nil
 }
 
 func (rs *RequestService) validateCalendarSlots(petSitterSlots []entities.CalendarSlot, requestSlots []request.RequestCalendarSlotRequest) error {

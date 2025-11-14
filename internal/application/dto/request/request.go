@@ -53,5 +53,10 @@ type CancelRequestRequest struct {
 
 type GetRequestFullDataRequest struct {
 	RequestID uint
+}
+
+type RespondToRequestRequest struct {
+	RequestID uint
+	Accept    bool
 	UserID    uint
 }

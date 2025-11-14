@@ -164,11 +164,9 @@ func (rc *UserRequestController) GetRequestFullData(ctx *gin.Context) {
 		RequestID uint `uri:"requestID"`
 	}
 	params := controllers.Receive[Params](ctx)
-	UserID := controllers.GetID(ctx)
 
 	info := request.GetRequestFullDataRequest{
 		RequestID: params.RequestID,
-		UserID:    UserID,
 	}
 	res, err := rc.requestService.GetRequestFullData(info)
 	if err != nil {
