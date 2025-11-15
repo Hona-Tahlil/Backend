@@ -1,7 +1,12 @@
 package user
 
+import (
+	"hona/backend/internal/application/dto/rbac"
+)
+
 type LoginResponse struct {
-	JWTToken string `json:jwt_token`
+	AccessToken string              `json:"accessToken"`
+	Roles       []rbac.RoleResponse `json:"roles"`
 }
 
 type MLData struct {

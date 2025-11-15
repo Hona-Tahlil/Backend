@@ -7,4 +7,6 @@ type UserRepository interface {
 	DeleteUserByEmail(email string) error
 	CreateUser(user *entities.User) error
 	SaveUser(user *entities.User) error
+	FindUserByID(userID uint) (*entities.User, error)
+	GetRoleUsersByID(roleID uint, limit, offset int) ([]entities.User, error)
 }

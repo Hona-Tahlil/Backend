@@ -22,10 +22,6 @@ const (
 	Canary
 	Budgie
 	Cockatiel
-
-	// Others
-	Goldfish
-	Hamster
 )
 
 func (species Species) String() string {
@@ -58,10 +54,6 @@ func (species Species) String() string {
 		return "مرغ عشق"
 	case Cockatiel:
 		return "کاکاتیل"
-	case Goldfish:
-		return "ماهی قرمز"
-	case Hamster:
-		return "همستر"
 	default:
 		return ""
 	}
@@ -72,6 +64,5 @@ func GetAllSpecies() []Species {
 		GermanShepherd, GoldenRetriever, Bulldog, Poodle, Labrador, Husky,
 		Persian, Siamese, MaineCoon, BritishShorthair,
 		Parrot, Canary, Budgie, Cockatiel,
-		Goldfish, Hamster,
 	}
 }

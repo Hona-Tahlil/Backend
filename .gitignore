@@ -1,2 +1,17 @@
 .env
 .vscode
+*.pem
+# Air (Go live-reload tool)
+.air.toml
+/tmp/
+/tmp/*
+/tmp/**/
+/tmp/main
+# Air (live reload)
+.air.toml
+tmp/
+tmp/*
+tmp/**/*
+cmd/tmp/
+cmd/tmp/*
+cmd/tmp/**/*

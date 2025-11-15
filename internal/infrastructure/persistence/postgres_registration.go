@@ -10,7 +10,7 @@ import (
 	"gorm.io/gorm"
 )
 
-var dbInstance *PostgresDatabase
+var dbInstance *gorm.DB
 var dbOnce sync.Once
 
 type Database interface {
@@ -72,6 +72,16 @@ func NewPostgresDatabase() *PostgresDatabase {
 			&entities.Transaction{},
 			&entities.Transfer{},
 		)
+		// user := entities.User{
+		// 	Email: "test@email",
+		// }
+		// db.Create(&user)
+		// permission := entities.Permission{
+		// 	Type:     enums.RequestPermission,
+		// 	Category: enums.ReadPermissionCategory,
+		// }
+		// db.Create(&permission)
+
 	})
 
 	return dbInstance

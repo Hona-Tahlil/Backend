@@ -108,6 +108,7 @@ func NewEnv() *Env {
 			ExpireMinutes: expireMinutes,
 		},
 	}
+	return defaultVal
 }
 
 func getEnvInt(key string, defaultVal int) int {

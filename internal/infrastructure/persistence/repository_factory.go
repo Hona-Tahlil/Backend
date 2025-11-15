@@ -20,3 +20,11 @@ func NewRepositoryFactory(db *gorm.DB) *RepositoryFactory {
 func (f *RepositoryFactory) UserRepository() domainpostgres.UserRepository {
 	return postgres.NewUserRepository(f.db)
 }
+
+func (f *RepositoryFactory) RBACRepository() domainpostgres.RBACRepository {
+	return postgres.NewRBACRepository(f.db)
+}
+
+func (f *RepositoryFactory) PetRepository() domainpostgres.PetRepository {
+	return postgres.NewPetRepository(f.db)
+}

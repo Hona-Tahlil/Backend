@@ -1,6 +1,6 @@
 services:
   db:
-    image: postgres:latest
+    image: postgres:17
     restart: always
     environment:
       POSTGRES_USER: ${DB_USER}
@@ -41,8 +41,6 @@ services:
       DB_PORT: ${DB_PORT}
     ports:
       - "${SERVER_PORT}:8080"
-    volumes:
-     - .:/app  
 
 
 volumes:
