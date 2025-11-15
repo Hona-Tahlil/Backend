@@ -1,23 +1,29 @@
 package service
 
 import (
-	"fmt"
+	"hona/backend/bootstrap"
 	calendarslot "hona/backend/internal/application/dto/calendar_slot"
 	"hona/backend/internal/application/dto/servicedto"
 	"hona/backend/internal/application/usecase"
+	"hona/backend/internal/domain/entities"
 	"hona/backend/internal/domain/enums"
+	"hona/backend/internal/domain/exceptions"
 	"hona/backend/internal/domain/ports"
 )
 
 type PetSitterService struct {
-	unitOfWork  ports.UnitOfWork
-	userService usecase.UserService
+	unitOfWork          ports.UnitOfWork
+	userService         usecase.UserService
+	serviceService      usecase.ServiceService
+	calendarSlotService usecase.CalendarSlotService
 }
 
-func NewPetSitterService(unitOfWork ports.UnitOfWork, userService usecase.UserService) *PetSitterService {
+func NewPetSitterService(unitOfWork ports.UnitOfWork, userService usecase.UserService, serviceService usecase.ServiceService, calendarSlotService usecase.CalendarSlotService) *PetSitterService {
 	return &PetSitterService{
-		unitOfWork:  unitOfWork,
-		userService: userService,
+		unitOfWork:          unitOfWork,
+		userService:         userService,
+		serviceService:      serviceService,
+		calendarSlotService: calendarSlotService,
 	}
 }
 
@@ -32,7 +38,9 @@ func (ps *PetSitterService) GetPetSitterFreeSlotsResponse(id uint) ([]calendarsl
 		return nil, err
 	}
 	if user.PetSitter == nil {
-		return nil, fmt.Errorf("wrong pet sitter")
+		var ve exceptions.ValidationErrors
+		ve.AddError(bootstrap.Run().Constants.ErrorFields.PetSitter, bootstrap.Run().Constants.ErrorTags.NotFound)
+		return nil, &ve
 	}
 	petSitterRepo := ps.unitOfWork.Factory().PetSitterRepository()
 	err = userRepo.PreloadPetSitter(user)
@@ -45,18 +53,15 @@ func (ps *PetSitterService) GetPetSitterFreeSlotsResponse(id uint) ([]calendarsl
 		return nil, err
 	}
 	petSitterCalendarSlots := petSitter.Schedule
-	freeSlots := make([]calendarslot.CalendarSlotInfoResponse, 0)
+	freeSlots := make([]entities.CalendarSlot, 0)
 	for _, slot := range petSitterCalendarSlots {
 		if slot.Status != enums.Free {
 			continue
 		}
-		freeSlots = append(freeSlots, calendarslot.CalendarSlotInfoResponse{
-			ID:    slot.ID,
-			Date:  slot.Date,
-			Slots: slot.Slots,
-		})
+		freeSlots = append(freeSlots, slot)
 	}
-	return freeSlots, nil
+
+	return ps.calendarSlotService.GetCalendarSlotsResponse(freeSlots), nil
 }
 
 func (ps *PetSitterService) GetServicesResponse(id uint) ([]servicedto.ServiceInfoResponse, error) {
@@ -72,7 +77,9 @@ func (ps *PetSitterService) GetServicesResponse(id uint) ([]servicedto.ServiceIn
 	}
 	petSitter := user.PetSitter
 	if petSitter == nil {
-		return nil, fmt.Errorf("invalid pet sitter")
+		var ve exceptions.ValidationErrors
+		ve.AddError(bootstrap.Run().Constants.ErrorFields.PetSitter, bootstrap.Run().Constants.ErrorTags.NotFound)
+		return nil, &ve
 	}
 	petSitterRepo := ps.unitOfWork.Factory().PetSitterRepository()
 	err = petSitterRepo.PreloadServices(petSitter)
@@ -80,12 +87,7 @@ func (ps *PetSitterService) GetServicesResponse(id uint) ([]servicedto.ServiceIn
 		return nil, err
 	}
 	for _, service := range petSitter.Services {
-		r = append(r, servicedto.ServiceInfoResponse{
-			ID:          service.ID,
-			Type:        service.Type.String(),
-			Description: service.Description,
-			Price:       service.Price,
-		})
+		r = append(r, ps.serviceService.GetServiceResponse(&service))
 	}
 	return r, nil
 }

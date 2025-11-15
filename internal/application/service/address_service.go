@@ -1,9 +1,10 @@
 package service
 
 import (
-	"fmt"
+	"hona/backend/bootstrap"
 	"hona/backend/internal/application/dto/address"
 	"hona/backend/internal/domain/entities"
+	"hona/backend/internal/domain/exceptions"
 	"hona/backend/internal/domain/ports"
 )
 
@@ -24,7 +25,9 @@ func (as *AddressService) FindAddressByID(id uint) (*entities.Address, error) {
 		return nil, err
 	}
 	if address == nil {
-		return nil, fmt.Errorf("invalid address")
+		var ve exceptions.ValidationErrors
+		ve.AddError(bootstrap.Run().Constants.ErrorFields.Address, bootstrap.Run().Constants.ErrorTags.NotFound)
+		return nil, &ve
 	}
 
 	return address, nil

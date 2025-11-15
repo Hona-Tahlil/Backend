@@ -1,9 +1,10 @@
 package service
 
 import (
-	"fmt"
+	"hona/backend/bootstrap"
 	"hona/backend/internal/domain/entities"
 	"hona/backend/internal/domain/enums"
+	"hona/backend/internal/domain/exceptions"
 	"hona/backend/internal/domain/ports"
 )
 
@@ -24,7 +25,9 @@ func (cs *CityService) FindCityByNameInProvince(name enums.City, province *entit
 		return nil, err
 	}
 	if city == nil {
-		return nil, fmt.Errorf("invalid city")
+		var ve exceptions.ValidationErrors
+		ve.AddError(bootstrap.Run().Constants.ErrorFields.Address, bootstrap.Run().Constants.ErrorTags.NotFound)
+		return nil, &ve
 	}
 
 	flag := false
@@ -35,7 +38,9 @@ func (cs *CityService) FindCityByNameInProvince(name enums.City, province *entit
 		}
 	}
 	if !flag {
-		return nil, fmt.Errorf("city does not belong to province")
+		var ve exceptions.ValidationErrors
+		ve.AddError(bootstrap.Run().Constants.ErrorFields.Address, bootstrap.Run().Constants.ErrorTags.UnacceptableInput)
+		return nil, &ve
 	}
 
 	return city, nil

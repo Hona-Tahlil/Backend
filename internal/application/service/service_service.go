@@ -1,9 +1,10 @@
 package service
 
 import (
-	"fmt"
+	"hona/backend/bootstrap"
 	"hona/backend/internal/application/dto/servicedto"
 	"hona/backend/internal/domain/entities"
+	"hona/backend/internal/domain/exceptions"
 	"hona/backend/internal/domain/ports"
 )
 
@@ -24,7 +25,9 @@ func (ss *ServiceService) FindServiceByID(id uint) (*entities.Service, error) {
 		return nil, err
 	}
 	if service == nil {
-		return nil, fmt.Errorf("service not found")
+		var ve exceptions.ValidationErrors
+		ve.AddError(bootstrap.Run().Constants.ErrorFields.Service, bootstrap.Run().Constants.ErrorTags.NotFound)
+		return nil, &ve
 	}
 
 	return service, nil

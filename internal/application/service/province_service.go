@@ -1,9 +1,10 @@
 package service
 
 import (
-	"fmt"
+	"hona/backend/bootstrap"
 	"hona/backend/internal/domain/entities"
 	"hona/backend/internal/domain/enums"
+	"hona/backend/internal/domain/exceptions"
 	"hona/backend/internal/domain/ports"
 )
 
@@ -24,7 +25,9 @@ func (ps *ProvinceService) FindProvinceByName(name enums.Province) (*entities.Pr
 		return nil, err
 	}
 	if province == nil {
-		return nil, fmt.Errorf("invalid province")
+		var ve exceptions.ValidationErrors
+		ve.AddError(bootstrap.Run().Constants.ErrorFields.Province, bootstrap.Run().Constants.ErrorTags.NotFound)
+		return nil, &ve
 	}
 
 	err = provinceRepo.PreloadCities(province)

@@ -1,12 +1,13 @@
 package service
 
 import (
-	"fmt"
+	"hona/backend/bootstrap"
 	"hona/backend/internal/application/dto/pet"
 	"hona/backend/internal/application/dto/request"
 	"hona/backend/internal/application/usecase"
 	"hona/backend/internal/domain/entities"
 	"hona/backend/internal/domain/enums"
+	"hona/backend/internal/domain/exceptions"
 	"hona/backend/internal/domain/ports"
 	"sort"
 	"time"
@@ -46,11 +47,15 @@ func (rs *RequestService) CreateRequest(info request.CreateRequestRequest) error
 		return err
 	}
 	if petSitterUser.PetSitter == nil {
-		return fmt.Errorf("invalid pet sitter")
+		var ve exceptions.ValidationErrors
+		ve.AddError(bootstrap.Run().Constants.ErrorFields.PetSitter, bootstrap.Run().Constants.ErrorTags.NotFound)
+		return &ve
 	}
 	petSitter := petSitterUser.PetSitter
 	if !petSitter.IsVerified {
-		return fmt.Errorf("invalid pet sitter")
+		var ve exceptions.ValidationErrors
+		ve.AddError(bootstrap.Run().Constants.ErrorFields.PetSitter, bootstrap.Run().Constants.ErrorTags.NotFound)
+		return &ve
 	}
 
 	petSitterRepo := rs.unitOfWork.Factory().PetSitterRepository()
@@ -69,7 +74,9 @@ func (rs *RequestService) CreateRequest(info request.CreateRequestRequest) error
 		return err
 	}
 	if !user.IsEmailVerified {
-		return fmt.Errorf("invalid user")
+		var ve exceptions.ValidationErrors
+		ve.AddError(bootstrap.Run().Constants.ErrorFields.User, bootstrap.Run().Constants.ErrorTags.UnacceptableInput)
+		return &ve
 	}
 
 	err = rs.validateRequestPets(user, petSitter, info.PetIDs)
@@ -108,7 +115,9 @@ func (rs *RequestService) CreateRequest(info request.CreateRequestRequest) error
 			return err
 		}
 	} else {
-		return fmt.Errorf("either address info or address ID must be provided")
+		var ve exceptions.ValidationErrors
+		ve.AddError(bootstrap.Run().Constants.ErrorFields.Address, bootstrap.Run().Constants.ErrorTags.UnacceptableInput)
+		return &ve
 	}
 
 	err = rs.validateRequestService(petSitter, info.ServiceID)
@@ -187,10 +196,13 @@ func (rs *RequestService) EditRequest(info request.EditRequestRequest) error {
 		return err
 	}
 	if foundRequest == nil {
-		return fmt.Errorf("request not found")
+		var ve exceptions.ValidationErrors
+		ve.AddError(bootstrap.Run().Constants.ErrorFields.Request, bootstrap.Run().Constants.ErrorTags.NotFound)
+		return &ve
 	}
 	if foundRequest.Status != enums.Pending {
-		return fmt.Errorf("invalid edit attempt")
+		err = exceptions.NewAccessDeniedError(bootstrap.Run().Constants.ErrorTags.ForbiddenStatus)
+		return err
 	}
 
 	petSitterUser, err := rs.userService.FindUserByID(foundRequest.PetSitterUserID)
@@ -203,11 +215,15 @@ func (rs *RequestService) EditRequest(info request.EditRequestRequest) error {
 		return err
 	}
 	if petSitterUser.PetSitter == nil {
-		return fmt.Errorf("invalid pet sitter")
+		var ve exceptions.ValidationErrors
+		ve.AddError(bootstrap.Run().Constants.ErrorFields.PetSitter, bootstrap.Run().Constants.ErrorTags.NotFound)
+		return &ve
 	}
 	petSitter := petSitterUser.PetSitter
 	if !petSitter.IsVerified {
-		return fmt.Errorf("invalid pet sitter")
+		var ve exceptions.ValidationErrors
+		ve.AddError(bootstrap.Run().Constants.ErrorFields.PetSitter, bootstrap.Run().Constants.ErrorTags.NotFound)
+		return &ve
 	}
 
 	user, err := rs.userService.FindUserByID(info.UserID)
@@ -215,7 +231,9 @@ func (rs *RequestService) EditRequest(info request.EditRequestRequest) error {
 		return err
 	}
 	if !user.IsEmailVerified {
-		return fmt.Errorf("invalid user")
+		var ve exceptions.ValidationErrors
+		ve.AddError(bootstrap.Run().Constants.ErrorFields.User, bootstrap.Run().Constants.ErrorTags.UnacceptableInput)
+		return &ve
 	}
 
 	err = rs.validateRequestPets(user, petSitter, info.PetIDs)
@@ -254,7 +272,9 @@ func (rs *RequestService) EditRequest(info request.EditRequestRequest) error {
 			return err
 		}
 	} else {
-		return fmt.Errorf("either address info or address ID must be provided")
+		var ve exceptions.ValidationErrors
+		ve.AddError(bootstrap.Run().Constants.ErrorFields.Address, bootstrap.Run().Constants.ErrorTags.UnacceptableInput)
+		return &ve
 	}
 
 	err = rs.validateRequestService(petSitter, info.ServiceID)
@@ -293,14 +313,18 @@ func (rs *RequestService) CancelRequest(info request.CancelRequestRequest) error
 		return nil
 	}
 	if foundRequest == nil {
-		return fmt.Errorf("request not found")
+		var ve exceptions.ValidationErrors
+		ve.AddError(bootstrap.Run().Constants.ErrorFields.Request, bootstrap.Run().Constants.ErrorTags.NotFound)
+		return &ve
 	}
 	if foundRequest.UserID != info.UserID || foundRequest.PetSitterUserID == info.UserID {
-		return fmt.Errorf("wrong user trying to cancel request")
+		err = exceptions.NewAccessDeniedError(bootstrap.Run().Constants.ErrorTags.ForbiddenStatus)
+		return err
 	}
 
 	if foundRequest.Status == enums.Finished || foundRequest.Status == enums.Canceled {
-		return fmt.Errorf("can't cancel this request")
+		err = exceptions.NewAccessDeniedError(bootstrap.Run().Constants.ErrorTags.ForbiddenStatus)
+		return err
 	}
 
 	sort.Slice(foundRequest.CalendarSlots, func(i, j int) bool {
@@ -308,7 +332,8 @@ func (rs *RequestService) CancelRequest(info request.CancelRequestRequest) error
 	})
 
 	if foundRequest.CalendarSlots[0].Date.Before(time.Now().Add(-time.Hour * 24)) {
-		return fmt.Errorf("can't cancel this request")
+		err = exceptions.NewAccessDeniedError(bootstrap.Run().Constants.ErrorTags.ForbiddenStatus)
+		return err
 	}
 
 	foundRequest.Status = enums.Canceled
@@ -325,7 +350,9 @@ func (rs *RequestService) GetRequestFullData(info request.GetRequestFullDataRequ
 		return nil, err
 	}
 	if foundRequest == nil {
-		return nil, fmt.Errorf("request not found")
+		var ve exceptions.ValidationErrors
+		ve.AddError(bootstrap.Run().Constants.ErrorFields.Request, bootstrap.Run().Constants.ErrorTags.NotFound)
+		return nil, &ve
 	}
 
 	petsData, err := rs.petService.GetPetsBasicDataResponse(foundRequest.Pets)
@@ -354,13 +381,17 @@ func (rs *RequestService) RespondToRequest(info request.RespondToRequestRequest)
 		return err
 	}
 	if foundRequest == nil {
-		return fmt.Errorf("request not found")
+		var ve exceptions.ValidationErrors
+		ve.AddError(bootstrap.Run().Constants.ErrorFields.Request, bootstrap.Run().Constants.ErrorTags.NotFound)
+		return &ve
 	}
 	if foundRequest.Status != enums.Pending {
-		return fmt.Errorf("can't respond to this request")
+		err = exceptions.NewAccessDeniedError(bootstrap.Run().Constants.ErrorTags.ForbiddenStatus)
+		return err
 	}
 	if foundRequest.PetSitterUserID != info.UserID {
-		return fmt.Errorf("you can't respond to this request")
+		err = exceptions.NewAccessDeniedError(bootstrap.Run().Constants.ErrorTags.ForbiddenStatus)
+		return err
 	}
 
 	if info.Accept {
@@ -389,7 +420,9 @@ func (rs *RequestService) validateCalendarSlots(petSitterSlots []entities.Calend
 				}
 			}
 			if !flag {
-				return fmt.Errorf("invalid calendar slots")
+				var ce exceptions.ConflictErrors
+				ce.Add(bootstrap.Run().Constants.ErrorFields.CalendarSlot, bootstrap.Run().Constants.ErrorTags.UnacceptableInput)
+				return &ce
 			}
 		}
 	}
@@ -415,7 +448,9 @@ func (rs *RequestService) validateRequestPets(user *entities.User, petSitter *en
 			}
 		}
 		if !flag {
-			return fmt.Errorf("wrong pet selected")
+			var ce exceptions.ConflictErrors
+			ce.Add(bootstrap.Run().Constants.ErrorFields.Pet, bootstrap.Run().Constants.ErrorTags.UnacceptableInput)
+			return &ce
 		}
 	}
 
@@ -428,7 +463,9 @@ func (rs *RequestService) validateRequestPets(user *entities.User, petSitter *en
 			}
 		}
 		if !flag {
-			return fmt.Errorf("wrong pet selected")
+			var ce exceptions.ConflictErrors
+			ce.Add(bootstrap.Run().Constants.ErrorFields.Pet, bootstrap.Run().Constants.ErrorTags.UnacceptableInput)
+			return &ce
 		}
 	}
 
@@ -472,7 +509,9 @@ func (rs *RequestService) validateRequestService(petSitter *entities.PetSitter, 
 		}
 	}
 	if !flag {
-		return fmt.Errorf("wrong service selected")
+		var ce exceptions.ConflictErrors
+		ce.Add(bootstrap.Run().Constants.ErrorFields.Service, bootstrap.Run().Constants.ErrorTags.UnacceptableInput)
+		return &ce
 	}
 
 	return nil

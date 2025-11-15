@@ -71,7 +71,8 @@ func handleValidationErrors(validationErrs *exceptions.ValidationErrors) ([]cont
 
 func handleAuthError(authErr *exceptions.AuthError) ([]controllers.Message, int) {
 	msg := controllers.Message{
-		Text: authErr.Type,
+		Text:    authErr.Type,
+		Message: authErr.Message,
 	}
 	return []controllers.Message{msg}, 401
 }

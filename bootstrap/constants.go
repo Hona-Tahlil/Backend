@@ -37,21 +37,25 @@ type JWTConstants struct {
 }
 
 type ErrorFields struct {
-	User       string
-	Phone      string
-	Email      string
-	Password   string
-	MagicLink  string
-	Address    string
-	Name       string
-	Province   string
-	City       string
-	Role       string
-	Permission string
-	BirthDate  string
-	IsAdult    string
-	Pet        string
-	Species    string
+	User         string
+	Phone        string
+	Email        string
+	Password     string
+	MagicLink    string
+	Address      string
+	Name         string
+	Province     string
+	City         string
+	Role         string
+	Permission   string
+	BirthDate    string
+	IsAdult      string
+	Pet          string
+	Species      string
+	PetSitter    string
+	Request      string
+	CalendarSlot string
+	Service      string
 }
 
 type ErrorTags struct {
@@ -112,21 +116,25 @@ func NewConstants() *Constants {
 			PrivateKey: "./internal/infrastructure/jwt/private_key.pem",
 		},
 		ErrorFields: ErrorFields{
-			User:       "user",
-			Phone:      "phone",
-			Email:      "email",
-			Password:   "password",
-			MagicLink:  "magicLink",
-			Address:    "address",
-			Name:       "name",
-			Province:   "province",
-			City:       "city",
-			Role:       "role",
-			Permission: "permission",
-			BirthDate:  "birthDate",
-			IsAdult:    "isAdult",
-			Pet:        "pet",
-			Species:    "species",
+			User:         "user",
+			Phone:        "phone",
+			Email:        "email",
+			Password:     "password",
+			MagicLink:    "magicLink",
+			Address:      "address",
+			Name:         "name",
+			Province:     "province",
+			City:         "city",
+			Role:         "role",
+			Permission:   "permission",
+			BirthDate:    "birthDate",
+			IsAdult:      "isAdult",
+			Pet:          "pet",
+			Species:      "species",
+			PetSitter:    "petSitter",
+			Request:      "request",
+			CalendarSlot: "calendarSlot",
+			Service:      "service",
 		},
 		ErrorTags: ErrorTags{
 			AlreadyRegistered:      "errors.alreadyRegistered",
