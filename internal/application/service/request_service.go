@@ -523,12 +523,12 @@ func (rs *RequestService) makeRequestService(serviceID uint) (*entities.Service,
 		return nil, err
 	}
 	requestService := &entities.Service{
-		PetSitterID: service.PetSitterID,
-		Description: service.Description,
-		Price:       service.Price,
-		Type:        service.Type,
-		PetKinds:    service.PetKinds,
-		Kind:        "request",
+		PetSitterUserID: service.PetSitterUserID,
+		Description:     service.Description,
+		Price:           service.Price,
+		Type:            service.Type,
+		PetKinds:        service.PetKinds,
+		Kind:            "request",
 	}
 
 	return requestService, nil

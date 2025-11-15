@@ -11,8 +11,8 @@ type PetSitter struct {
 	UserID          uint            `gorm:"index"`
 	CertificateKeys []string        `gorm:"type:text[]"`
 	IsVerified      bool            `gorm:"default=false"`
-	Requests        []Request       `gorm:"foreignKey:PetSitterID"`
-	Services        []Service       `gorm:"foreignKey:PetSitterID"`
+	Requests        []Request       `gorm:"foreignKey:PetSitterUserID"`
+	Services        []Service       `gorm:"foreignKey:PetSitterUserID"`
 	PetKinds        []enums.PetKind `gorm:"type:integer[];not null"`
 	Schedule        []CalendarSlot  `gorm:"foreignKey:Refer"`
 	Comments        []Comment       `gorm:"foreignKey:PetSitterID"`

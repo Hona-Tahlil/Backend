@@ -2,7 +2,7 @@ package user
 
 import (
 	"hona/backend/internal/application/dto/request"
-	"hona/backend/internal/application/service"
+	"hona/backend/internal/application/usecase"
 	"hona/backend/internal/domain/enums"
 	"hona/backend/internal/presentation/controllers"
 	"time"
@@ -11,10 +11,10 @@ import (
 )
 
 type UserRequestController struct {
-	requestService *service.RequestService
+	requestService usecase.RequestService
 }
 
-func NewUserRequestController(requestService *service.RequestService) *UserRequestController {
+func NewUserRequestController(requestService usecase.RequestService) *UserRequestController {
 	return &UserRequestController{
 		requestService: requestService,
 	}

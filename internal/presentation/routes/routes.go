@@ -15,4 +15,5 @@ func SetUpRoutes(ginEngine *gin.Engine, app *wire.Application) {
 	httpv1.SetUpGeneralRoutes(v1, app)
 	httpv1.SetUpAdminRoutes(v1, app)
 	httpv1.SetUpUserRoutes(v1, app)
+	httpv1.SetUpPetSitterRoutes(v1, app)
 }
