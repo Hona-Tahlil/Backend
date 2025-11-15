@@ -34,7 +34,7 @@ func (pgx *PostgresDatabase) WithTransaction(fn func(Database) error) error {
 }
 
 func NewPostgresDatabase() *PostgresDatabase {
-	dbConfig := bootstrap.ProjectConfig.Env.PrimaryDB
+	dbConfig := bootstrap.Run().Env.PrimaryDB
 	dsn := fmt.Sprintf(
 		"host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=UTC",
 		dbConfig.Host,
@@ -51,9 +51,27 @@ func NewPostgresDatabase() *PostgresDatabase {
 		}
 
 		dbInstance = &PostgresDatabase{DB: db}
-
-		dbInstance.DB.AutoMigrate(&entities.User{})
-
+		// dbInstance = db
+		dbInstance.DB.AutoMigrate(
+			&entities.User{},
+			&entities.User{},
+			&entities.Role{},
+			&entities.Permission{},
+			&entities.Wallet{},
+			&entities.Request{},
+			&entities.CalendarSlot{},
+			&entities.Pet{},
+			&entities.PetSitter{},
+			&entities.Service{},
+			&entities.Chat{},
+			&entities.Comment{},
+			&entities.Address{},
+			&entities.Province{},
+			&entities.City{},
+			&entities.TextMessage{},
+			&entities.Transaction{},
+			&entities.Transfer{},
+		)
 	})
 
 	return dbInstance

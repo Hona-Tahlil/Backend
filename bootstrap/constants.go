@@ -3,21 +3,36 @@ package bootstrap
 import "fmt"
 
 type Constants struct {
-	Context       Context
-	JWTKeysPath   JWTKeysPath
-	ErrorFields   ErrorFields
-	ErrorTags     ErrorTags
-	JWTConstants  JWTConstants
-	RedisKey      RedisKey
-	TemplatesPath TemplatesPath
+	Context         Context
+	JWTKeysPath     JWTKeysPath
+	ErrorFields     ErrorFields
+	ErrorTags       ErrorTags
+	JWTConstants    JWTConstants
+	SuccessMessages SuccessMessages
+	RedisKey        RedisKey
+	TemplatesPath   TemplatesPath
 }
 
-type TemplatesPath struct {
-	Path              string
+type SuccessMessages struct {
+	Register          string
+	PhoneVerification string
+	Login             string
+	AddAddress        string
+	EditAddress       string
+	DeleteAddress     string
+	ChangePassword    string
+	ForgotPassword    string
+	RefreshToken      string
 	EmailVerification string
-}
-
-type RedisKey struct {
+	UpdateProfile     string
+	CreateRole        string
+	UpdateRole        string
+	DeleteRole        string
+	UpdateUserRole    string
+	Generic           string
+	AddPet            string
+	RemovePet         string
+	UpdatePet         string
 }
 
 type JWTConstants struct {
@@ -30,13 +45,17 @@ type ErrorFields struct {
 	Phone      string
 	Email      string
 	Password   string
-	OTP        string
+	MagicLink  string
 	Address    string
 	Name       string
 	Province   string
 	City       string
 	Role       string
 	Permission string
+	BirthDate  string
+	IsAdult    string
+	Pet        string
+	Species    string
 }
 
 type ErrorTags struct {
@@ -50,7 +69,6 @@ type ErrorTags struct {
 	Invalid                string
 	NotRegistered          string
 	NotVerified            string
-	NotActive              string
 	InvalidAuthCredentials string
 	ExpiredAuthToken       string
 	InvalidAuthToken       string
@@ -61,17 +79,7 @@ type ErrorTags struct {
 	AlreadyExist           string
 	ForbiddenStatus        string
 	Pending                string
-	AlreadyBlocked         string
-	AlreadyActive          string
-	AlreadyResolved        string
-	AlreadyArchived        string
-	AlreadyCompleted       string
 	NotAccepted            string
-	StatusNotChange        string
-	AlreadyCanceled        string
-	AlreadyRejected        string
-	AlreadyAccepted        string
-	AlreadyDraft           string
 	InvalidRecaptcha       string
 	Required               string
 	Numeric                string
@@ -79,6 +87,8 @@ type ErrorTags struct {
 	Binding                string
 	Generic                string
 	NotFound               string
+	UnacceptableInput      string
+	DuplicateName          string
 }
 
 type JWTKeysPath struct {
@@ -91,6 +101,15 @@ type Context struct {
 	ID             string
 	RefreshToken   string
 	AcceptLanguage string
+	Authorization  string
+}
+
+type TemplatesPath struct {
+	Path              string
+	EmailVerification string
+}
+
+type RedisKey struct {
 }
 
 func NewConstants() *Constants {
@@ -100,6 +119,7 @@ func NewConstants() *Constants {
 			ID:             "id",
 			RefreshToken:   "refreshToken",
 			AcceptLanguage: "Accept-Language",
+			Authorization:  "Authorization",
 		},
 		JWTKeysPath: JWTKeysPath{
 			PublicKey:  "./internal/infrastructure/jwt/public_key.pem",
@@ -110,58 +130,74 @@ func NewConstants() *Constants {
 			Phone:      "phone",
 			Email:      "email",
 			Password:   "password",
-			OTP:        "otp",
+			MagicLink:  "magicLink",
 			Address:    "address",
 			Name:       "name",
 			Province:   "province",
 			City:       "city",
 			Role:       "role",
 			Permission: "permission",
+			BirthDate:  "birthDate",
+			IsAdult:    "isAdult",
+			Pet:        "pet",
+			Species:    "species",
 		},
 		ErrorTags: ErrorTags{
-			AlreadyRegistered:      "alreadyRegistered",
-			MinimumLength:          "minimumLength",
-			ContainsLowercase:      "containsLowercase",
-			ContainsUppercase:      "containsUppercase",
-			ContainsNumber:         "containsNumber",
-			ContainsSpecialChar:    "containsSpecialChar",
-			Expired:                "Expired",
-			Invalid:                "invalid",
-			NotRegistered:          "notRegistered",
-			NotVerified:            "notVerified",
-			NotActive:              "notActive",
-			InvalidAuthCredentials: "invalidAuthCredentials",
-			ExpiredAuthToken:       "expiredAuthToken",
-			InvalidAuthToken:       "invalidAuthToken",
-			Unauthorized:           "unauthorized",
-			AwaitingApproval:       "awaitingApproval",
-			Rejected:               "rejected",
-			NotExist:               "notExist",
-			AlreadyExist:           "alreadyExist",
-			ForbiddenStatus:        "forbiddenStatus",
-			Pending:                "pending",
-			AlreadyBlocked:         "alreadyBlocked",
-			AlreadyActive:          "alreadyActive",
-			AlreadyResolved:        "alreadyResolved",
-			AlreadyArchived:        "alreadyArchived",
-			AlreadyCompleted:       "alreadyCompleted",
-			NotAccepted:            "notAccepted",
-			StatusNotChange:        "statusNotChange",
-			AlreadyCanceled:        "alreadyCanceled",
-			AlreadyRejected:        "alreadyRejected",
-			AlreadyAccepted:        "alreadyAccepted",
-			AlreadyDraft:           "alreadyDraft",
-			InvalidRecaptcha:       "invalidRecaptcha",
-			Required:               "required",
-			Numeric:                "numeric",
-			AccessDenied:           "accessDenied",
-			Binding:                "binding",
-			Generic:                "generic",
-			NotFound:               "notFound",
+			AlreadyRegistered:      "errors.alreadyRegistered",
+			MinimumLength:          "errors.minimumLength",
+			ContainsLowercase:      "errors.containsLowercase",
+			ContainsUppercase:      "errors.containsUppercase",
+			ContainsNumber:         "errors.containsNumber",
+			ContainsSpecialChar:    "errors.containsSpecialChar",
+			Expired:                "errors.Expired",
+			Invalid:                "errors.invalid",
+			NotRegistered:          "errors.notRegistered",
+			NotVerified:            "errors.notVerified",
+			InvalidAuthCredentials: "errors.invalidAuthCredentials",
+			ExpiredAuthToken:       "errors.expiredAuthToken",
+			InvalidAuthToken:       "errors.invalidAuthToken",
+			Unauthorized:           "errors.unauthorized",
+			AwaitingApproval:       "errors.awaitingApproval",
+			Rejected:               "errors.rejected",
+			NotExist:               "errors.notExist",
+			AlreadyExist:           "errors.alreadyExist",
+			ForbiddenStatus:        "errors.forbiddenStatus",
+			Pending:                "errors.pending",
+			NotAccepted:            "errors.notAccepted",
+			InvalidRecaptcha:       "errors.invalidRecaptcha",
+			Required:               "errors.required",
+			Numeric:                "errors.numeric",
+			AccessDenied:           "errors.accessDenied",
+			Binding:                "errors.binding",
+			Generic:                "errors.generic",
+			NotFound:               "errors.notFound",
+			UnacceptableInput:      "errors.unacceptableInput",
+			DuplicateName:          "errors.duplicateName",
 		},
 		JWTConstants: JWTConstants{
 			AccessTokenType:  "access",
 			RefreshTokenType: "refresh",
+		},
+		SuccessMessages: SuccessMessages{
+			Register:          "successMessage.userRegister",
+			PhoneVerification: "successMessage.phoneVerification",
+			Login:             "successMessage.login",
+			AddAddress:        "successMessage.addAddress",
+			EditAddress:       "successMessage.editAddress",
+			DeleteAddress:     "successMessage.deleteAddress",
+			ChangePassword:    "successMessage.changePassword",
+			ForgotPassword:    "successMessage.forgotPassword",
+			RefreshToken:      "successMessage.refreshToken",
+			EmailVerification: "successMessage.emailVerification",
+			UpdateProfile:     "successMessage.updateProfile",
+			CreateRole:        "successMessage.createRole",
+			UpdateRole:        "successMessage.updateRole",
+			DeleteRole:        "successMessage.deleteRole",
+			UpdateUserRole:    "successMessage.updateUserRoles",
+			Generic:           "successMessage.generic",
+			AddPet:            "successMessage.addPet",
+			RemovePet:         "successMessage.removePet",
+			UpdatePet:         "successMessage.updatePet",
 		},
 		TemplatesPath: TemplatesPath{
 			Path:              "./internal/infrastructure/mail/",
