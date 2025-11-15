@@ -10,9 +10,12 @@ import (
 	"hona/backend/internal/application/usecase"
 	domainjwt "hona/backend/internal/domain/jwt"
 	"hona/backend/internal/domain/ports"
+	domainredis "hona/backend/internal/domain/ports/redis"
 	domainstorage "hona/backend/internal/domain/storage"
 	"hona/backend/internal/infrastructure/jwt"
+	"hona/backend/internal/infrastructure/mail"
 	"hona/backend/internal/infrastructure/persistence"
+	"hona/backend/internal/infrastructure/persistence/repository/redis"
 	"hona/backend/internal/infrastructure/seeder"
 	"hona/backend/internal/infrastructure/storage"
 	"hona/backend/internal/presentation/controllers/v1/admin"
@@ -33,6 +36,10 @@ var RepositoryProviderSet = wire.NewSet(
 	persistence.NewRepositoryFactory,
 	persistence.NewUnitOfWork,
 	persistence.NewPostgresDatabase,
+	persistence.NewRedisDatabase,
+	redis.NewUserCacheRepository,
+	wire.Bind(new(persistence.Cache), new(*persistence.RedisDatabase)),
+	wire.Bind(new(domainredis.UserCacheRepository), new(*redis.UserCacheRepository)),
 	wire.Bind(new(ports.RepositoryFactory), new(*persistence.RepositoryFactory)),
 	wire.Bind(new(ports.UnitOfWork), new(*persistence.UnitOfWork)),
 )
@@ -42,6 +49,7 @@ var ServiceProviderSet = wire.NewSet(
 	jwt.NewJWTKeyManager,
 	service.NewRBACService,
 	service.NewPetService,
+	mail.NewEmailService,
 	wire.Bind(new(domainjwt.JWTService), new(*jwt.JWTService)),
 	wire.Bind(new(domainjwt.JWTKeyManager), new(*jwt.JWTKeyManager)),
 	wire.Bind(new(usecase.RBACService), new(*service.RBACService)),

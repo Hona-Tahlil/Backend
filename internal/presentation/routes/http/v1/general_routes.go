@@ -14,6 +14,5 @@ func SetUpGeneralRoutes(v1 *gin.RouterGroup, app *wire.Application) {
 		auth.POST("/verify", app.Controllers.GeneralControllers.GeneralUserController.VerifyEmail)
 		auth.POST("/forgot-password", app.Controllers.GeneralControllers.GeneralUserController.ForgotPassword)
 		auth.PUT("/reset-password", app.Controllers.GeneralControllers.GeneralUserController.ResetPassword)
-    
 	}
 }

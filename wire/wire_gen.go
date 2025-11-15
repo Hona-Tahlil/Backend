@@ -13,9 +13,12 @@ import (
 	"hona/backend/internal/application/usecase"
 	"hona/backend/internal/domain/jwt"
 	"hona/backend/internal/domain/ports"
+	"hona/backend/internal/domain/ports/redis"
 	"hona/backend/internal/domain/storage"
 	"hona/backend/internal/infrastructure/jwt"
+	"hona/backend/internal/infrastructure/mail"
 	"hona/backend/internal/infrastructure/persistence"
+	"hona/backend/internal/infrastructure/persistence/repository/redis"
 	"hona/backend/internal/infrastructure/seeder"
 	"hona/backend/internal/infrastructure/storage"
 	"hona/backend/internal/presentation/controllers/v1/admin"
@@ -27,11 +30,14 @@ import (
 // Injectors from wire.go:
 
 func InitializeApplication(container *bootstrap.Config) (*Application, error) {
-	db := persistence.NewPostgresDatabase()
-	unitOfWork := persistence.NewUnitOfWork(db)
 	jwtKeyManager := jwt.NewJWTKeyManager()
 	jwtService := jwt.NewJWTService(jwtKeyManager)
-	userService := service.NewUserService(unitOfWork, jwtService)
+	db := persistence.NewPostgresDatabase()
+	unitOfWork := persistence.NewUnitOfWork(db)
+	redisDatabase := persistence.NewRedisDatabase()
+	userCacheRepository := redis.NewUserCacheRepository(redisDatabase)
+	emailService := mail.NewEmailService()
+	userService := service.NewUserService(jwtService, unitOfWork, userCacheRepository, emailService)
 	generalUserController := general.NewGeneralUserController(userService)
 	generalControllers := &GeneralControllers{
 		GeneralUserController: generalUserController,
@@ -79,9 +85,9 @@ func InitializeApplication(container *bootstrap.Config) (*Application, error) {
 
 var StorageProviderSet = wire.NewSet(storage.NewS3Storage, wire.Bind(new(domainstorage.Storage), new(*storage.S3Storage)), wire.Struct(new(Storage), "*"))
 
-var RepositoryProviderSet = wire.NewSet(persistence.NewRepositoryFactory, persistence.NewUnitOfWork, persistence.NewPostgresDatabase, wire.Bind(new(ports.RepositoryFactory), new(*persistence.RepositoryFactory)), wire.Bind(new(ports.UnitOfWork), new(*persistence.UnitOfWork)))
+var RepositoryProviderSet = wire.NewSet(persistence.NewRepositoryFactory, persistence.NewUnitOfWork, persistence.NewPostgresDatabase, persistence.NewRedisDatabase, redis.NewUserCacheRepository, wire.Bind(new(persistence.Cache), new(*persistence.RedisDatabase)), wire.Bind(new(domainredis.UserCacheRepository), new(*redis.UserCacheRepository)), wire.Bind(new(ports.RepositoryFactory), new(*persistence.RepositoryFactory)), wire.Bind(new(ports.UnitOfWork), new(*persistence.UnitOfWork)))
 
-var ServiceProviderSet = wire.NewSet(service.NewUserService, jwt.NewJWTService, jwt.NewJWTKeyManager, service.NewRBACService, service.NewPetService, wire.Bind(new(domainjwt.JWTService), new(*jwt.JWTService)), wire.Bind(new(domainjwt.JWTKeyManager), new(*jwt.JWTKeyManager)), wire.Bind(new(usecase.RBACService), new(*service.RBACService)), wire.Bind(new(usecase.UserService), new(*service.UserService)), wire.Bind(new(usecase.PetService), new(*service.PetService)))
+var ServiceProviderSet = wire.NewSet(service.NewUserService, jwt.NewJWTService, jwt.NewJWTKeyManager, service.NewRBACService, service.NewPetService, mail.NewEmailService, wire.Bind(new(domainjwt.JWTService), new(*jwt.JWTService)), wire.Bind(new(domainjwt.JWTKeyManager), new(*jwt.JWTKeyManager)), wire.Bind(new(usecase.RBACService), new(*service.RBACService)), wire.Bind(new(usecase.UserService), new(*service.UserService)), wire.Bind(new(usecase.PetService), new(*service.PetService)))
 
 var GeneralControllersProviderSet = wire.NewSet(general.NewGeneralUserController, wire.Struct(new(GeneralControllers), "*"))
 

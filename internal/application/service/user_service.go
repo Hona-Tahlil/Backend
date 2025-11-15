@@ -5,11 +5,11 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"hona/backend/bootstrap"
-  "hona/backend/internal/application/dto/rbac"
+	"hona/backend/internal/application/dto/rbac"
 	"hona/backend/internal/application/dto/user"
 	"hona/backend/internal/domain/entities"
 	"hona/backend/internal/domain/exceptions"
-  domainjwt "hona/backend/internal/domain/jwt"
+	domainjwt "hona/backend/internal/domain/jwt"
 	"hona/backend/internal/domain/ports"
 	domainredis "hona/backend/internal/domain/ports/redis"
 	"hona/backend/internal/infrastructure/mail"
@@ -20,18 +20,18 @@ import (
 )
 
 type UserService struct {
-	jwtService domainjwt.JWTService
+	jwtService          domainjwt.JWTService
 	unitOfWork          ports.UnitOfWork
 	userCacheRepository domainredis.UserCacheRepository
 	emailService        *mail.EmailService
 }
 
-func NewGeneralService(jwtService domainjwt.JWTService, unitOfWork ports.UnitOfWork, userCacheRepository domainredis.UserCacheRepository, emailService *mail.EmailService) *UserService {
+func NewUserService(jwtService domainjwt.JWTService, unitOfWork ports.UnitOfWork, userCacheRepository domainredis.UserCacheRepository, emailService *mail.EmailService) *UserService {
 	return &UserService{
 		unitOfWork:          unitOfWork,
 		userCacheRepository: userCacheRepository,
 		emailService:        emailService,
-    jwtService: jwtService,
+		jwtService:          jwtService,
 	}
 }
 
@@ -166,19 +166,6 @@ func (us *UserService) FindUserByID(id uint) (*entities.User, error) {
 
 	return foundUser, nil
 }
-func (us *UserService) FindUserByEmail(email string) (*entities.User, error) {
-	foundUser, err := us.unitOfWork.Factory().UserRepository().FindUserByEmail(email)
-	if err != nil {
-		return nil, err
-	}
-
-	if foundUser == nil {
-		NotFoundError := exceptions.NewNotFoundError(bootstrap.Run().Constants.ErrorFields.User)
-		return nil, NotFoundError
-	}
-
-	return foundUser, nil
-}
 
 func (us *UserService) FindVerifiedUserByEmail(email string) (*entities.User, error) {
 	foundUser, err := us.FindUserByEmail(email)
@@ -203,7 +190,7 @@ func (us *UserService) validateDuplicateEmail(email string) error {
 	}
 	if data != nil {
 		ce.Add(bootstrap.Run().Constants.ErrorFields.Email, bootstrap.Run().Constants.ErrorTags.AlreadyRegistered)
-		return ce
+		return &ce
 	}
 	user, err := us.FindUserByEmail(email)
 	if err != nil {
@@ -213,7 +200,7 @@ func (us *UserService) validateDuplicateEmail(email string) error {
 	}
 	if user != nil && user.IsEmailVerified {
 		ce.Add(bootstrap.Run().Constants.ErrorFields.Email, bootstrap.Run().Constants.ErrorTags.AlreadyRegistered)
-		return ce
+		return &ce
 	}
 	return nil
 }
