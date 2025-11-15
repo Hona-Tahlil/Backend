@@ -13,7 +13,27 @@ import (
 var dbInstance *gorm.DB
 var dbOnce sync.Once
 
-func NewPostgresDatabase() *gorm.DB {
+type Database interface {
+	GetDB() *gorm.DB
+	WithTransaction(fn func(Database) error) error
+}
+
+type PostgresDatabase struct {
+	DB *gorm.DB
+}
+
+func (pgx *PostgresDatabase) GetDB() *gorm.DB {
+	return pgx.DB
+}
+
+func (pgx *PostgresDatabase) WithTransaction(fn func(Database) error) error {
+	return pgx.DB.Transaction(func(tx *gorm.DB) error {
+		txWrapper := &PostgresDatabase{DB: tx}
+		return fn(txWrapper)
+	})
+}
+
+func NewPostgresDatabase() *PostgresDatabase {
 	dbConfig := bootstrap.Run().Env.PrimaryDB
 	dsn := fmt.Sprintf(
 		"host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=UTC",
@@ -30,28 +50,9 @@ func NewPostgresDatabase() *gorm.DB {
 			panic(fmt.Errorf("failed to connect database"))
 		}
 
-		dbInstance = db
-
-		// db.Migrator().DropTable(
-		// 	&entities.User{},
-		// 	&entities.Role{},
-		// 	&entities.Permission{},
-		// 	&entities.Wallet{},
-		// 	&entities.Request{},
-		// 	&entities.CalenderSlot{},
-		// 	&entities.Pet{},
-		// 	&entities.PetSitter{},
-		// 	&entities.Reserve{},
-		// 	&entities.Service{},
-		// 	&entities.Chat{},
-		// 	&entities.Comment{},
-		// 	&entities.Address{},
-		// 	&entities.Province{},
-		// 	&entities.City{},
-		// 	&entities.TextMessage{},
-		// 	"user_roles",
-    // )
-		db.AutoMigrate(
+		dbInstance = &PostgresDatabase{DB: db}
+		// dbInstance = db
+		dbInstance.DB.AutoMigrate(
 			&entities.User{},
 			&entities.User{},
 			&entities.Role{},

@@ -1,5 +1,7 @@
 package bootstrap
 
+import "fmt"
+
 type Constants struct {
 	Context         Context
 	JWTKeysPath     JWTKeysPath
@@ -7,6 +9,8 @@ type Constants struct {
 	ErrorTags       ErrorTags
 	JWTConstants    JWTConstants
 	SuccessMessages SuccessMessages
+	RedisKey        RedisKey
+	TemplatesPath   TemplatesPath
 }
 
 type SuccessMessages struct {
@@ -100,6 +104,14 @@ type Context struct {
 	Authorization  string
 }
 
+type TemplatesPath struct {
+	Path              string
+	EmailVerification string
+}
+
+type RedisKey struct {
+}
+
 func NewConstants() *Constants {
 	return &Constants{
 		Context: Context{
@@ -187,5 +199,17 @@ func NewConstants() *Constants {
 			RemovePet:         "successMessage.removePet",
 			UpdatePet:         "successMessage.updatePet",
 		},
+		TemplatesPath: TemplatesPath{
+			Path:              "./internal/infrastructure/mail/",
+			EmailVerification: "email_verification.html",
+		},
 	}
+}
+
+func (r *RedisKey) GenerateMLKey(value string) string {
+	return fmt.Sprintf("ML:%s", value)
+}
+
+func (r *RedisKey) GenerateFPKey(value string) string {
+	return fmt.Sprintf("FP:%s", value)
 }
