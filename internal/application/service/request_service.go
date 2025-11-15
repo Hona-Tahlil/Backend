@@ -41,6 +41,7 @@ func (rs *RequestService) CreateRequest(info request.CreateRequestRequest) error
 	if err != nil {
 		return err
 	}
+	// TODO: move this to user service
 	userRepo := rs.unitOfWork.Factory().UserRepository()
 	err = userRepo.PreloadPetSitter(petSitterUser)
 	if err != nil {
@@ -90,6 +91,7 @@ func (rs *RequestService) CreateRequest(info request.CreateRequestRequest) error
 	}
 
 	var address *entities.Address
+	// TODO: logic in address service
 	if info.AddressInfo != nil {
 		province, err := rs.provinceService.FindProvinceByName(info.AddressInfo.ProvinceName)
 		if err != nil {
@@ -209,6 +211,7 @@ func (rs *RequestService) EditRequest(info request.EditRequestRequest) error {
 	if err != nil {
 		return err
 	}
+	// TODO: same as createRequest
 	userRepo := rs.unitOfWork.Factory().UserRepository()
 	err = userRepo.PreloadPetSitter(petSitterUser)
 	if err != nil {
@@ -226,6 +229,7 @@ func (rs *RequestService) EditRequest(info request.EditRequestRequest) error {
 		return &ve
 	}
 
+	// TODO: move logic to the user service
 	user, err := rs.userService.FindUserByID(info.UserID)
 	if err != nil {
 		return err
@@ -246,6 +250,7 @@ func (rs *RequestService) EditRequest(info request.EditRequestRequest) error {
 		return err
 	}
 
+	// TODO: same as createRequest
 	var address *entities.Address
 	if info.AddressInfo != nil {
 		province, err := rs.provinceService.FindProvinceByName(info.AddressInfo.ProvinceName)
@@ -298,7 +303,7 @@ func (rs *RequestService) EditRequest(info request.EditRequestRequest) error {
 	foundRequest.Service = *serviceEntity
 	foundRequest.TotalPrice = uint(totalPrice)
 
-	err = requestRepo.EditRequest(foundRequest)
+	requestRepo.EditRequest(foundRequest)
 	if err != nil {
 		return err
 	}
@@ -308,6 +313,7 @@ func (rs *RequestService) EditRequest(info request.EditRequestRequest) error {
 
 func (rs *RequestService) CancelRequest(info request.CancelRequestRequest) error {
 	requestRepo := rs.unitOfWork.Factory().RequestRepository()
+	// TODO: move this to dedicated method
 	foundRequest, err := requestRepo.GetRequestByID(info.RequestID)
 	if err != nil {
 		return nil
@@ -374,6 +380,7 @@ func (rs *RequestService) GetRequestFullData(info request.GetRequestFullDataRequ
 	}, nil
 }
 
+// TODO: handle conflict here and in gets
 func (rs *RequestService) RespondToRequest(info request.RespondToRequestRequest) error {
 	requestRepo := rs.unitOfWork.Factory().RequestRepository()
 	foundRequest, err := requestRepo.GetRequestByID(info.RequestID)
@@ -409,8 +416,9 @@ func (rs *RequestService) validateCalendarSlots(petSitterSlots []entities.Calend
 	for _, req := range requestSlots {
 		for _, userSlot := range req.Slots {
 			flag := false
+			// TODO: map
 			for _, petSitterSlot := range petSitterSlots {
-				if petSitterSlot.Date.Equal(req.Date) {
+				if petSitterSlot.Date.Equal(req.Date) && petSitterSlot.Status == enums.Free {
 					for _, sitterSlot := range petSitterSlot.Slots {
 						if sitterSlot == userSlot {
 							flag = true
@@ -437,7 +445,7 @@ func (rs *RequestService) validateRequestPets(user *entities.User, petSitter *en
 	if err != nil {
 		return err
 	}
-
+	// TODO: pet service
 	for _, petID := range petIDs {
 		flag := false
 		for _, pet := range user.Pets {
@@ -473,6 +481,7 @@ func (rs *RequestService) validateRequestPets(user *entities.User, petSitter *en
 }
 
 func (rs *RequestService) makeRequestPets(petIDs []uint) ([]entities.Pet, error) {
+	// TODO: use len and index instead of append
 	pets := make([]entities.Pet, 0)
 
 	for _, petID := range petIDs {
@@ -491,7 +500,8 @@ func (rs *RequestService) makeRequestPets(petIDs []uint) ([]entities.Pet, error)
 			Weight:     pet.Weight,
 			PictureKey: pet.PictureKey,
 			AboutPet:   pet.AboutPet,
-			Type:       "request",
+			// TODO: constant
+			Type: "request",
 		}
 
 		pets = append(pets, *requestPet)
@@ -501,6 +511,7 @@ func (rs *RequestService) makeRequestPets(petIDs []uint) ([]entities.Pet, error)
 }
 
 func (rs *RequestService) validateRequestService(petSitter *entities.PetSitter, serviceID uint) error {
+	// TODO: Move this to pet sitter service
 	flag := false
 	for _, service := range petSitter.Services {
 		if service.ID == serviceID {
@@ -528,7 +539,8 @@ func (rs *RequestService) makeRequestService(serviceID uint) (*entities.Service,
 		Price:           service.Price,
 		Type:            service.Type,
 		PetKinds:        service.PetKinds,
-		Kind:            "request",
+		// TODO: constant
+		Kind: "request",
 	}
 
 	return requestService, nil
@@ -555,6 +567,7 @@ func (rs *RequestService) makeCalendarSlots(calendarSlots []request.RequestCalen
 		calendarSlot := &entities.CalendarSlot{
 			Date:  slot.Date,
 			Slots: slot.Slots,
+			// TODO: status
 		}
 		slots = append(slots, *calendarSlot)
 	}

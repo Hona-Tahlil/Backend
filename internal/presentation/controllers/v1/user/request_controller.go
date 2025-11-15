@@ -46,6 +46,7 @@ func (rc *UserRequestController) CreateRequest(ctx *gin.Context) {
 		Slots []enums.Slot `json:"slots" validate:"required"`
 	}
 	type AddressInfo struct {
+		// TODO: validate + json
 		ProvinceName  enums.Province
 		CityName      enums.City
 		StreetAddress string
@@ -59,7 +60,7 @@ func (rc *UserRequestController) CreateRequest(ctx *gin.Context) {
 		PetIDs          []uint         `json:"petIDs" validate:"required"`
 		Notes           *string        `json:"notes"`
 		AddressInfo     *AddressInfo   `json:"addressInfo"`
-		AddressID       *uint          `json:"addressID" validate:"required"`
+		AddressID       *uint          `json:"addressID"`
 		ServiceID       uint           `json:"serviceID" validate:"required"`
 	}
 	params := controllers.Receive[Params](ctx)
