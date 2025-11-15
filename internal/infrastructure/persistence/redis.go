@@ -24,13 +24,13 @@ var (
 	rdbInstance *RedisDatabase
 )
 
-func NewRedisDatabase(redisConfig *bootstrap.Redis) *RedisDatabase {
+func NewRedisDatabase() *RedisDatabase {
 	rdbOnce.Do(func() {
-		rdbNumber, _ := strconv.Atoi(redisConfig.RDBNumber)
-		address := fmt.Sprintf("%s:%s", redisConfig.Address, redisConfig.Port)
+		rdbNumber, _ := strconv.Atoi(bootstrap.Run().Env.PrimaryRedis.RDBNumber)
+		address := fmt.Sprintf("%s:%s", bootstrap.Run().Env.PrimaryRedis.Address, bootstrap.Run().Env.PrimaryRedis.Port)
 		rdb := redis.NewClient(&redis.Options{
 			Addr:     address,
-			Password: redisConfig.Password,
+			Password: bootstrap.Run().Env.PrimaryRedis.Password,
 			DB:       rdbNumber,
 		})
 		_, err := rdb.Ping(context.Background()).Result()

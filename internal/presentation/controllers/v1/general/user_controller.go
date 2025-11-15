@@ -4,7 +4,7 @@ import (
 	"hona/backend/bootstrap"
 	"hona/backend/internal/application/dto/rbac"
 	"hona/backend/internal/application/dto/user"
-	"hona/backend/internal/application/usecase"
+	"hona/backend/internal/application/service"
 	"hona/backend/internal/presentation/controllers"
 
 	"github.com/gin-gonic/gin"
@@ -84,7 +84,7 @@ func (gc *GeneralUserController) VerifyEmail(ctx *gin.Context) {
 		Email: params.Email,
 		Token: params.Token,
 	}
-	if err := gc.generalService.VerifyEmail(verifyEmailInfo); err != nil {
+	if err := gc.userService.VerifyEmail(verifyEmailInfo); err != nil {
 		panic(err)
 	}
 	msg := controllers.Message{
@@ -102,11 +102,10 @@ func (gc *GeneralUserController) SendVerificationEmail(ctx *gin.Context) {
 	SendVerificationEmailInfo := user.SendVerificationEmailRequest{
 		Email: params.Email,
 	}
-	if err := gc.userService.VerifyEmail(verifyOTPInfo); err != nil {
+	if err := gc.userService.SendVerificationEmail(SendVerificationEmailInfo); err != nil {
 		panic(err)
 	}
-	msg := controllers.Message{
-	}
+	msg := controllers.Message{}
 	controllers.Respond(ctx, 200, msg, nil)
 
 }
@@ -137,7 +136,7 @@ func (gc *GeneralUserController) ResetPassword(ctx *gin.Context) {
 		Token:    params.Token,
 		Password: params.Password,
 	}
-	if err := gc.generalService.ResetPassword(resetPasswordInfo); err != nil {
+	if err := gc.userService.ResetPassword(resetPasswordInfo); err != nil {
 		panic(err)
 	}
 }
