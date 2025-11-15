@@ -18,6 +18,7 @@ import (
 	"hona/backend/internal/infrastructure/persistence/seeder"
 	"hona/backend/internal/presentation/controllers/v1/admin"
 	"hona/backend/internal/presentation/controllers/v1/general"
+	"hona/backend/internal/presentation/controllers/v1/petsitter"
 	"hona/backend/internal/presentation/middleware"
 )
 
@@ -38,9 +39,15 @@ func InitializeApplication(container *bootstrap.Config) (*Application, error) {
 	adminControllers := &AdminControllers{
 		AdminRBACController: adminRBACController,
 	}
+	petSitterService := service.NewPetSitterService(unitOfWork)
+	petSitterController := petsitter.NewPetsitterController(petSitterService)
+	wirePetSitterController := &PetSitterController{
+		PetSitterController: petSitterController,
+	}
 	controllers := &Controllers{
-		GeneralControllers: generalControllers,
-		AdminControllers:   adminControllers,
+		GeneralControllers:  generalControllers,
+		AdminControllers:    adminControllers,
+		PetSitterController: wirePetSitterController,
 	}
 	localizationMiddleware := middleware.NewLocalizationMiddleware()
 	recoveryMiddleware := middleware.NewRecoveryMiddleware()
@@ -60,11 +67,13 @@ func InitializeApplication(container *bootstrap.Config) (*Application, error) {
 
 var RepositoryProviderSet = wire.NewSet(persistence.NewRepositoryFactory, persistence.NewUnitOfWork, persistence.NewPostgresDatabase, wire.Bind(new(ports.RepositoryFactory), new(*persistence.RepositoryFactory)), wire.Bind(new(ports.UnitOfWork), new(*persistence.UnitOfWork)))
 
-var ServiceProviderSet = wire.NewSet(service.NewUserService, jwt.NewJWTService, jwt.NewJWTKeyManager, service.NewRBACService, wire.Bind(new(domainjwt.JWTService), new(*jwt.JWTService)), wire.Bind(new(domainjwt.JWTKeyManager), new(*jwt.JWTKeyManager)), wire.Bind(new(usecase.RBACService), new(*service.RBACService)), wire.Bind(new(usecase.UserService), new(*service.UserService)))
+var ServiceProviderSet = wire.NewSet(service.NewUserService, jwt.NewJWTService, jwt.NewJWTKeyManager, service.NewRBACService, service.NewPetSitterService, wire.Bind(new(domainjwt.JWTService), new(*jwt.JWTService)), wire.Bind(new(domainjwt.JWTKeyManager), new(*jwt.JWTKeyManager)), wire.Bind(new(usecase.RBACService), new(*service.RBACService)), wire.Bind(new(usecase.UserService), new(*service.UserService)), wire.Bind(new(usecase.PetSitterService), new(*service.PetSitterService)))
 
 var GeneralControllersProviderSet = wire.NewSet(general.NewGeneralUserController, wire.Struct(new(GeneralControllers), "*"))
 
 var AdminControllersProviderSet = wire.NewSet(admin.NewAdminRBACController, wire.Struct(new(AdminControllers), "*"))
+
+var PetSitterControllersProviderSet = wire.NewSet(petsitter.NewPetsitterController, wire.Struct(new(PetSitterController), "*"))
 
 var ControllersProviderSet = wire.NewSet(wire.Struct(new(Controllers), "*"))
 
@@ -80,6 +89,7 @@ var ProviderSet = wire.NewSet(
 	ServiceProviderSet,
 	RepositoryProviderSet,
 	SeederProviderSet,
+	PetSitterControllersProviderSet,
 )
 
 type GeneralControllers struct {
@@ -90,9 +100,14 @@ type AdminControllers struct {
 	AdminRBACController *admin.AdminRBACController
 }
 
+type PetSitterController struct {
+	PetSitterController *petsitter.PetSitterController
+}
+
 type Controllers struct {
-	GeneralControllers *GeneralControllers
-	AdminControllers   *AdminControllers
+	GeneralControllers  *GeneralControllers
+	AdminControllers    *AdminControllers
+	PetSitterController *PetSitterController
 }
 
 type Middlewares struct {

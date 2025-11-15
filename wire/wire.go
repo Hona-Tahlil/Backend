@@ -15,6 +15,8 @@ import (
 	"hona/backend/internal/infrastructure/persistence/seeder"
 	"hona/backend/internal/presentation/controllers/v1/admin"
 	"hona/backend/internal/presentation/controllers/v1/general"
+	"hona/backend/internal/presentation/controllers/v1/petsitter"
+
 	"hona/backend/internal/presentation/middleware"
 
 	"github.com/google/wire"
@@ -32,10 +34,12 @@ var ServiceProviderSet = wire.NewSet(
 	jwt.NewJWTService,
 	jwt.NewJWTKeyManager,
 	service.NewRBACService,
+	service.NewPetSitterService,
 	wire.Bind(new(domainjwt.JWTService), new(*jwt.JWTService)),
 	wire.Bind(new(domainjwt.JWTKeyManager), new(*jwt.JWTKeyManager)),
 	wire.Bind(new(usecase.RBACService), new(*service.RBACService)),
 	wire.Bind(new(usecase.UserService), new(*service.UserService)),
+	wire.Bind(new(usecase.PetSitterService), new(*service.PetSitterService)),
 )
 
 var GeneralControllersProviderSet = wire.NewSet(
@@ -46,6 +50,11 @@ var GeneralControllersProviderSet = wire.NewSet(
 var AdminControllersProviderSet = wire.NewSet(
 	admin.NewAdminRBACController,
 	wire.Struct(new(AdminControllers), "*"),
+)
+
+var PetSitterControllersProviderSet = wire.NewSet(
+	petsitter.NewPetsitterController,
+	wire.Struct(new(PetSitterController), "*"),
 )
 
 var ControllersProviderSet = wire.NewSet(
@@ -71,6 +80,7 @@ var ProviderSet = wire.NewSet(
 	ServiceProviderSet,
 	RepositoryProviderSet,
 	SeederProviderSet,
+	PetSitterControllersProviderSet,
 )
 
 type GeneralControllers struct {
@@ -81,9 +91,14 @@ type AdminControllers struct {
 	AdminRBACController *admin.AdminRBACController
 }
 
+type PetSitterController struct {
+	PetSitterController *petsitter.PetSitterController
+}
+
 type Controllers struct {
-	GeneralControllers *GeneralControllers
-	AdminControllers   *AdminControllers
+	GeneralControllers  *GeneralControllers
+	AdminControllers    *AdminControllers
+	PetSitterController *PetSitterController
 }
 
 type Middlewares struct {

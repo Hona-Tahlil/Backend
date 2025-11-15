@@ -24,3 +24,7 @@ func (f *RepositoryFactory) UserRepository() domainpostgres.UserRepository {
 func (f *RepositoryFactory) RBACRepository() domainpostgres.RBACRepository {
 	return postgres.NewRBACRepository(f.db)
 }
+
+func (f *RepositoryFactory) PetSitterRepository() domainpostgres.PetSitterRepository {
+	return postgres.NewPetSitterRepository(f.db)
+}
