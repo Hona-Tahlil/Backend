@@ -87,10 +87,10 @@ jobs:
         run: |
           echo "${{ secrets.ENV_FILE }}" > .env
 
-      - name: Write .pem files
-        run: |
-          echo "${{ secrets.PRIVATE }}" > ./internal/infrastructure/jwt/private_key.pem
-          echo "${{ secrets.PUBLIC }}" > ./internal/infrastructure/jwt/public_key.pem
+      # - name: Write .pem files
+      #   run: |
+      #     echo "${{ secrets.PRIVATE }}" > ./internal/infrastructure/jwt/private_key.pem
+      #     echo "${{ secrets.PUBLIC }}" > ./internal/infrastructure/jwt/public_key.pem
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
