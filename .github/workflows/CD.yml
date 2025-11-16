@@ -131,3 +131,5 @@ jobs:
             sleep 10
             docker compose pull
             docker compose up -d
+
+# wow
