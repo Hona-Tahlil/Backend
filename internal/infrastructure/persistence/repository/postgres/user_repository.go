@@ -40,6 +40,19 @@ func (up *UserRepository) FindUserByID(userID uint) (*entities.User, error) {
 	return &foundUser, nil
 }
 
+func (up *UserRepository) CreateUser(user *entities.User) error {
+	return up.db.Create(user).Error
+}
+
+func (up *UserRepository) DeleteUserByEmail(email string) error {
+	return up.db.Where("email = ?", email).Delete(&entities.User{}).Error
+}
+
+
+func (up *UserRepository) UpdateUser(user *entities.User) error {
+	return up.db.Save(user).Error
+}
+
 func (up *UserRepository) GetRoleUsersByID(roleID uint, limit, offset int) ([]entities.User, error) {
 	var users []entities.User
 
@@ -60,4 +73,8 @@ func (up *UserRepository) GetRoleUsersByID(roleID uint, limit, offset int) ([]en
 
 func (up *UserRepository) PreloadPetSitter(user *entities.User) error {
 	return up.db.Preload("PetSitter").First(user, user.ID).Error
+}
+
+func (up *UserRepository) PreloadAddress(user *entities.User) error {
+	return up.db.Preload("Address").First(user, user.ID).Error
 }

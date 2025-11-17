@@ -6,4 +6,5 @@ type RepositoryFactory interface {
 	UserRepository() domainpostgres.UserRepository
 	RBACRepository() domainpostgres.RBACRepository
 	PetSitterRepository() domainpostgres.PetSitterRepository
+	AddressRepository() domainpostgres.AddressRepository
 }

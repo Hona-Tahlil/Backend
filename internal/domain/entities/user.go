@@ -14,7 +14,7 @@ type User struct {
 	Password        string    `gorm:"not null"`
 	FirstName       string    `gorm:"not null"`
 	LastName        string    `gorm:"not null"`
-	Address         []Address `gorm:"foreignKey:OwnerID"`
+	Address         Address `gorm:"foreignKey:OwnerID"`
 	Phone           *string   `gorm:"index"`
 	IsPhoneVerified bool      `gorm:"default=false;index"`
 	Gender          enums.Gender

@@ -16,14 +16,26 @@ func NewPetSitterRepository(db *gorm.DB) *PetSitterRepository {
 	}
 }
 
-func (pr *PetSitterRepository) PreloadSchedule(petSitter *entities.PetSitter) error {
-	return pr.db.Preload("schedule").First(petSitter, petSitter.ID).Error
+func (pr *PetSitterRepository) PreloadServices(petSitter *entities.PetSitter) error {
+	return pr.db.Preload("Services").First(petSitter, petSitter.ID).Error
 }
 
 func (pr *PetSitterRepository) CreatePetSitter(petSitter *entities.PetSitter) error {
 	return pr.db.Create(petSitter).Error
 }
 
-func (pr *PetSitterRepository) SavePetSitter(petSitter *entities.PetSitter) error {
+func (pr *PetSitterRepository) UpdatePetSitter(petSitter *entities.PetSitter) error {
 	return pr.db.Save(petSitter).Error
+}
+
+func (pr *PetSitterRepository) FindPetSitterByID(id uint) (*entities.PetSitter, error) {
+	var petsitter entities.PetSitter
+	err := pr.db.First(&petsitter, id).Error
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &petsitter, nil
 }

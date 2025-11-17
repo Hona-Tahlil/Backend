@@ -1,48 +1,40 @@
 package petsitter
 
 import (
+	"hona/backend/internal/domain/enums"
+	"mime/multipart"
 	"time"
 )
 
 type GetPetSitterRequest struct {
-	UserID uint `json:"user_id" validate:"required"`
+	UserID uint
 }
 
-type FirstSubmit struct {
-	// Status      *string `json:"status,omitempty"`
-	UserID    uint
-	FirstName string `json:"first_name"`
-	LastName  string `json:"last_name"`
-	Email     string `json:"email"`
-	// Gender      enums.Gender `json:"gender,omitempty"`
-	BirthDate   *time.Time `json:"birth_date,omitempty"`
-	PhoneNumber string     `json:"phone_number,omitempty"`
-	City        string     `json:"city,omitempty"`
-	Address     string     `json:"address,omitempty"`
-
-	Bio *string `json:"bio,omitempty"`
+type SubmitPersonalInfoRequest struct {
+	UserID      uint
+	FirstName   string         `json:"first_name"`
+	LastName    string         `json:"last_name"`
+	Email       string         `json:"email"`
+	Gender      enums.Gender   `json:"gender,omitempty"`
+	BirthDate   *time.Time     `json:"birth_date,omitempty"`
+	PhoneNumber string         `json:"phone_number,omitempty"`
+	Province    enums.Province `json:"province" validate:"required"`
+	City        enums.City     `json:"city,omitempty"`
+	Address     string         `json:"address,omitempty"`
+	Pelak       uint         `json:"pelak" validate:"required"`
+	Vahed       uint         `json:"vahed" validate:"required"`
+	PostalCode  string         `json:"postalCode" validate:"required,len=10"`
 }
 
-type SecondSubmit struct {
+type UploadDocumentsRequest struct {
+	UserID          uint
+	CertificateFile []*multipart.FileHeader
+	File            []*multipart.FileHeader
 }
 
-// type User struct {
-// 	gorm.Model
-// 	Email           string    `gorm:"not null;unique;index"`
-// 	IsEmailVerified bool      `gorm:"default=false;index"`
-// 	Password        string    `gorm:"not null"`
-// 	FirstName       string    `gorm:"not null"`
-// 	LastName        string    `gorm:"not null"`
-// 	Address         []Address `gorm:"foreignKey:OwnerID"`
-// 	Phone           *string   `gorm:"index"`
-// 	IsPhoneVerified bool      `gorm:"default=false;index"`
-// 	Gender          enums.Gender
-// 	BirthDate       *time.Time
-// 	PictureLink     *string
-// 	Wallet          Wallet     `gorm:"foreignKey:UserID;not null"`
-// 	Requests        []Request  `gorm:"foreignKey:UserID"`
-// 	Roles           []Role     `gorm:"many2many:user_roles"`
-// 	Pets            []Pet      `gorm:"foreignKey:UserID"`
-// 	PetSitter       *PetSitter `gorm:"foreignKey:UserID"`
-// 	Comments        []Comment  `gorm:"foreignKey:UserID"`
-// }
+type SubmitSkillsRequest struct {
+	UserID   uint
+	Bio      string
+	Petkind  []enums.PetKind
+	Services []enums.ServiceType
+}

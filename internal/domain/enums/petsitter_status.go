@@ -1,16 +1,30 @@
 package enums
 
-type PetSitterStatus string
+type PetSitterStatus uint
 
 const (
-	PSS_Draft     PetSitterStatus = "draft"     // رکورد ایجاد شده ولی هنوز کامل نیست
-	PSS_InReview  PetSitterStatus = "in_review" // ارسال برای بررسی/احراز
-	PSS_Active    PetSitterStatus = "active"    // قابل نمایش و رزرو
-	PSS_Rejected  PetSitterStatus = "rejected"  // رد شده (نیاز به اصلاح)
-	PSS_Suspended PetSitterStatus = "suspended" // تعلیق موقت/دائمی
+	PSS_Draft    PetSitterStatus = iota + 1
+	PSS_InReview  
+	PSS_Active   
+	PSS_Rejected  
+	PSS_Suspended 
 )
 
-
+func (petSitterStatus PetSitterStatus) String() string {
+	switch petSitterStatus {
+	case PetSitterStatus(PSS_Draft):
+		return "draft"
+	case PetSitterStatus(PSS_InReview):
+		return "in_review"
+	case PetSitterStatus(PSS_Active):
+		return "active"
+	case PetSitterStatus(PSS_Rejected):
+		return "rejected"
+	case PetSitterStatus(PSS_Suspended):
+		return "suspended"
+	}
+	return ""
+}
 
 func GetAllPetSitterStatus() []PetSitterStatus {
 	return []PetSitterStatus{

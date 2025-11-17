@@ -3,10 +3,10 @@ package enums
 type OnboardingStep uint8
 
 const (
-	OBS_Review  OnboardingStep = 1 
-	OBS_Profile OnboardingStep = 2 
-	OBS_Skills OnboardingStep = 3
-	OBS_Done OnboardingStep = 4
+	OBS_Review  OnboardingStep = iota + 1
+	OBS_Profile 
+	OBS_Documents
+	OBS_Done 
 )
 
 
@@ -14,7 +14,7 @@ func GetAllOnboardingStep() []OnboardingStep {
 	return []OnboardingStep{
 		OBS_Review,
 		OBS_Profile,
-		OBS_Skills,
+		OBS_Documents,
 		OBS_Done,
 	}
 }

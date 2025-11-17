@@ -7,19 +7,21 @@
 package wire
 
 import (
-	"github.com/google/wire"
 	"hona/backend/bootstrap"
 	"hona/backend/internal/application/service"
 	"hona/backend/internal/application/usecase"
-	"hona/backend/internal/domain/jwt"
+	domainjwt "hona/backend/internal/domain/jwt"
 	"hona/backend/internal/domain/ports"
 	"hona/backend/internal/infrastructure/jwt"
 	"hona/backend/internal/infrastructure/persistence"
 	"hona/backend/internal/infrastructure/persistence/seeder"
+	"hona/backend/internal/infrastructure/storage"
 	"hona/backend/internal/presentation/controllers/v1/admin"
 	"hona/backend/internal/presentation/controllers/v1/general"
 	"hona/backend/internal/presentation/controllers/v1/petsitter"
 	"hona/backend/internal/presentation/middleware"
+
+	"github.com/google/wire"
 )
 
 // Injectors from wire.go:
@@ -39,7 +41,8 @@ func InitializeApplication(container *bootstrap.Config) (*Application, error) {
 	adminControllers := &AdminControllers{
 		AdminRBACController: adminRBACController,
 	}
-	petSitterService := service.NewPetSitterService(unitOfWork)
+	storage := storage.NewS3Storage()
+	petSitterService := service.NewPetSitterService(unitOfWork, storage, userService)
 	petSitterController := petsitter.NewPetsitterController(petSitterService)
 	wirePetSitterController := &PetSitterController{
 		PetSitterController: petSitterController,
