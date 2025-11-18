@@ -71,7 +71,7 @@ func NewPostgresDatabase() *gorm.DB {
 			&entities.Transfer{},
 		)
 		user := entities.User{
-			Email:     "test@email",
+			Email:     "test@email.com",
 			Password:  "password",
 			FirstName: "John",
 			LastName:  "Doe",
