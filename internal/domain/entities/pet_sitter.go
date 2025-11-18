@@ -13,10 +13,10 @@ type PetSitter struct {
 	FileKeys        []string  `gorm:"type:text[]"`
 	Requests        []Request `gorm:"foreignKey:PetSitterID"`
 	Services        []Service `gorm:"foreignKey:PetSitterID"`
-	PetKinds        []enums.PetKind
+	PetKinds        []enums.PetKind `gorm:"type:integer[]"`
 	Schedule        []CalendarSlot `gorm:"foreignKey:Refer"`
 	Comments        []Comment      `gorm:"foreignKey:PetSitterID"`
 	Bio             *string
-	Status          enums.PetSitterStatus `gorm:"type:varchar(20);index"`
+	Status          enums.PetSitterStatus `gorm:"type:integer;index"`
 	OnboardingStep  enums.OnboardingStep  `gorm:"default:1"`
 }
