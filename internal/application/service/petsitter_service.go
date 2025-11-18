@@ -116,17 +116,12 @@ func (ps *PetSitterService) SubmitPersonalInfo(petSitterInfo petsitter.SubmitPer
 
 func (ps *PetSitterService) GetPersonalInfo(userID uint) (*petsitter.PersonalInfoResponse, error) {
 	userRepo := ps.unitOfWork.Factory().UserRepository()
-	petSitterRepo := ps.unitOfWork.Factory().PetSitterRepository()
 	addressRepo := ps.unitOfWork.Factory().AddressRepository()
 	foundUser, err := userRepo.FindUserByID(userID)
 	if err != nil {
 		return nil, err
 	}
 	err = userRepo.PreloadPetSitter(foundUser)
-	if err != nil {
-		return nil, err
-	}
-	foundPetSitter, err := petSitterRepo.FindPetSitterByID(userID)
 	if err != nil {
 		return nil, err
 	}
@@ -155,8 +150,8 @@ func (ps *PetSitterService) GetPersonalInfo(userID uint) (*petsitter.PersonalInf
 		HouseNumber:    foundUser.Address.HouseNumber,
 		Unit:           foundUser.Address.Unit,
 		PostalCode:     *foundUser.Address.PostalCode,
-		Status:         foundPetSitter.Status,
-		OnboardingStep: foundPetSitter.OnboardingStep,
+		Status:         foundUser.PetSitter.Status,
+		OnboardingStep: foundUser.PetSitter.OnboardingStep,
 	}, nil
 
 }
