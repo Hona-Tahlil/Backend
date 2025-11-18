@@ -8,6 +8,7 @@ import (
 
 func SetUpPetSitterRoutes(v1 *gin.RouterGroup, app *wire.Application) {
 	petsitter := v1.Group("/petsitter")
+	petsitter.Use(app.Middlewares.AuthMiddleware.AuthRequired)
 	{
 		register := petsitter.Group("/register")
 		{
