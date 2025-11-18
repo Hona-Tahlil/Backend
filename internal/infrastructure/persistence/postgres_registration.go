@@ -6,6 +6,7 @@ import (
 	"hona/backend/internal/domain/entities"
 	"sync"
 
+	"golang.org/x/crypto/bcrypt"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -70,9 +71,10 @@ func NewPostgresDatabase() *gorm.DB {
 			&entities.Transaction{},
 			&entities.Transfer{},
 		)
+		pass, _ := bcrypt.GenerateFromPassword([]byte("password"), bcrypt.DefaultCost)
 		user := entities.User{
 			Email:     "test@email.com",
-			Password:  "password",
+			Password:  string(pass),
 			FirstName: "John",
 			LastName:  "Doe",
 		}
