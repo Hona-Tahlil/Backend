@@ -54,9 +54,11 @@ func InitializeApplication(container *bootstrap.Config) (*Application, error) {
 	}
 	localizationMiddleware := middleware.NewLocalizationMiddleware()
 	recoveryMiddleware := middleware.NewRecoveryMiddleware()
+	authMiddleware := middleware.NewAuthMiddleware(jwtService)
 	middlewares := &Middlewares{
 		LocalizationMiddleware: localizationMiddleware,
 		RecoveryMiddleware:     recoveryMiddleware,
+		AuthMiddleware:         authMiddleware,
 	}
 	databaseSeeder := seeder.NewDatabaseSeeder(db)
 	wireSeeder := &Seeder{
@@ -85,7 +87,7 @@ var PetSitterControllersProviderSet = wire.NewSet(petsitter.NewPetsitterControll
 
 var ControllersProviderSet = wire.NewSet(wire.Struct(new(Controllers), "*"))
 
-var MiddlewaresProviderSet = wire.NewSet(middleware.NewLocalizationMiddleware, middleware.NewRecoveryMiddleware, wire.Struct(new(Middlewares), "*"))
+var MiddlewaresProviderSet = wire.NewSet(middleware.NewLocalizationMiddleware, middleware.NewRecoveryMiddleware, middleware.NewAuthMiddleware, wire.Struct(new(Middlewares), "*"))
 
 var SeederProviderSet = wire.NewSet(seeder.NewDatabaseSeeder, wire.Struct(new(Seeder), "*"))
 
@@ -122,6 +124,7 @@ type Controllers struct {
 type Middlewares struct {
 	LocalizationMiddleware *middleware.LocalizationMiddleware
 	RecoveryMiddleware     *middleware.RecoveryMiddleware
+	AuthMiddleware         *middleware.AuthMiddleware
 }
 
 type Seeder struct {

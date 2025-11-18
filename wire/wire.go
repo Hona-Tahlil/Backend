@@ -10,15 +10,16 @@ import (
 	"hona/backend/internal/application/usecase"
 	domainjwt "hona/backend/internal/domain/jwt"
 	"hona/backend/internal/domain/ports"
+	domainstorage "hona/backend/internal/domain/storage"
 	"hona/backend/internal/infrastructure/jwt"
 	"hona/backend/internal/infrastructure/persistence"
 	"hona/backend/internal/infrastructure/persistence/seeder"
+	"hona/backend/internal/infrastructure/storage"
 	"hona/backend/internal/presentation/controllers/v1/admin"
 	"hona/backend/internal/presentation/controllers/v1/general"
 	"hona/backend/internal/presentation/controllers/v1/petsitter"
-	"hona/backend/internal/infrastructure/storage"
 	"hona/backend/internal/presentation/middleware"
-	domainstorage "hona/backend/internal/domain/storage"
+
 	"github.com/google/wire"
 )
 
@@ -70,6 +71,7 @@ var ControllersProviderSet = wire.NewSet(
 var MiddlewaresProviderSet = wire.NewSet(
 	middleware.NewLocalizationMiddleware,
 	middleware.NewRecoveryMiddleware,
+	middleware.NewAuthMiddleware,
 	wire.Struct(new(Middlewares), "*"),
 )
 
@@ -111,6 +113,7 @@ type Controllers struct {
 type Middlewares struct {
 	LocalizationMiddleware *middleware.LocalizationMiddleware
 	RecoveryMiddleware     *middleware.RecoveryMiddleware
+	AuthMiddleware         *middleware.AuthMiddleware
 }
 
 type Seeder struct {
