@@ -16,10 +16,16 @@ import (
 	"hona/backend/internal/presentation/controllers/v1/admin"
 	"hona/backend/internal/presentation/controllers/v1/general"
 	"hona/backend/internal/presentation/controllers/v1/petsitter"
-
+	"hona/backend/internal/infrastructure/storage"
 	"hona/backend/internal/presentation/middleware"
-
+	domainstorage "hona/backend/internal/domain/storage"
 	"github.com/google/wire"
+)
+
+var StorageProviderSet = wire.NewSet(
+	storage.NewS3Storage,
+	wire.Bind(new(domainstorage.Storage), new(*storage.S3Storage)),
+	wire.Struct(new(Storage), "*"),
 )
 
 var RepositoryProviderSet = wire.NewSet(
@@ -80,6 +86,7 @@ var ProviderSet = wire.NewSet(
 	ServiceProviderSet,
 	RepositoryProviderSet,
 	SeederProviderSet,
+	StorageProviderSet,
 	PetSitterControllersProviderSet,
 )
 
@@ -110,17 +117,23 @@ type Seeder struct {
 	DatabaseSeeder *seeder.DatabaseSeeder
 }
 
+type Storage struct {
+	S3Storage *storage.S3Storage
+}
+
 type Application struct {
 	Controllers *Controllers
 	Middlewares *Middlewares
 	Seeder      *Seeder
+	Storage     *Storage
 }
 
-func NewApplication(controllers *Controllers, middlewares *Middlewares, seeder *Seeder) *Application {
+func NewApplication(controllers *Controllers, middlewares *Middlewares, seeder *Seeder, storage *Storage) *Application {
 	return &Application{
 		Controllers: controllers,
 		Middlewares: middlewares,
 		Seeder:      seeder,
+		Storage:     storage,
 	}
 }
 

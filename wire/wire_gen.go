@@ -7,11 +7,13 @@
 package wire
 
 import (
+	"github.com/google/wire"
 	"hona/backend/bootstrap"
 	"hona/backend/internal/application/service"
 	"hona/backend/internal/application/usecase"
-	domainjwt "hona/backend/internal/domain/jwt"
+	"hona/backend/internal/domain/jwt"
 	"hona/backend/internal/domain/ports"
+	"hona/backend/internal/domain/storage"
 	"hona/backend/internal/infrastructure/jwt"
 	"hona/backend/internal/infrastructure/persistence"
 	"hona/backend/internal/infrastructure/persistence/seeder"
@@ -20,8 +22,6 @@ import (
 	"hona/backend/internal/presentation/controllers/v1/general"
 	"hona/backend/internal/presentation/controllers/v1/petsitter"
 	"hona/backend/internal/presentation/middleware"
-
-	"github.com/google/wire"
 )
 
 // Injectors from wire.go:
@@ -41,8 +41,8 @@ func InitializeApplication(container *bootstrap.Config) (*Application, error) {
 	adminControllers := &AdminControllers{
 		AdminRBACController: adminRBACController,
 	}
-	storage := storage.NewS3Storage()
-	petSitterService := service.NewPetSitterService(unitOfWork, storage, userService)
+	s3Storage := storage.NewS3Storage()
+	petSitterService := service.NewPetSitterService(unitOfWork, s3Storage, userService)
 	petSitterController := petsitter.NewPetsitterController(petSitterService)
 	wirePetSitterController := &PetSitterController{
 		PetSitterController: petSitterController,
@@ -62,11 +62,16 @@ func InitializeApplication(container *bootstrap.Config) (*Application, error) {
 	wireSeeder := &Seeder{
 		DatabaseSeeder: databaseSeeder,
 	}
-	application := NewApplication(controllers, middlewares, wireSeeder)
+	wireStorage := &Storage{
+		S3Storage: s3Storage,
+	}
+	application := NewApplication(controllers, middlewares, wireSeeder, wireStorage)
 	return application, nil
 }
 
 // wire.go:
+
+var StorageProviderSet = wire.NewSet(storage.NewS3Storage, wire.Bind(new(domainstorage.Storage), new(*storage.S3Storage)), wire.Struct(new(Storage), "*"))
 
 var RepositoryProviderSet = wire.NewSet(persistence.NewRepositoryFactory, persistence.NewUnitOfWork, persistence.NewPostgresDatabase, wire.Bind(new(ports.RepositoryFactory), new(*persistence.RepositoryFactory)), wire.Bind(new(ports.UnitOfWork), new(*persistence.UnitOfWork)))
 
@@ -92,6 +97,7 @@ var ProviderSet = wire.NewSet(
 	ServiceProviderSet,
 	RepositoryProviderSet,
 	SeederProviderSet,
+	StorageProviderSet,
 	PetSitterControllersProviderSet,
 )
 
@@ -122,16 +128,22 @@ type Seeder struct {
 	DatabaseSeeder *seeder.DatabaseSeeder
 }
 
+type Storage struct {
+	S3Storage *storage.S3Storage
+}
+
 type Application struct {
 	Controllers *Controllers
 	Middlewares *Middlewares
 	Seeder      *Seeder
+	Storage     *Storage
 }
 
-func NewApplication(controllers *Controllers, middlewares *Middlewares, seeder2 *Seeder) *Application {
+func NewApplication(controllers *Controllers, middlewares *Middlewares, seeder2 *Seeder, storage2 *Storage) *Application {
 	return &Application{
 		Controllers: controllers,
 		Middlewares: middlewares,
 		Seeder:      seeder2,
+		Storage:     storage2,
 	}
 }
