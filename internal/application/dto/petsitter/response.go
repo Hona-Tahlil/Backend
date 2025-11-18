@@ -2,38 +2,32 @@ package petsitter
 
 import (
 	"hona/backend/internal/domain/enums"
-	"mime/multipart"
 	"time"
 )
 
 type PetSitterStatusResponse struct {
-	UserID         uint
-	Status         enums.PetSitterStatus
-	OnboardingStep enums.OnboardingStep
+	Status         enums.PetSitterStatus `json:"status"`
+	OnboardingStep enums.OnboardingStep   `json:"onboarding_step"`
 }
 
 type PersonalInfoResponse struct {
-	UserID         uint
-	FirstName      string         `json:"first_name"`
-	LastName       string         `json:"last_name"`
-	Email          string         `json:"email"`
-	Gender         enums.Gender   `json:"gender,omitempty"`
-	BirthDate      *time.Time     `json:"birth_date,omitempty"`
-	PhoneNumber    string         `json:"phone_number,omitempty"`
-	Province       enums.Province `json:"province" validate:"required"`
-	City           enums.City     `json:"city,omitempty"`
-	Address        string         `json:"address,omitempty"`
-	Pelak          uint           `json:"pelak" validate:"required"`
-	Vahed          uint           `json:"vahed" validate:"required"`
-	PostalCode     string         `json:"postalCode" validate:"required,len=10"`
-	Status         enums.PetSitterStatus
-	OnboardingStep enums.OnboardingStep
+	FirstName      string                `json:"first_name"`
+	LastName       string                `json:"last_name"`
+	Email          string                `json:"email"`
+	Gender         enums.Gender          `json:"gender"`
+	BirthDate      *time.Time            `json:"birth_date"`
+	PhoneNumber    string                `json:"phone_number"`
+	Province       enums.Province        `json:"province"`
+	City           enums.City            `json:"city"`
+	Address        string                `json:"address"`
+	HouseNumber    uint                  `json:"house_number"`
+	Unit           uint                  `json:"unit"`
+	PostalCode     string                `json:"postal_code"`
+	Status         enums.PetSitterStatus `json:"status"`
+	OnboardingStep enums.OnboardingStep  `json:"onboarding_step"`
 }
 
 type DocumentResponse struct {
-	UserID          uint
-	CertificateFile []*multipart.FileHeader
-	File            *multipart.FileHeader
-	Status          enums.PetSitterStatus
-	OnboardingStep  enums.OnboardingStep
+	CertificateFiles []string `json:"certificate_files"`
+	Files            []string `json:"files"`
 }

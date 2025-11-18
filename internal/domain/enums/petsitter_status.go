@@ -26,6 +26,7 @@ func (petSitterStatus PetSitterStatus) String() string {
 	return ""
 }
 
+
 func GetAllPetSitterStatus() []PetSitterStatus {
 	return []PetSitterStatus{
 		PSS_Draft,

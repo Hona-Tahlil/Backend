@@ -34,7 +34,6 @@ func (pc *PetSitterController) CreateSignupSession(ctx *gin.Context) {
 
 func (pc *PetSitterController) SubmitPersonalInfo(ctx *gin.Context) {
 	UserID := controllers.GetID(ctx)
-	//TODO
 	type FirstSubmitParams struct {
 		FirstName   string `json:"firstName" validate:"required"`
 		LastName    string `json:"lastName" validate:"required"`
@@ -43,18 +42,18 @@ func (pc *PetSitterController) SubmitPersonalInfo(ctx *gin.Context) {
 	}
 	params := controllers.Receive[FirstSubmitParams](ctx)
 	FirstSubmitInfo := petsitter.SubmitPersonalInfoRequest{
-		UserID:      UserID,
-		FirstName:   params.FirstName,
-		LastName:    params.LastName,
-		Email:       params.Email,
-		PhoneNumber: params.PhoneNumber,
+		UserID:    UserID,
+		FirstName: params.FirstName,
+		LastName:  params.LastName,
+		Email:     params.Email,
+		Phone:     params.PhoneNumber,
 	}
-	res, err := pc.petSitterService.SubmitPersonalInfo(FirstSubmitInfo);
+	err := pc.petSitterService.SubmitPersonalInfo(FirstSubmitInfo)
 	if err != nil {
 		panic(err)
 	}
 	msg := controllers.Message{}
-	controllers.Respond(ctx, 200, msg, res)
+	controllers.Respond(ctx, 200, msg, nil)
 }
 
 func (pc *PetSitterController) GetPersonalInfo(ctx *gin.Context) {
@@ -67,7 +66,6 @@ func (pc *PetSitterController) GetPersonalInfo(ctx *gin.Context) {
 	controllers.Respond(ctx, 200, msg, res)
 }
 
-
 func (pc *PetSitterController) UploadDocuments(ctx *gin.Context) {
 	UserID := controllers.GetID(ctx)
 	form, err := ctx.MultipartForm()
@@ -75,17 +73,19 @@ func (pc *PetSitterController) UploadDocuments(ctx *gin.Context) {
 		form = nil
 		panic(err)
 	}
-	files := form.File["files"]
+	CertificateFiles := form.File["certificateFiles"]
+	Files := form.File["files"]
 	UploadDocumentsInfo := petsitter.UploadDocumentsRequest{
-		UserID: UserID,
-		File:   files,
+		UserID:           UserID,
+		CertificateFiles: CertificateFiles,
+		Files:            Files,
 	}
-	res, err := pc.petSitterService.UploadDocuments(UploadDocumentsInfo)
+	err = pc.petSitterService.UploadDocuments(UploadDocumentsInfo)
 	if err != nil {
 		panic(err)
 	}
 	msg := controllers.Message{}
-	controllers.Respond(ctx, 200, msg, res)
+	controllers.Respond(ctx, 200, msg, nil)
 }
 
 func (pc *PetSitterController) GetDocuments(ctx *gin.Context) {
@@ -102,7 +102,7 @@ func (pc *PetSitterController) SubmitSkills(ctx *gin.Context) {
 	userID := controllers.GetID(ctx)
 
 	type SkillsParams struct {
-		Bio      string `json:"bio" validate:"required"`
+		Bio      string `json:"bio" validate:"required,min=20"`
 		PetKinds []enums.PetKind
 		Services []enums.ServiceType
 	}
@@ -115,14 +115,13 @@ func (pc *PetSitterController) SubmitSkills(ctx *gin.Context) {
 		Services: params.Services,
 	}
 
-	res, err := pc.petSitterService.SubmitSkills(dto)
+	err := pc.petSitterService.SubmitSkills(dto)
 	if err != nil {
 		panic(err)
 	}
 	msg := controllers.Message{}
-	controllers.Respond(ctx, 200, msg, res)
+	controllers.Respond(ctx, 200, msg, nil)
 }
-
 
 func (pc *PetSitterController) GetPetsitterStatus(ctx *gin.Context) {
 	UserID := controllers.GetID(ctx)

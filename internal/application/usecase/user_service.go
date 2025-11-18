@@ -22,4 +22,5 @@ type UserService interface {
 	GetRolesResponse(user entities.User) []rbac.RoleResponse
 	GetRoleUsersByID(roleID uint, limit, offset int) ([]entities.User, error)
 	GetUserInfosResponse(users []entities.User) []rbac.UserInfoResponse
+	FindVerifiedUserByID(id uint) (*entities.User, error)
 }
