@@ -55,10 +55,12 @@ func InitializeApplication(container *bootstrap.Config) (*Application, error) {
 	localizationMiddleware := middleware.NewLocalizationMiddleware()
 	recoveryMiddleware := middleware.NewRecoveryMiddleware()
 	authMiddleware := middleware.NewAuthMiddleware(jwtService)
+	corsMiddleware := middleware.NewCORSMiddleware()
 	middlewares := &Middlewares{
 		LocalizationMiddleware: localizationMiddleware,
 		RecoveryMiddleware:     recoveryMiddleware,
 		AuthMiddleware:         authMiddleware,
+		CORSMiddleware:         corsMiddleware,
 	}
 	databaseSeeder := seeder.NewDatabaseSeeder(db)
 	wireSeeder := &Seeder{
@@ -87,7 +89,7 @@ var PetSitterControllersProviderSet = wire.NewSet(petsitter.NewPetsitterControll
 
 var ControllersProviderSet = wire.NewSet(wire.Struct(new(Controllers), "*"))
 
-var MiddlewaresProviderSet = wire.NewSet(middleware.NewLocalizationMiddleware, middleware.NewRecoveryMiddleware, middleware.NewAuthMiddleware, wire.Struct(new(Middlewares), "*"))
+var MiddlewaresProviderSet = wire.NewSet(middleware.NewLocalizationMiddleware, middleware.NewRecoveryMiddleware, middleware.NewAuthMiddleware, middleware.NewCORSMiddleware, wire.Struct(new(Middlewares), "*"))
 
 var SeederProviderSet = wire.NewSet(seeder.NewDatabaseSeeder, wire.Struct(new(Seeder), "*"))
 
@@ -125,6 +127,7 @@ type Middlewares struct {
 	LocalizationMiddleware *middleware.LocalizationMiddleware
 	RecoveryMiddleware     *middleware.RecoveryMiddleware
 	AuthMiddleware         *middleware.AuthMiddleware
+	CORSMiddleware         *middleware.CORSMiddleware
 }
 
 type Seeder struct {

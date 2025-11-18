@@ -72,6 +72,7 @@ var MiddlewaresProviderSet = wire.NewSet(
 	middleware.NewLocalizationMiddleware,
 	middleware.NewRecoveryMiddleware,
 	middleware.NewAuthMiddleware,
+	middleware.NewCORSMiddleware,
 	wire.Struct(new(Middlewares), "*"),
 )
 
@@ -114,6 +115,7 @@ type Middlewares struct {
 	LocalizationMiddleware *middleware.LocalizationMiddleware
 	RecoveryMiddleware     *middleware.RecoveryMiddleware
 	AuthMiddleware         *middleware.AuthMiddleware
+	CORSMiddleware         *middleware.CORSMiddleware
 }
 
 type Seeder struct {
