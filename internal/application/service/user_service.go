@@ -127,7 +127,7 @@ func (us *UserService) FindUserByEmail(email string) (*entities.User, error) {
 	return foundUser, nil
 }
 
-func (us *UserService) indVerifiedUserByID(id uint) (*entities.User, error) {
+func (us *UserService) FindVerifiedUserByID(id uint) (*entities.User, error) {
 	foundUser, err := us.FindUserByID(id)
 	if err != nil {
 		return nil, err

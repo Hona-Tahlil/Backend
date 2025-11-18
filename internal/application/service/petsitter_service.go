@@ -61,6 +61,7 @@ func (ps *PetSitterService) CreateSignupSession(PetsitterInfo petsitter.GetPetSi
 
 func (ps *PetSitterService) SubmitPersonalInfo(petSitterInfo petsitter.SubmitPersonalInfoRequest) error {
 	userRepo := ps.unitOfWork.Factory().UserRepository()
+	addressRepo := ps.unitOfWork.Factory().AddressRepository()
 	foundUser, err := ps.userService.FindVerifiedUserByID(petSitterInfo.UserID)
 	if err != nil {
 		return err
@@ -80,17 +81,35 @@ func (ps *PetSitterService) SubmitPersonalInfo(petSitterInfo petsitter.SubmitPer
 	if err != nil {
 		return err
 	}
+	err = userRepo.PreloadAddress(foundUser)
+	if err != nil {
+		return err
+	}
+	err = addressRepo.PreloadProvince(&foundUser.Address)
+	if err != nil {
+		return err
+	}
+	err = addressRepo.PreloadCity(&foundUser.Address)
+	if err != nil {
+		return err
+	}
 	foundUser.FirstName = petSitterInfo.FirstName
 	foundUser.LastName = petSitterInfo.LastName
+	foundUser.Email = petSitterInfo.Email
+	foundUser.Gender = petSitterInfo.Gender
+	foundUser.BirthDate = petSitterInfo.BirthDate
 	foundUser.Phone = &petSitterInfo.Phone
+	foundUser.Address.StreetAddress = petSitterInfo.Address
+	foundUser.Address.Province.Name = petSitterInfo.Province
+	foundUser.Address.City.Name = petSitterInfo.City
+	foundUser.Address.HouseNumber = petSitterInfo.HouseNumber
+	foundUser.Address.Unit = petSitterInfo.Unit
 	foundUser.PetSitter.Status = enums.PSS_Draft
 	foundUser.PetSitter.OnboardingStep = enums.OBS_Profile
-
 	err = userRepo.UpdateUser(foundUser)
 	if err != nil {
 		return err
 	}
-
 	return nil
 
 }
