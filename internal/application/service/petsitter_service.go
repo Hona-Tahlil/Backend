@@ -71,7 +71,7 @@ func (ps *PetSitterService) SubmitPersonalInfo(petSitterInfo petsitter.SubmitPer
 		return err
 	}
 	if foundUser.PetSitter == nil {
-		return err
+		return exceptions.NewNotFoundError(bootstrap.Run().Constants.ErrorFields.PetSitter)
 	}
 	err = ps.CheckPetSitterStatus(foundUser.PetSitter.Status)
 	if err != nil {
@@ -85,16 +85,19 @@ func (ps *PetSitterService) SubmitPersonalInfo(petSitterInfo petsitter.SubmitPer
 	if err != nil {
 		return err
 	}
-	err = addressRepo.PreloadProvince(&foundUser.Address)
+	if foundUser.Address == nil {
+		return exceptions.NewNotFoundError(bootstrap.Run().Constants.ErrorFields.Address)
+	}
+	err = addressRepo.PreloadProvince(foundUser.Address)
 	if err != nil {
 		return err
 	}
-	err = addressRepo.PreloadCity(&foundUser.Address)
+	err = addressRepo.PreloadCity(foundUser.Address)
 	if err != nil {
 		return err
 	}
 	//
-	address := entities.Address{
+	address := &entities.Address{
 		Province: entities.Province{
 			Name: petSitterInfo.Province,
 		},
@@ -103,7 +106,7 @@ func (ps *PetSitterService) SubmitPersonalInfo(petSitterInfo petsitter.SubmitPer
 		},
 		StreetAddress: petSitterInfo.Address,
 		HouseNumber:   petSitterInfo.HouseNumber,
-		Unit:         petSitterInfo.Unit,
+		Unit:          petSitterInfo.Unit,
 	}
 	foundUser.Address = address
 	//
@@ -138,11 +141,11 @@ func (ps *PetSitterService) GetPersonalInfo(userID uint) (*petsitter.PersonalInf
 	if err != nil {
 		return nil, err
 	}
-	err = addressRepo.PreloadProvince(&foundUser.Address)
+	err = addressRepo.PreloadProvince(foundUser.Address)
 	if err != nil {
 		return nil, err
 	}
-	err = addressRepo.PreloadCity(&foundUser.Address)
+	err = addressRepo.PreloadCity(foundUser.Address)
 	if err != nil {
 		return nil, err
 	}
