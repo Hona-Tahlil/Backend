@@ -73,10 +73,11 @@ func NewPostgresDatabase() *gorm.DB {
 		)
 		pass, _ := bcrypt.GenerateFromPassword([]byte("password"), bcrypt.DefaultCost)
 		user := entities.User{
-			Email:     "test@email.com",
-			Password:  string(pass),
-			FirstName: "John",
-			LastName:  "Doe",
+			Email:           "test@email.com",
+			Password:        string(pass),
+			FirstName:       "John",
+			LastName:        "Doe",
+			IsEmailVerified: true,
 		}
 		db.Create(&user)
 
