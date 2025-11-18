@@ -93,17 +93,26 @@ func (ps *PetSitterService) SubmitPersonalInfo(petSitterInfo petsitter.SubmitPer
 	if err != nil {
 		return err
 	}
+	//
+	address := entities.Address{
+		Province: entities.Province{
+			Name: petSitterInfo.Province,
+		},
+		City: entities.City{
+			Name: petSitterInfo.City,
+		},
+		StreetAddress: petSitterInfo.Address,
+		HouseNumber:   petSitterInfo.HouseNumber,
+		Unit:         petSitterInfo.Unit,
+	}
+	foundUser.Address = address
+	//
 	foundUser.FirstName = petSitterInfo.FirstName
 	foundUser.LastName = petSitterInfo.LastName
 	foundUser.Email = petSitterInfo.Email
 	foundUser.Gender = petSitterInfo.Gender
 	foundUser.BirthDate = petSitterInfo.BirthDate
 	foundUser.Phone = &petSitterInfo.Phone
-	foundUser.Address.StreetAddress = petSitterInfo.Address
-	foundUser.Address.Province.Name = petSitterInfo.Province
-	foundUser.Address.City.Name = petSitterInfo.City
-	foundUser.Address.HouseNumber = petSitterInfo.HouseNumber
-	foundUser.Address.Unit = petSitterInfo.Unit
 	foundUser.PetSitter.Status = enums.PSS_Draft
 	foundUser.PetSitter.OnboardingStep = enums.OBS_Profile
 	err = userRepo.UpdateUser(foundUser)
