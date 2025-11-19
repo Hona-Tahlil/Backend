@@ -36,12 +36,14 @@ func NewRequestService(userService usecase.UserService, unitOfWork ports.UnitOfW
 	}
 }
 
+// TODO: rethink error handlings
+
 func (rs *RequestService) CreateRequest(info request.CreateRequestRequest) error {
+	// TODO: move to find pet sitter by user id func in petsitter_service
 	petSitterUser, err := rs.userService.FindUserByID(info.PetSitterUserID)
 	if err != nil {
 		return err
 	}
-	// TODO: move this to user service
 	userRepo := rs.unitOfWork.Factory().UserRepository()
 	err = userRepo.PreloadPetSitter(petSitterUser)
 	if err != nil {
@@ -58,7 +60,6 @@ func (rs *RequestService) CreateRequest(info request.CreateRequestRequest) error
 		ve.AddError(bootstrap.Run().Constants.ErrorFields.PetSitter, bootstrap.Run().Constants.ErrorTags.NotFound)
 		return &ve
 	}
-
 	petSitterRepo := rs.unitOfWork.Factory().PetSitterRepository()
 	err = petSitterRepo.PreloadSchedule(petSitter)
 	if err != nil {
@@ -70,6 +71,7 @@ func (rs *RequestService) CreateRequest(info request.CreateRequestRequest) error
 		return err
 	}
 
+	// TODO: use find verified user by id
 	user, err := rs.userService.FindUserByID(info.UserID)
 	if err != nil {
 		return err
@@ -160,6 +162,7 @@ func (rs *RequestService) CreateRequest(info request.CreateRequestRequest) error
 	return nil
 }
 
+// TODO: get services that their prices isn't 0
 func (rs *RequestService) GetCreateRequestInfo(info request.GetCreateRequestInfoRequest) (*request.CreateRequestInfoResponse, error) {
 	addresses, err := rs.addressService.GetUserAddressesInfo(info.UserID)
 	if err != nil {
@@ -192,6 +195,7 @@ func (rs *RequestService) GetCreateRequestInfo(info request.GetCreateRequestInfo
 }
 
 func (rs *RequestService) EditRequest(info request.EditRequestRequest) error {
+	// TODO: service for finding a request
 	requestRepo := rs.unitOfWork.Factory().RequestRepository()
 	foundRequest, err := requestRepo.GetRequestByID(info.RequestID)
 	if err != nil {
@@ -344,12 +348,16 @@ func (rs *RequestService) CancelRequest(info request.CancelRequestRequest) error
 
 	foundRequest.Status = enums.Canceled
 
+	// TODO: change sitter slots
+
 	requestRepo.EditRequest(foundRequest)
 
 	return nil
 }
 
+// TODO: check for conflict and return message
 func (rs *RequestService) GetRequestFullData(info request.GetRequestFullDataRequest) (*request.RequestFullDataResponse, error) {
+	// TODO: use service method
 	requestRepo := rs.unitOfWork.Factory().RequestRepository()
 	foundRequest, err := requestRepo.GetRequestByID(info.RequestID)
 	if err != nil {
@@ -382,6 +390,7 @@ func (rs *RequestService) GetRequestFullData(info request.GetRequestFullDataRequ
 
 // TODO: handle conflict here and in gets
 func (rs *RequestService) RespondToRequest(info request.RespondToRequestRequest) error {
+	/// TODO: use service method
 	requestRepo := rs.unitOfWork.Factory().RequestRepository()
 	foundRequest, err := requestRepo.GetRequestByID(info.RequestID)
 	if err != nil {
@@ -407,12 +416,16 @@ func (rs *RequestService) RespondToRequest(info request.RespondToRequestRequest)
 		foundRequest.Status = enums.Dismissed
 	}
 
+	// TODO: Update PetSitter Slots if accepted
+
 	requestRepo.EditRequest(foundRequest)
 
 	return nil
 }
 
 func (rs *RequestService) validateCalendarSlots(petSitterSlots []entities.CalendarSlot, requestSlots []request.RequestCalendarSlotRequest) error {
+	// TODO: move logic to calendar service if possible
+	// TODO: use map to decrease complexity
 	for _, req := range requestSlots {
 		for _, userSlot := range req.Slots {
 			flag := false
@@ -439,6 +452,7 @@ func (rs *RequestService) validateCalendarSlots(petSitterSlots []entities.Calend
 }
 
 func (rs *RequestService) validateRequestPets(user *entities.User, petSitter *entities.PetSitter, petIDs []uint) error {
+	// TODO: use map to decrease complexity
 	pets := make([]entities.Pet, 0)
 	userRepo := rs.unitOfWork.Factory().UserRepository()
 	err := userRepo.PreloadPets(user)
@@ -462,6 +476,7 @@ func (rs *RequestService) validateRequestPets(user *entities.User, petSitter *en
 		}
 	}
 
+	// TODO: pet sitter service
 	for _, pet := range pets {
 		flag := false
 		for _, kind := range petSitter.PetKinds {
@@ -481,6 +496,7 @@ func (rs *RequestService) validateRequestPets(user *entities.User, petSitter *en
 }
 
 func (rs *RequestService) makeRequestPets(petIDs []uint) ([]entities.Pet, error) {
+	// TODO: alter the logic to not need finding again!
 	// TODO: use len and index instead of append
 	pets := make([]entities.Pet, 0)
 
@@ -511,6 +527,7 @@ func (rs *RequestService) makeRequestPets(petIDs []uint) ([]entities.Pet, error)
 }
 
 func (rs *RequestService) validateRequestService(petSitter *entities.PetSitter, serviceID uint) error {
+	// TODO: validate 0 price for services
 	// TODO: Move this to pet sitter service
 	flag := false
 	for _, service := range petSitter.Services {
@@ -529,6 +546,7 @@ func (rs *RequestService) validateRequestService(petSitter *entities.PetSitter, 
 }
 
 func (rs *RequestService) makeRequestService(serviceID uint) (*entities.Service, error) {
+	// TODO: alter to not need finding again
 	service, err := rs.serviceService.FindServiceByID(serviceID)
 	if err != nil {
 		return nil, err
@@ -574,3 +592,5 @@ func (rs *RequestService) makeCalendarSlots(calendarSlots []request.RequestCalen
 
 	return slots
 }
+
+// TODO: get ... funcs to use validate and make funcs together

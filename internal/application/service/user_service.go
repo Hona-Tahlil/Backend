@@ -98,6 +98,7 @@ func (us *UserService) GetRoleUsersByID(roleID uint, limit, offset int) ([]entit
 	return users, nil
 }
 
+// TODO: preload fields
 func (us *UserService) findVerifiedUserByEmail(email string) (*entities.User, error) {
 	foundUser, err := us.FindUserByEmail(email)
 	if err != nil {
@@ -112,6 +113,7 @@ func (us *UserService) findVerifiedUserByEmail(email string) (*entities.User, er
 	return foundUser, nil
 }
 
+// TODO: preload fields
 func (us *UserService) FindUserByEmail(email string) (*entities.User, error) {
 	userRepo := us.unitOfWork.Factory().UserRepository()
 	foundUser, err := userRepo.FindUserByEmail(email)
@@ -127,6 +129,7 @@ func (us *UserService) FindUserByEmail(email string) (*entities.User, error) {
 	return foundUser, nil
 }
 
+// TODO: preload fields
 func (us *UserService) findVerifiedUserByID(id uint) (*entities.User, error) {
 	foundUser, err := us.FindUserByID(id)
 	if err != nil {
@@ -141,6 +144,7 @@ func (us *UserService) findVerifiedUserByID(id uint) (*entities.User, error) {
 	return foundUser, nil
 }
 
+// TODO: preload fields
 func (us *UserService) FindUserByID(id uint) (*entities.User, error) {
 	userRepo := us.unitOfWork.Factory().UserRepository()
 	foundUser, err := userRepo.FindUserByID(id)

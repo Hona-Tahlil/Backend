@@ -37,3 +37,5 @@ func main() {
 
 	ginEngine.Run()
 }
+
+// TODO: use len and index instead of append everywhere!

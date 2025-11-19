@@ -39,27 +39,27 @@ func (rc *UserRequestController) GetCreateRequestInfo(ctx *gin.Context) {
 	controllers.Respond(ctx, 200, msg, *res)
 }
 
-// TODO Email Sending?
+// TODO Email?
 func (rc *UserRequestController) CreateRequest(ctx *gin.Context) {
 	type CalendarSlot struct {
 		Date  time.Time    `json:"date" validate:"required"`
 		Slots []enums.Slot `json:"slots" validate:"required"`
 	}
 	type AddressInfo struct {
-		// TODO: validate + json
-		ProvinceName  enums.Province
-		CityName      enums.City
-		StreetAddress string
-		HouseNumber   uint
-		Unit          uint
-		PostalCode    *string
+		ProvinceName  enums.Province `json:"provinceName" validate:"required"`
+		CityName      enums.City     `json:"cityName" validate:"required"`
+		StreetAddress string         `json:"streetAddress" validate:"required"`
+		HouseNumber   uint           `json:"houseNumber" validate:"required"`
+		Unit          uint           `json:"unit" validate:"required"`
+		PostalCode    *string        `json:"postalCode"`
 	}
+	// TODO: test if dive works
 	type Params struct {
 		PetSitterUserID uint           `json:"petSitterUserID" validate:"required"`
-		CalenderSlots   []CalendarSlot `json:"calendarSlots" validate:"required"`
+		CalenderSlots   []CalendarSlot `json:"calendarSlots" validate:"required,min=1" binding:"dive"`
 		PetIDs          []uint         `json:"petIDs" validate:"required"`
 		Notes           *string        `json:"notes"`
-		AddressInfo     *AddressInfo   `json:"addressInfo"`
+		AddressInfo     *AddressInfo   `json:"addressInfo" validate:"omitempty" binding:"dive,omitempty"`
 		AddressID       *uint          `json:"addressID"`
 		ServiceID       uint           `json:"serviceID" validate:"required"`
 	}
@@ -97,19 +97,20 @@ func (rc *UserRequestController) EditRequest(ctx *gin.Context) {
 		Slots []enums.Slot `json:"slots" validate:"required"`
 	}
 	type AddressInfo struct {
-		ProvinceName  enums.Province
-		CityName      enums.City
-		StreetAddress string
-		HouseNumber   uint
-		Unit          uint
-		PostalCode    *string
+		ProvinceName  enums.Province `json:"provinceName" validate:"required"`
+		CityName      enums.City     `json:"cityName" validate:"required"`
+		StreetAddress string         `json:"streetAddress" validate:"required"`
+		HouseNumber   uint           `json:"houseNumber" validate:"required"`
+		Unit          uint           `json:"unit" validate:"required"`
+		PostalCode    *string        `json:"postalCode"`
 	}
+	// TODO: test if dive works
 	type Params struct {
 		RequestID     uint           `json:"requestID" validate:"required"`
-		CalenderSlots []CalendarSlot `json:"calendarSlots" validate:"required"`
+		CalenderSlots []CalendarSlot `json:"calendarSlots" validate:"required,min=1" binding:"dive"`
 		PetIDs        []uint         `json:"petIDs" validate:"required"`
 		Notes         *string        `json:"notes"`
-		AddressInfo   *AddressInfo   `json:"addressInfo"`
+		AddressInfo   *AddressInfo   `json:"addressInfo" validate:"omitempty" binding:"dive,omitempty"`
 		AddressID     *uint          `json:"addressID" validate:"required"`
 		ServiceID     uint           `json:"serviceID" validate:"required"`
 	}
@@ -178,5 +179,3 @@ func (rc *UserRequestController) GetRequestFullData(ctx *gin.Context) {
 }
 
 // TODO: View Requests With Different Filters -> Accepted - Pending - Rejected - Canceled - ... / Different Sorts / Pagination
-
-// TODO: Policy: Cancel - Price - calendar (warning)
