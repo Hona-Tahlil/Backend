@@ -42,3 +42,5 @@ func GetID(ctx *gin.Context) uint {
 	ID, _ := id.(uint)
 	return ID
 }
+
+// TODO: encoder and decoder func for Calendar

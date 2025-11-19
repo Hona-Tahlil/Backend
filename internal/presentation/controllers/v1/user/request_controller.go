@@ -18,7 +18,10 @@ func NewUserRequestController(requestService usecase.RequestService) *UserReques
 	return &UserRequestController{
 		requestService: requestService,
 	}
+
 }
+
+// TODO: use encoder and decoder func for Calendar
 
 func (rc *UserRequestController) GetCreateRequestInfo(ctx *gin.Context) {
 	type Params struct {
