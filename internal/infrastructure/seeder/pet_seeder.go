@@ -21,9 +21,6 @@ func NewPetSeeder(db *gorm.DB) *PetSeeder {
 }
 
 func (s *PetSeeder) Seed(count int) error {
-	rand.Seed(time.Now().UnixNano())
-
-	// Get existing users to assign pets to them
 	var users []entities.User
 	if err := s.db.Limit(100).Find(&users).Error; err != nil {
 		return fmt.Errorf("failed to fetch users: %w", err)
@@ -36,14 +33,11 @@ func (s *PetSeeder) Seed(count int) error {
 	pets := make([]entities.Pet, 0, count)
 
 	for i := 0; i < count; i++ {
-		// Random user
 		user := users[rand.Intn(len(users))]
 
-		// Random pet kind
 		petKinds := enums.GetAllPetKinds()
 		kind := petKinds[rand.Intn(len(petKinds))]
 
-		// Select appropriate species based on kind
 		var species enums.Species
 		switch kind {
 		case enums.Dog:
@@ -66,39 +60,33 @@ func (s *PetSeeder) Seed(count int) error {
 			species = catSpecies[rand.Intn(len(catSpecies))]
 		}
 
-		// Random gender
 		genders := []enums.PetGender{enums.MalePet, enums.FemalePet}
 		gender := genders[rand.Intn(len(genders))]
 
-		// Random age (0-15 years for pets)
 		now := time.Now()
 		yearsAgo := rand.Intn(16)
 		daysOffset := rand.Intn(365)
 		hoursOffset := rand.Intn(24)
 		birthDate := now.AddDate(-yearsAgo, 0, -daysOffset).Add(-time.Duration(hoursOffset) * time.Hour)
 
-		// IsAdult logic (typically pets are adult after 1-2 years)
 		isAdult := yearsAgo >= 2
 
-		// Random weight based on pet kind (in appropriate units)
 		var weight *float32
 		var w float32
 		switch kind {
 		case enums.Dog:
-			w = float32(10 + rand.Intn(40)) // 10-50 kg for dogs
+			w = float32(10 + rand.Intn(40))
 		case enums.Cat:
-			w = float32(3 + rand.Intn(7)) // 3-10 kg for cats
+			w = float32(3 + rand.Intn(7))
 		}
 		weight = &w
 
-		// Random about text (70% chance)
 		var aboutPet *string
 		if rand.Intn(10) < 7 {
 			about := generatePetAbout(kind)
 			aboutPet = &about
 		}
 
-		// Pet names based on kind
 		name := generatePetName(kind)
 
 		pet := entities.Pet{
