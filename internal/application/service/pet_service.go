@@ -150,12 +150,7 @@ func (ps *PetService) RemovePet(info pet.RemovePetRequest) error {
 }
 
 func (ps *PetService) GetPetsBasicData(info pet.GetPetsBasicDataRequest) ([]pet.PetBasicDataResponse, error) {
-	user, err := ps.userService.FindUserByID(info.UserID)
-	if err != nil {
-		return nil, err
-	}
-	petRepo := ps.unitOfWork.Factory().PetRepository()
-	err = petRepo.PreloadUserPets(user)
+	user, err := ps.userService.FindUserByID(info.UserID, true)
 	if err != nil {
 		return nil, err
 	}

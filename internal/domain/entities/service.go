@@ -12,7 +12,7 @@ type Service struct {
 	RequestID       *uint             `gorm:"index"`
 	Type            enums.ServiceType `gorm:"index"`
 	Price           uint              `gorm:"index"`
-	PetKinds        []enums.PetKind   `gorm:"type:integer[];not null"`
-	Description     *string
-	Kind            string `gorm:"index"`
+	// PetKinds        []enums.PetKind   `gorm:"type:integer[];not null"`
+	Description *string
+	Kind        string `gorm:"index"`
 }

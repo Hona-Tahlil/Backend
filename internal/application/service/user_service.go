@@ -55,7 +55,7 @@ func (us *UserService) GetRolesResponse(user entities.User) []rbac.RoleResponse 
 }
 
 func (us *UserService) Login(loginInfo user.LoginRequest) (*user.LoginResponse, string, int, error) {
-	foundUser, err := us.FindUserByEmail(loginInfo.Email)
+	foundUser, err := us.FindUserByEmail(loginInfo.Email, true)
 	if err != nil {
 		if _, ok := err.(*exceptions.NotFoundError); !ok {
 			return nil, "", 0, err
@@ -98,9 +98,8 @@ func (us *UserService) GetRoleUsersByID(roleID uint, limit, offset int) ([]entit
 	return users, nil
 }
 
-// TODO: preload fields
-func (us *UserService) findVerifiedUserByEmail(email string) (*entities.User, error) {
-	foundUser, err := us.FindUserByEmail(email)
+func (us *UserService) FindVerifiedUserByEmail(email string, preload bool) (*entities.User, error) {
+	foundUser, err := us.FindUserByEmail(email, preload)
 	if err != nil {
 		return nil, err
 	}
@@ -113,8 +112,7 @@ func (us *UserService) findVerifiedUserByEmail(email string) (*entities.User, er
 	return foundUser, nil
 }
 
-// TODO: preload fields
-func (us *UserService) FindUserByEmail(email string) (*entities.User, error) {
+func (us *UserService) FindUserByEmail(email string, preload bool) (*entities.User, error) {
 	userRepo := us.unitOfWork.Factory().UserRepository()
 	foundUser, err := userRepo.FindUserByEmail(email)
 	if foundUser == nil {
@@ -126,12 +124,18 @@ func (us *UserService) FindUserByEmail(email string) (*entities.User, error) {
 		return nil, err
 	}
 
+	if preload {
+		err = userRepo.PreloadFields(foundUser)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	return foundUser, nil
 }
 
-// TODO: preload fields
-func (us *UserService) findVerifiedUserByID(id uint) (*entities.User, error) {
-	foundUser, err := us.FindUserByID(id)
+func (us *UserService) FindVerifiedUserByID(id uint, preload bool) (*entities.User, error) {
+	foundUser, err := us.FindUserByID(id, preload)
 	if err != nil {
 		return nil, err
 	}
@@ -144,8 +148,7 @@ func (us *UserService) findVerifiedUserByID(id uint) (*entities.User, error) {
 	return foundUser, nil
 }
 
-// TODO: preload fields
-func (us *UserService) FindUserByID(id uint) (*entities.User, error) {
+func (us *UserService) FindUserByID(id uint, preload bool) (*entities.User, error) {
 	userRepo := us.unitOfWork.Factory().UserRepository()
 	foundUser, err := userRepo.FindUserByID(id)
 	if foundUser == nil {
@@ -155,6 +158,13 @@ func (us *UserService) FindUserByID(id uint) (*entities.User, error) {
 
 	if err != nil {
 		return nil, err
+	}
+
+	if preload {
+		err = userRepo.PreloadFields(foundUser)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return foundUser, nil
@@ -201,7 +211,7 @@ func (us *UserService) ForgotPassword(forgetPasswordInfo user.ForgotPasswordRequ
 func (us *UserService) RefreshTokens(refreshTokenInfo rbac.RefreshTokenRequest) (*rbac.RefreshTokenResponse, string, int, error) {
 	accessToken, refreshToken, userID, expireTime := us.jwtService.RefreshTokens(refreshTokenInfo.RefreshToken)
 
-	foundUser, err := us.FindUserByID(userID)
+	foundUser, err := us.FindUserByID(userID, true)
 	if err != nil {
 		return nil, "", 0, err
 	}

@@ -204,13 +204,8 @@ func (rs *RBACService) GetAllRoles() ([]rbac.RoleResponse, error) {
 }
 
 func (rs *RBACService) GetUserRolesByID(info rbac.GetUserRolesByIDRequest) ([]rbac.RoleResponse, error) {
-	user, err := rs.userService.FindUserByID(info.ID)
+	user, err := rs.userService.FindUserByID(info.ID, true)
 	if err != nil {
-		return nil, err
-	}
-
-	rbacRepo := rs.unitOfWork.Factory().RBACRepository()
-	if err := rbacRepo.PreloadUserRoles(user); err != nil {
 		return nil, err
 	}
 
@@ -218,13 +213,8 @@ func (rs *RBACService) GetUserRolesByID(info rbac.GetUserRolesByIDRequest) ([]rb
 }
 
 func (rs *RBACService) GetUserRolesByEmail(info rbac.GetUserRolesByEmailRequest) ([]rbac.RoleResponse, error) {
-	user, err := rs.userService.FindUserByEmail(info.Email)
+	user, err := rs.userService.FindUserByEmail(info.Email, true)
 	if err != nil {
-		return nil, err
-	}
-
-	rbacRepo := rs.unitOfWork.Factory().RBACRepository()
-	if err := rbacRepo.PreloadUserRoles(user); err != nil {
 		return nil, err
 	}
 
@@ -232,7 +222,7 @@ func (rs *RBACService) GetUserRolesByEmail(info rbac.GetUserRolesByEmailRequest)
 }
 
 func (rs *RBACService) RemoveRoleFromUserByID(info rbac.RemoveRoleFromUserByIDRequest) error {
-	user, err := rs.userService.FindUserByID(info.UserID)
+	user, err := rs.userService.FindUserByID(info.UserID, false)
 	if err != nil {
 		return err
 	}
@@ -252,7 +242,7 @@ func (rs *RBACService) RemoveRoleFromUserByID(info rbac.RemoveRoleFromUserByIDRe
 }
 
 func (rs *RBACService) RemoveRoleFromUserByEmail(info rbac.RemoveRoleFromUserByEmailRequest) error {
-	user, err := rs.userService.FindUserByEmail(info.UserEmail)
+	user, err := rs.userService.FindUserByEmail(info.UserEmail, false)
 	if err != nil {
 		return err
 	}
@@ -272,7 +262,7 @@ func (rs *RBACService) RemoveRoleFromUserByEmail(info rbac.RemoveRoleFromUserByE
 }
 
 func (rs *RBACService) AddRoleToUserByID(info rbac.AddRoleToUserByIDRequest) error {
-	user, err := rs.userService.FindUserByID(info.UserID)
+	user, err := rs.userService.FindUserByID(info.UserID, false)
 	if err != nil {
 		return err
 	}
@@ -292,7 +282,7 @@ func (rs *RBACService) AddRoleToUserByID(info rbac.AddRoleToUserByIDRequest) err
 }
 
 func (rs *RBACService) AddRoleToUserByEmail(info rbac.AddRoleToUserByEmailRequest) error {
-	user, err := rs.userService.FindUserByEmail(info.UserEmail)
+	user, err := rs.userService.FindUserByEmail(info.UserEmail, false)
 	if err != nil {
 		return err
 	}

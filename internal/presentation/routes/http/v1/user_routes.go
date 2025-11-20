@@ -21,7 +21,7 @@ func SetUpUserRoutes(v1 *gin.RouterGroup, app *wire.Application) {
 	requests.Use(app.Middlewares.AuthMiddleware.AuthRequired)
 	{
 		// TODO: test
-		requests.GET("/create-info", app.Controllers.UserControllers.UserRequestController.GetCreateRequestInfo)
+		requests.GET("/", app.Controllers.UserControllers.UserRequestController.GetCreateRequestInfo)
 		// TODO: test
 		requests.POST("/", app.Controllers.UserControllers.UserRequestController.CreateRequest)
 		// TODO: test

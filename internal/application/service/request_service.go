@@ -40,12 +40,7 @@ func NewRequestService(userService usecase.UserService, unitOfWork ports.UnitOfW
 
 func (rs *RequestService) CreateRequest(info request.CreateRequestRequest) error {
 	// TODO: move to find pet sitter by user id func in petsitter_service
-	petSitterUser, err := rs.userService.FindUserByID(info.PetSitterUserID)
-	if err != nil {
-		return err
-	}
-	userRepo := rs.unitOfWork.Factory().UserRepository()
-	err = userRepo.PreloadPetSitter(petSitterUser)
+	petSitterUser, err := rs.userService.FindUserByID(info.PetSitterUserID, true)
 	if err != nil {
 		return err
 	}
@@ -60,11 +55,6 @@ func (rs *RequestService) CreateRequest(info request.CreateRequestRequest) error
 		ve.AddError(bootstrap.Run().Constants.ErrorFields.PetSitter, bootstrap.Run().Constants.ErrorTags.NotFound)
 		return &ve
 	}
-	petSitterRepo := rs.unitOfWork.Factory().PetSitterRepository()
-	err = petSitterRepo.PreloadSchedule(petSitter)
-	if err != nil {
-		return err
-	}
 
 	err = rs.validateCalendarSlots(petSitter.Schedule, info.CalenderSlots)
 	if err != nil {
@@ -72,14 +62,9 @@ func (rs *RequestService) CreateRequest(info request.CreateRequestRequest) error
 	}
 
 	// TODO: use find verified user by id
-	user, err := rs.userService.FindUserByID(info.UserID)
+	user, err := rs.userService.FindVerifiedUserByID(info.UserID, true)
 	if err != nil {
 		return err
-	}
-	if !user.IsEmailVerified {
-		var ve exceptions.ValidationErrors
-		ve.AddError(bootstrap.Run().Constants.ErrorFields.User, bootstrap.Run().Constants.ErrorTags.UnacceptableInput)
-		return &ve
 	}
 
 	err = rs.validateRequestPets(user, petSitter, info.PetIDs)
@@ -211,13 +196,7 @@ func (rs *RequestService) EditRequest(info request.EditRequestRequest) error {
 		return err
 	}
 
-	petSitterUser, err := rs.userService.FindUserByID(foundRequest.PetSitterUserID)
-	if err != nil {
-		return err
-	}
-	// TODO: same as createRequest
-	userRepo := rs.unitOfWork.Factory().UserRepository()
-	err = userRepo.PreloadPetSitter(petSitterUser)
+	petSitterUser, err := rs.userService.FindUserByID(foundRequest.PetSitterUserID, true)
 	if err != nil {
 		return err
 	}
@@ -233,15 +212,9 @@ func (rs *RequestService) EditRequest(info request.EditRequestRequest) error {
 		return &ve
 	}
 
-	// TODO: move logic to the user service
-	user, err := rs.userService.FindUserByID(info.UserID)
+	user, err := rs.userService.FindVerifiedUserByID(info.UserID, true)
 	if err != nil {
 		return err
-	}
-	if !user.IsEmailVerified {
-		var ve exceptions.ValidationErrors
-		ve.AddError(bootstrap.Run().Constants.ErrorFields.User, bootstrap.Run().Constants.ErrorTags.UnacceptableInput)
-		return &ve
 	}
 
 	err = rs.validateRequestPets(user, petSitter, info.PetIDs)
@@ -454,11 +427,6 @@ func (rs *RequestService) validateCalendarSlots(petSitterSlots []entities.Calend
 func (rs *RequestService) validateRequestPets(user *entities.User, petSitter *entities.PetSitter, petIDs []uint) error {
 	// TODO: use map to decrease complexity
 	pets := make([]entities.Pet, 0)
-	userRepo := rs.unitOfWork.Factory().UserRepository()
-	err := userRepo.PreloadPets(user)
-	if err != nil {
-		return err
-	}
 	// TODO: pet service
 	for _, petID := range petIDs {
 		flag := false
@@ -556,7 +524,7 @@ func (rs *RequestService) makeRequestService(serviceID uint) (*entities.Service,
 		Description:     service.Description,
 		Price:           service.Price,
 		Type:            service.Type,
-		PetKinds:        service.PetKinds,
+		// PetKinds:        service.PetKinds,
 		// TODO: constant
 		Kind: "request",
 	}

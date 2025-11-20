@@ -58,10 +58,42 @@ func (up *UserRepository) GetRoleUsersByID(roleID uint, limit, offset int) ([]en
 	return users, nil
 }
 
-func (up *UserRepository) PreloadPets(user *entities.User) error {
-	return up.db.Preload("Pets").First(user, user.ID).Error
-}
-
-func (up *UserRepository) PreloadPetSitter(user *entities.User) error {
-	return up.db.Preload("PetSitter").First(user, user.ID).Error
+func (up *UserRepository) PreloadFields(user *entities.User) error {
+	err := up.db.Preload("Pets").First(user, user.ID).Error
+	if err != nil {
+		return err
+	}
+	err = up.db.Preload("Wallet").First(user, user.ID).Error
+	if err != nil {
+		return err
+	}
+	err = up.db.Preload("Requests").First(user, user.ID).Error
+	if err != nil {
+		return err
+	}
+	err = up.db.Preload("Roles").First(user, user.ID).Error
+	if err != nil {
+		return err
+	}
+	err = up.db.Preload("PetSitter.Requests").First(user, user.ID).Error
+	if err != nil {
+		return err
+	}
+	err = up.db.Preload("PetSitter.Services").First(user, user.ID).Error
+	if err != nil {
+		return err
+	}
+	err = up.db.Preload("PetSitter.Schedule").First(user, user.ID).Error
+	if err != nil {
+		return err
+	}
+	err = up.db.Preload("PetSitter.Comments").First(user, user.ID).Error
+	if err != nil {
+		return err
+	}
+	err = up.db.Preload("Comments").First(user, user.ID).Error
+	if err != nil {
+		return err
+	}
+	return nil
 }
