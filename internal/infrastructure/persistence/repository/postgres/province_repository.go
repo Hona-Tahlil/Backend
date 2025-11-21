@@ -26,9 +26,11 @@ func (pr *ProvinceRepository) FindProvinceByName(name enums.Province) (*entities
 		}
 		return nil, result.Error
 	}
-	return &province, nil
-}
 
-func (pr *ProvinceRepository) PreloadCities(province *entities.Province) error {
-	return pr.db.Preload("Cities").First(province, province.ID).Error
+	err := pr.db.Preload("Cities").First(province, province.ID).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return &province, nil
 }

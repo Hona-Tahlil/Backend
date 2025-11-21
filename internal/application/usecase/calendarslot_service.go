@@ -7,4 +7,5 @@ import (
 
 type CalendarSlotService interface {
 	GetCalendarSlotsResponse(calendarSlots []entities.CalendarSlot) []calendarslot.CalendarSlotInfoResponse
+	GetFreeMap(calendarSlots []entities.CalendarSlot) map[string]map[interface{}]bool
 }

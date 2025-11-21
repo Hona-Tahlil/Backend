@@ -34,3 +34,13 @@ func (rp *RequestRepository) GetRequestByID(requestID uint) (*entities.Request, 
 	}
 	return &request, nil
 }
+
+func (rp *RequestRepository) PreloadFields(request *entities.Request, fields []string) error {
+	for _, field := range fields {
+		err := rp.db.Preload(field).First(request, request.ID).Error
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}

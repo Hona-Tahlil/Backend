@@ -3,9 +3,16 @@ package usecase
 import (
 	calendarslot "hona/backend/internal/application/dto/calendar_slot"
 	"hona/backend/internal/application/dto/servicedto"
+	"hona/backend/internal/domain/entities"
+	"hona/backend/internal/domain/enums"
 )
 
 type PetSitterService interface {
-	GetPetSitterFreeSlotsResponse(id uint) ([]calendarslot.CalendarSlotInfoResponse, error)
-	GetServicesResponse(id uint) ([]servicedto.ServiceInfoResponse, error)
+	GetPetSitterFreeSlotsResponse(petSitter *entities.PetSitter) ([]calendarslot.CalendarSlotInfoResponse, error)
+	GetServicesResponse(petSitter *entities.PetSitter) ([]servicedto.ServiceInfoResponse, error)
+	GetAvailableServicesResponse(petSitter *entities.PetSitter) ([]servicedto.ServiceInfoResponse, error)
+	GetPetSitterByID(id uint) (*entities.PetSitter, error)
+	PreloadFields(petSitter *entities.PetSitter, fields []string) error
+	ValidatePets(pets []entities.Pet, petKinds []enums.PetKind) error
+	ValidateService(services []entities.Service, serviceID uint) (*entities.Service, error)
 }

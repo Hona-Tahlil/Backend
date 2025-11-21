@@ -58,42 +58,12 @@ func (up *UserRepository) GetRoleUsersByID(roleID uint, limit, offset int) ([]en
 	return users, nil
 }
 
-func (up *UserRepository) PreloadFields(user *entities.User) error {
-	err := up.db.Preload("Pets").First(user, user.ID).Error
-	if err != nil {
-		return err
-	}
-	err = up.db.Preload("Wallet").First(user, user.ID).Error
-	if err != nil {
-		return err
-	}
-	err = up.db.Preload("Requests").First(user, user.ID).Error
-	if err != nil {
-		return err
-	}
-	err = up.db.Preload("Roles").First(user, user.ID).Error
-	if err != nil {
-		return err
-	}
-	err = up.db.Preload("PetSitter.Requests").First(user, user.ID).Error
-	if err != nil {
-		return err
-	}
-	err = up.db.Preload("PetSitter.Services").First(user, user.ID).Error
-	if err != nil {
-		return err
-	}
-	err = up.db.Preload("PetSitter.Schedule").First(user, user.ID).Error
-	if err != nil {
-		return err
-	}
-	err = up.db.Preload("PetSitter.Comments").First(user, user.ID).Error
-	if err != nil {
-		return err
-	}
-	err = up.db.Preload("Comments").First(user, user.ID).Error
-	if err != nil {
-		return err
+func (up *UserRepository) PreloadFields(user *entities.User, fields []string) error {
+	for _, field := range fields {
+		err := up.db.Preload(field).First(user, user.ID).Error
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }

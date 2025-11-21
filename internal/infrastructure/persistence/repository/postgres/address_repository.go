@@ -25,6 +25,15 @@ func (ar *AddressRepository) FindAddressByID(id uint) (*entities.Address, error)
 		}
 		return nil, result.Error
 	}
+	err := ar.db.Preload("Province.Cities").First(&foundAddress, foundAddress.ID).Error
+	if err != nil {
+		return nil, err
+	}
+	err = ar.db.Preload("City").First(&foundAddress, foundAddress.ID).Error
+	if err != nil {
+		return nil, err
+	}
+
 	return &foundAddress, nil
 }
 
@@ -38,6 +47,15 @@ func (ar *AddressRepository) FindAddressesByUserID(id uint) ([]entities.Address,
 		return nil, err
 	}
 
+	err = ar.db.Preload("Province.Cities").First(&mainAddress, mainAddress.ID).Error
+	if err != nil {
+		return nil, err
+	}
+	err = ar.db.Preload("City").First(&mainAddress, mainAddress.ID).Error
+	if err != nil {
+		return nil, err
+	}
+
 	err = ar.db.Find(&addresses, "refer = ? AND type = ?", id, "Request").Error
 	if err != nil {
 		return nil, err
@@ -45,6 +63,15 @@ func (ar *AddressRepository) FindAddressesByUserID(id uint) ([]entities.Address,
 
 	flag := false
 	for _, address := range addresses {
+		err = ar.db.Preload("Province.Cities").First(&address, address.ID).Error
+		if err != nil {
+			return nil, err
+		}
+		err = ar.db.Preload("City").First(&address, address.ID).Error
+		if err != nil {
+			return nil, err
+		}
+
 		if address.City == mainAddress.City && address.Province.Name == mainAddress.Province.Name && address.StreetAddress == mainAddress.StreetAddress {
 			flag = true
 			break

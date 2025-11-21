@@ -7,6 +7,11 @@ type Constants struct {
 	ErrorTags       ErrorTags
 	JWTConstants    JWTConstants
 	SuccessMessages SuccessMessages
+	EntityConstants EntityConstants
+}
+
+type EntityConstants struct {
+	Request string
 }
 
 type SuccessMessages struct {
@@ -192,6 +197,9 @@ func NewConstants() *Constants {
 			AddPet:            "successMessage.addPet",
 			RemovePet:         "successMessage.removePet",
 			UpdatePet:         "successMessage.updatePet",
+		},
+		EntityConstants: EntityConstants{
+			Request: "request",
 		},
 	}
 }

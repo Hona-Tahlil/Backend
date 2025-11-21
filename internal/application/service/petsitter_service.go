@@ -27,17 +27,7 @@ func NewPetSitterService(unitOfWork ports.UnitOfWork, userService usecase.UserSe
 	}
 }
 
-func (ps *PetSitterService) GetPetSitterFreeSlotsResponse(id uint) ([]calendarslot.CalendarSlotInfoResponse, error) {
-	user, err := ps.userService.FindUserByID(id, true)
-	if err != nil {
-		return nil, err
-	}
-	if user.PetSitter == nil {
-		var ve exceptions.ValidationErrors
-		ve.AddError(bootstrap.Run().Constants.ErrorFields.PetSitter, bootstrap.Run().Constants.ErrorTags.NotFound)
-		return nil, &ve
-	}
-	petSitter := user.PetSitter
+func (ps *PetSitterService) GetPetSitterFreeSlotsResponse(petSitter *entities.PetSitter) ([]calendarslot.CalendarSlotInfoResponse, error) {
 	petSitterCalendarSlots := petSitter.Schedule
 	freeSlots := make([]entities.CalendarSlot, 0)
 	for _, slot := range petSitterCalendarSlots {
@@ -50,20 +40,69 @@ func (ps *PetSitterService) GetPetSitterFreeSlotsResponse(id uint) ([]calendarsl
 	return ps.calendarSlotService.GetCalendarSlotsResponse(freeSlots), nil
 }
 
-func (ps *PetSitterService) GetServicesResponse(id uint) ([]servicedto.ServiceInfoResponse, error) {
+func (ps *PetSitterService) GetServicesResponse(petSitter *entities.PetSitter) ([]servicedto.ServiceInfoResponse, error) {
 	r := make([]servicedto.ServiceInfoResponse, 0)
-	user, err := ps.userService.FindUserByID(id, true)
-	if err != nil {
-		return nil, err
-	}
-	petSitter := user.PetSitter
-	if petSitter == nil {
-		var ve exceptions.ValidationErrors
-		ve.AddError(bootstrap.Run().Constants.ErrorFields.PetSitter, bootstrap.Run().Constants.ErrorTags.NotFound)
-		return nil, &ve
-	}
 	for _, service := range petSitter.Services {
 		r = append(r, ps.serviceService.GetServiceResponse(&service))
 	}
 	return r, nil
+}
+
+func (ps *PetSitterService) GetAvailableServicesResponse(petSitter *entities.PetSitter) ([]servicedto.ServiceInfoResponse, error) {
+	r := make([]servicedto.ServiceInfoResponse, 0)
+	for _, service := range petSitter.Services {
+		if service.Price != 0 {
+			r = append(r, ps.serviceService.GetServiceResponse(&service))
+		}
+	}
+	return r, nil
+}
+
+func (ps *PetSitterService) GetPetSitterByID(id uint) (*entities.PetSitter, error) {
+	user, err := ps.userService.FindUserByID(id)
+	if err != nil {
+		return nil, err
+	}
+	ps.userService.PreloadFields(user, []string{"PetSitter"})
+	if user.PetSitter == nil {
+		return nil, exceptions.NewNotFoundError(bootstrap.Run().Constants.ErrorFields.PetSitter)
+	}
+	if !user.PetSitter.IsVerified {
+		return nil, exceptions.NewNotFoundError(bootstrap.Run().Constants.ErrorFields.PetSitter)
+	}
+	return user.PetSitter, nil
+}
+
+func (ps *PetSitterService) PreloadFields(petSitter *entities.PetSitter, fields []string) error {
+	return ps.unitOfWork.Factory().PetSitterRepository().PreloadFields(petSitter, fields)
+}
+
+func (ps *PetSitterService) ValidatePets(pets []entities.Pet, petKinds []enums.PetKind) error {
+	for _, pet := range pets {
+		flag := false
+		for _, kind := range petKinds {
+			if kind == pet.Kind {
+				flag = true
+				break
+			}
+		}
+		if !flag {
+			var ce exceptions.ConflictErrors
+			ce.Add(bootstrap.Run().Constants.ErrorFields.Pet, bootstrap.Run().Constants.ErrorTags.UnacceptableInput)
+			return &ce
+		}
+	}
+
+	return nil
+}
+
+func (ps *PetSitterService) ValidateService(services []entities.Service, serviceID uint) (*entities.Service, error) {
+	for _, service := range services {
+		if service.ID == serviceID && service.Price != 0 {
+			return &service, nil
+		}
+	}
+	var ce exceptions.ConflictErrors
+	ce.Add(bootstrap.Run().Constants.ErrorFields.Service, bootstrap.Run().Constants.ErrorTags.UnacceptableInput)
+	return nil, &ce
 }

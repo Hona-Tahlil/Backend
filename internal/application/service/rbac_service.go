@@ -99,6 +99,11 @@ func (rs *RBACService) findRoleByID(roleID uint) (*entities.Role, error) {
 		return nil, NotFoundError
 	}
 
+	err = rbacRepo.PreloadRolePermissions(foundRole)
+	if err != nil {
+		return nil, err
+	}
+
 	return foundRole, nil
 }
 
@@ -112,6 +117,11 @@ func (rs *RBACService) findRoleByType(roleType string) (*entities.Role, error) {
 	if foundRole == nil {
 		NotFoundError := exceptions.NewNotFoundError(bootstrap.Run().Constants.ErrorFields.Role)
 		return nil, NotFoundError
+	}
+
+	err = rbacRepo.PreloadRolePermissions(foundRole)
+	if err != nil {
+		return nil, err
 	}
 
 	return foundRole, nil
@@ -162,22 +172,12 @@ func (rs *RBACService) GetRoleByID(info rbac.GetRoleByIDRequest) (*rbac.RoleResp
 		return nil, err
 	}
 
-	rbacRepo := rs.unitOfWork.Factory().RBACRepository()
-	if err := rbacRepo.PreloadRolePermissions(role); err != nil {
-		return nil, err
-	}
-
 	return rs.GetRoleResponse(*role), nil
 }
 
 func (rs *RBACService) GetRoleByType(info rbac.GetRoleByTypeRequest) (*rbac.RoleResponse, error) {
 	role, err := rs.findRoleByType(info.Type)
 	if err != nil {
-		return nil, err
-	}
-
-	rbacRepo := rs.unitOfWork.Factory().RBACRepository()
-	if err := rbacRepo.PreloadRolePermissions(role); err != nil {
 		return nil, err
 	}
 
@@ -193,9 +193,6 @@ func (rs *RBACService) GetAllRoles() ([]rbac.RoleResponse, error) {
 		return nil, err
 	}
 	for _, role := range roles {
-		if err := rbacRepo.PreloadRolePermissions(&role); err != nil {
-			return nil, err
-		}
 		res := rs.GetRoleResponse(role)
 		r = append(r, *res)
 	}
@@ -204,7 +201,7 @@ func (rs *RBACService) GetAllRoles() ([]rbac.RoleResponse, error) {
 }
 
 func (rs *RBACService) GetUserRolesByID(info rbac.GetUserRolesByIDRequest) ([]rbac.RoleResponse, error) {
-	user, err := rs.userService.FindUserByID(info.ID, true)
+	user, err := rs.userService.FindUserByID(info.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -213,7 +210,7 @@ func (rs *RBACService) GetUserRolesByID(info rbac.GetUserRolesByIDRequest) ([]rb
 }
 
 func (rs *RBACService) GetUserRolesByEmail(info rbac.GetUserRolesByEmailRequest) ([]rbac.RoleResponse, error) {
-	user, err := rs.userService.FindUserByEmail(info.Email, true)
+	user, err := rs.userService.FindUserByEmail(info.Email)
 	if err != nil {
 		return nil, err
 	}
@@ -222,7 +219,7 @@ func (rs *RBACService) GetUserRolesByEmail(info rbac.GetUserRolesByEmailRequest)
 }
 
 func (rs *RBACService) RemoveRoleFromUserByID(info rbac.RemoveRoleFromUserByIDRequest) error {
-	user, err := rs.userService.FindUserByID(info.UserID, false)
+	user, err := rs.userService.FindUserByID(info.UserID)
 	if err != nil {
 		return err
 	}
@@ -242,7 +239,7 @@ func (rs *RBACService) RemoveRoleFromUserByID(info rbac.RemoveRoleFromUserByIDRe
 }
 
 func (rs *RBACService) RemoveRoleFromUserByEmail(info rbac.RemoveRoleFromUserByEmailRequest) error {
-	user, err := rs.userService.FindUserByEmail(info.UserEmail, false)
+	user, err := rs.userService.FindUserByEmail(info.UserEmail)
 	if err != nil {
 		return err
 	}
@@ -262,7 +259,7 @@ func (rs *RBACService) RemoveRoleFromUserByEmail(info rbac.RemoveRoleFromUserByE
 }
 
 func (rs *RBACService) AddRoleToUserByID(info rbac.AddRoleToUserByIDRequest) error {
-	user, err := rs.userService.FindUserByID(info.UserID, false)
+	user, err := rs.userService.FindUserByID(info.UserID)
 	if err != nil {
 		return err
 	}
@@ -282,7 +279,7 @@ func (rs *RBACService) AddRoleToUserByID(info rbac.AddRoleToUserByIDRequest) err
 }
 
 func (rs *RBACService) AddRoleToUserByEmail(info rbac.AddRoleToUserByEmailRequest) error {
-	user, err := rs.userService.FindUserByEmail(info.UserEmail, false)
+	user, err := rs.userService.FindUserByEmail(info.UserEmail)
 	if err != nil {
 		return err
 	}
@@ -396,9 +393,6 @@ func (rs *RBACService) GetPermissionRoles(info rbac.GetPermissionRolesRequest) (
 		return nil, err
 	}
 	for _, role := range roles {
-		if err := rbacRepo.PreloadRolePermissions(&role); err != nil {
-			return nil, err
-		}
 		r = append(r, *rs.GetRoleResponse(role))
 	}
 

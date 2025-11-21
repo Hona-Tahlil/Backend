@@ -30,10 +30,5 @@ func (ps *ProvinceService) FindProvinceByName(name enums.Province) (*entities.Pr
 		return nil, &ve
 	}
 
-	err = provinceRepo.PreloadCities(province)
-	if err != nil {
-		return nil, err
-	}
-
 	return province, nil
 }

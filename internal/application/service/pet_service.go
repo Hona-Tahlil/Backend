@@ -150,10 +150,11 @@ func (ps *PetService) RemovePet(info pet.RemovePetRequest) error {
 }
 
 func (ps *PetService) GetPetsBasicData(info pet.GetPetsBasicDataRequest) ([]pet.PetBasicDataResponse, error) {
-	user, err := ps.userService.FindUserByID(info.UserID, true)
+	user, err := ps.userService.FindUserByID(info.UserID)
 	if err != nil {
 		return nil, err
 	}
+	ps.userService.PreloadFields(user, []string{"Pets"})
 	return ps.GetPetsBasicDataResponse(user.Pets)
 }
 
@@ -289,4 +290,25 @@ func (ps *PetService) GetPetsBasicDataResponse(pets []entities.Pet) ([]pet.PetBa
 	}
 
 	return r, nil
+}
+
+func (ps *PetService) GetPetsInUser(userPets []entities.Pet, petIDs []uint) ([]entities.Pet, error) {
+	pets := make([]entities.Pet, 0)
+	for _, petID := range petIDs {
+		flag := false
+		for _, pet := range userPets {
+			if pet.ID == petID {
+				flag = true
+				pets = append(pets, pet)
+				break
+			}
+		}
+		if !flag {
+			var ce exceptions.ConflictErrors
+			ce.Add(bootstrap.Run().Constants.ErrorFields.Pet, bootstrap.Run().Constants.ErrorTags.UnacceptableInput)
+			return nil, &ce
+		}
+	}
+
+	return pets, nil
 }

@@ -45,7 +45,6 @@ var ServiceProviderSet = wire.NewSet(
 	service.NewProvinceService,
 	service.NewAddressService,
 	service.NewCalendarSlotService,
-	service.NewCityService,
 	wire.Bind(new(domainjwt.JWTService), new(*jwt.JWTService)),
 	wire.Bind(new(domainjwt.JWTKeyManager), new(*jwt.JWTKeyManager)),
 	wire.Bind(new(usecase.RBACService), new(*service.RBACService)),
@@ -55,7 +54,6 @@ var ServiceProviderSet = wire.NewSet(
 	wire.Bind(new(usecase.ProvinceService), new(*service.ProvinceService)),
 	wire.Bind(new(usecase.AddressService), new(*service.AddressService)),
 	wire.Bind(new(usecase.CalendarSlotService), new(*service.CalendarSlotService)),
-	wire.Bind(new(usecase.CityService), new(*service.CityService)),
 )
 
 var GeneralControllersProviderSet = wire.NewSet(

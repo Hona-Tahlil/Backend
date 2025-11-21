@@ -3,6 +3,7 @@ package service
 import (
 	calendarslot "hona/backend/internal/application/dto/calendar_slot"
 	"hona/backend/internal/domain/entities"
+	"hona/backend/internal/domain/enums"
 )
 
 type CalendarSlotService struct {
@@ -24,4 +25,24 @@ func (cs *CalendarSlotService) GetCalendarSlotsResponse(calendarSlots []entities
 	}
 
 	return r
+}
+
+func (cs *CalendarSlotService) GetFreeMap(calendarSlots []entities.CalendarSlot) map[string]map[interface{}]bool {
+	availableSlots := make(map[string]map[interface{}]bool)
+
+	for _, psSlot := range calendarSlots {
+		if psSlot.Status == enums.Free {
+			dateKey := psSlot.Date.Format("2006-01-02")
+
+			if _, exists := availableSlots[dateKey]; !exists {
+				availableSlots[dateKey] = make(map[interface{}]bool)
+			}
+
+			for _, slot := range psSlot.Slots {
+				availableSlots[dateKey][slot] = true
+			}
+		}
+	}
+
+	return availableSlots
 }

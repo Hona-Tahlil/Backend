@@ -7,5 +7,4 @@ import (
 
 type ProvinceRepository interface {
 	FindProvinceByName(name enums.Province) (*entities.Province, error)
-	PreloadCities(province *entities.Province) error
 }

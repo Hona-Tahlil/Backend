@@ -3,18 +3,22 @@ package service
 import (
 	"hona/backend/bootstrap"
 	"hona/backend/internal/application/dto/address"
+	"hona/backend/internal/application/dto/request"
+	"hona/backend/internal/application/usecase"
 	"hona/backend/internal/domain/entities"
 	"hona/backend/internal/domain/exceptions"
 	"hona/backend/internal/domain/ports"
 )
 
 type AddressService struct {
-	unitOfWork ports.UnitOfWork
+	unitOfWork      ports.UnitOfWork
+	provinceService usecase.ProvinceService
 }
 
-func NewAddressService(unitOfWork ports.UnitOfWork) *AddressService {
+func NewAddressService(unitOfWork ports.UnitOfWork, provinceService usecase.ProvinceService) *AddressService {
 	return &AddressService{
-		unitOfWork: unitOfWork,
+		unitOfWork:      unitOfWork,
+		provinceService: provinceService,
 	}
 }
 
@@ -57,4 +61,32 @@ func (as *AddressService) GetUserAddressInfo(addressEntity *entities.Address) ad
 		Unit:          addressEntity.Unit,
 		PostalCode:    addressEntity.PostalCode,
 	}
+}
+
+func (as *AddressService) CreateAddress(addressInfo request.AddressInfoRequest) (*entities.Address, error) {
+	province, err := as.provinceService.FindProvinceByName(addressInfo.ProvinceName)
+	if err != nil {
+		return nil, err
+	}
+	var foundCity *entities.City
+	for _, city := range province.Cities {
+		if city.Name == addressInfo.CityName {
+			foundCity = &city
+			break
+		}
+	}
+	if foundCity == nil {
+		return nil, exceptions.NewNotFoundError(bootstrap.Run().Constants.ErrorFields.City)
+	}
+
+	address := &entities.Address{
+		Province:      *province,
+		City:          *foundCity,
+		StreetAddress: addressInfo.StreetAddress,
+		HouseNumber:   addressInfo.HouseNumber,
+		Unit:          addressInfo.Unit,
+		PostalCode:    addressInfo.PostalCode,
+	}
+
+	return address, nil
 }

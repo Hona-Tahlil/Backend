@@ -1,6 +1,9 @@
 package usecase
 
-import "hona/backend/internal/application/dto/request"
+import (
+	"hona/backend/internal/application/dto/request"
+	"hona/backend/internal/domain/entities"
+)
 
 type RequestService interface {
 	CreateRequest(info request.CreateRequestRequest) error
@@ -9,4 +12,5 @@ type RequestService interface {
 	CancelRequest(info request.CancelRequestRequest) error
 	GetRequestFullData(info request.GetRequestFullDataRequest) (*request.RequestFullDataResponse, error)
 	RespondToRequest(info request.RespondToRequestRequest) error
+	PreloadFields(request *entities.Request, fields []string) error
 }
