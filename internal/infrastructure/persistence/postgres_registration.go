@@ -2,9 +2,12 @@ package persistence
 
 import (
 	"fmt"
+	"log"
+	"os"
+	"sync"
+
 	"hona/backend/bootstrap"
 	"hona/backend/internal/domain/entities"
-	"sync"
 
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/driver/postgres"
@@ -14,26 +17,73 @@ import (
 var dbInstance *gorm.DB
 var dbOnce sync.Once
 
+type dbConfigStruct struct {
+	Host     string
+	User     string
+	Password string
+	Name     string
+	Port     string
+}
+
 func NewPostgresDatabase() *gorm.DB {
-	dbConfig := bootstrap.Run().Env.PrimaryDB
+	raw := bootstrap.Run().Env.PrimaryDB
+
+	cfg := dbConfigStruct{
+		Host:     raw.Host,
+		User:     raw.User,
+		Password: raw.Password,
+		Name:     raw.Name,
+		Port:     raw.Port,
+	}
+
+	if cfg.Host == "" {
+		cfg.Host = os.Getenv("DB_HOST")
+	}
+	if cfg.User == "" {
+		cfg.User = os.Getenv("DB_USER")
+	}
+	if cfg.Password == "" {
+		cfg.Password = os.Getenv("DB_PASSWORD")
+	}
+	if cfg.Name == "" {
+		cfg.Name = os.Getenv("DB_NAME")
+	}
+	if cfg.Port == "" {
+		cfg.Port = os.Getenv("DB_PORT")
+	}
+
+	if cfg.Host == "" || cfg.User == "" || cfg.Name == "" || cfg.Port == "" {
+		log.Fatalf("[DB CONFIG ERROR] Incomplete DB config after env fallback: host=%q user=%q dbname=%q port=%q",
+			cfg.Host, cfg.User, cfg.Name, cfg.Port,
+		)
+	}
+
+	fmt.Printf(
+		"[DB] Connecting → host=%s user=%s dbname=%s port=%s\n",
+		cfg.Host,
+		cfg.User,
+		cfg.Name,
+		cfg.Port,
+	)
+
 	dsn := fmt.Sprintf(
 		"host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=UTC",
-		dbConfig.Host,
-		dbConfig.User,
-		dbConfig.Password,
-		dbConfig.Name,
-		dbConfig.Port,
+		cfg.Host,
+		cfg.User,
+		cfg.Password,
+		cfg.Name,
+		cfg.Port,
 	)
 
 	dbOnce.Do(func() {
 		db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 		if err != nil {
-			panic(fmt.Errorf("failed to connect database"))
+			log.Fatalf("❌ Failed to connect to Postgres: %v", err)
 		}
 
 		dbInstance = db
 
-		db.Migrator().DropTable(
+		if err := db.Migrator().DropTable(
 			&entities.User{},
 			&entities.Role{},
 			&entities.Permission{},
@@ -51,8 +101,11 @@ func NewPostgresDatabase() *gorm.DB {
 			&entities.TextMessage{},
 			&entities.Transaction{},
 			&entities.Transfer{},
-		)
-		db.AutoMigrate(
+		); err != nil {
+			log.Fatalf("❌ Failed to drop tables: %v", err)
+		}
+
+		if err := db.AutoMigrate(
 			&entities.User{},
 			&entities.Role{},
 			&entities.Permission{},
@@ -70,7 +123,10 @@ func NewPostgresDatabase() *gorm.DB {
 			&entities.TextMessage{},
 			&entities.Transaction{},
 			&entities.Transfer{},
-		)
+		); err != nil {
+			log.Fatalf("❌ AutoMigrate failed: %v", err)
+		}
+
 		pass, _ := bcrypt.GenerateFromPassword([]byte("password"), bcrypt.DefaultCost)
 		user := entities.User{
 			Email:           "test1@email.com",
@@ -81,6 +137,7 @@ func NewPostgresDatabase() *gorm.DB {
 		}
 		db.Create(&user)
 
+		fmt.Println("✅ Database initialized successfully.")
 	})
 
 	return dbInstance

@@ -75,18 +75,15 @@ func (ps *PetSitterService) SubmitPersonalInfo(petSitterInfo petsitter.SubmitPer
 	}
 	err = ps.CheckPetSitterStatus(foundUser.PetSitter.Status)
 	if err != nil {
-		return err
+		return exceptions.NewNotFoundError(bootstrap.Run().Constants.ErrorFields.PetSitter)
 	}
 	err = ps.CheckPetSitterStep(foundUser.PetSitter.OnboardingStep, enums.OBS_Profile)
 	if err != nil {
-		return err
+		return exceptions.NewNotFoundError(bootstrap.Run().Constants.ErrorFields.PetSitter)
 	}
 	err = userRepo.PreloadAddress(foundUser)
 	if err != nil {
 		return err
-	}
-	if foundUser.Address == nil {
-		return exceptions.NewNotFoundError(bootstrap.Run().Constants.ErrorFields.Address)
 	}
 	err = addressRepo.PreloadProvince(foundUser.Address)
 	if err != nil {
@@ -97,19 +94,22 @@ func (ps *PetSitterService) SubmitPersonalInfo(petSitterInfo petsitter.SubmitPer
 		return err
 	}
 	//
-	address := &entities.Address{
-		Province: entities.Province{
-			Name: petSitterInfo.Province,
-		},
-		City: entities.City{
-			Name: petSitterInfo.City,
-		},
-		StreetAddress: petSitterInfo.Address,
-		HouseNumber:   petSitterInfo.HouseNumber,
-		Unit:          petSitterInfo.Unit,
+	if foundUser.Address == nil {
+		foundUser.Address = &entities.Address{
+			Province: entities.Province{
+				Name: petSitterInfo.Province,
+			},
+			City: entities.City{
+				Name: petSitterInfo.City,
+			},
+			StreetAddress: petSitterInfo.Address,
+			HouseNumber:   petSitterInfo.HouseNumber,
+			Unit:          petSitterInfo.Unit,
+		}
 	}
-	foundUser.Address = address
+
 	//
+	
 	foundUser.FirstName = petSitterInfo.FirstName
 	foundUser.LastName = petSitterInfo.LastName
 	foundUser.Email = petSitterInfo.Email
