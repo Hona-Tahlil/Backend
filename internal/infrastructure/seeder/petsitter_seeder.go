@@ -3,6 +3,7 @@ package seeder
 import (
 	"fmt"
 	"hona/backend/internal/domain/entities"
+	"hona/backend/internal/domain/enums"
 	"log"
 	"math/rand"
 
@@ -34,18 +35,19 @@ func (s *PetSitterSeeder) Seed(count int) error {
 	for i := 0; i < count; i++ {
 		userID := users[i].ID
 
-		isVerified := i%2 == 0
-
 		var bio *string
 		if rand.Intn(2) == 1 {
 			bioText := faker.Paragraph()
 			bio = &bioText
 		}
 
+		statuses := enums.GetAllPetSitterStatus()
+		status := statuses[rand.Intn(len(statuses))]
+
 		petSitter := entities.PetSitter{
-			UserID:     userID,
-			IsVerified: isVerified,
-			Bio:        bio,
+			UserID: userID,
+			Bio:    bio,
+			Status: status,
 		}
 
 		petSitters = append(petSitters, petSitter)
