@@ -140,6 +140,10 @@ func (rs *RequestService) GetCreateRequestInfo(info request.GetCreateRequestInfo
 
 	petsData := rs.petService.GetPetNames(foundUser.Pets)
 
+	if len(petsData) == 0 {
+		return nil, exceptions.NewAccessDeniedError("first add a pet")
+	}
+
 	petSitter, err := rs.petSitterService.GetPetSitterByID(info.PetSitterUserID)
 	if err != nil {
 		return nil, err
@@ -155,9 +159,17 @@ func (rs *RequestService) GetCreateRequestInfo(info request.GetCreateRequestInfo
 		return nil, err
 	}
 
+	if len(freeSlots) == 0 {
+		return nil, exceptions.NewNotFoundError(bootstrap.Run().Constants.ErrorFields.PetSitter)
+	}
+
 	servicesData, err := rs.petSitterService.GetAvailableServicesResponse(petSitter)
 	if err != nil {
 		return nil, err
+	}
+
+	if len(servicesData) == 0 {
+		return nil, exceptions.NewNotFoundError(bootstrap.Run().Constants.ErrorFields.PetSitter)
 	}
 
 	return &request.CreateRequestInfoResponse{

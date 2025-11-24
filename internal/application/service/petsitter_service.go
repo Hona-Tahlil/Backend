@@ -9,6 +9,7 @@ import (
 	"hona/backend/internal/domain/enums"
 	"hona/backend/internal/domain/exceptions"
 	"hona/backend/internal/domain/ports"
+	"log"
 
 	"github.com/samber/lo"
 )
@@ -78,7 +79,8 @@ func (ps *PetSitterService) GetPetSitterByID(id uint) (*entities.PetSitter, erro
 	if user.PetSitter == nil {
 		return nil, exceptions.NewNotFoundError(bootstrap.Run().Constants.ErrorFields.PetSitter)
 	}
-	if !user.PetSitter.IsVerified {
+	if user.PetSitter.Status != enums.PSS_Active {
+		log.Printf("[DEBUG] not active:")
 		return nil, exceptions.NewNotFoundError(bootstrap.Run().Constants.ErrorFields.PetSitter)
 	}
 	return user.PetSitter, nil
