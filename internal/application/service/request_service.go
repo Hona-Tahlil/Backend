@@ -34,8 +34,6 @@ func NewRequestService(userService usecase.UserService, unitOfWork ports.UnitOfW
 	}
 }
 
-// TODO: rethink error handlings
-
 func (rs *RequestService) CreateRequest(info request.CreateRequestRequest) error {
 	petSitter, err := rs.petSitterService.GetPetSitterByID(info.PetSitterUserID)
 	if err != nil {
@@ -270,13 +268,24 @@ func (rs *RequestService) CancelRequest(info request.CancelRequestRequest) error
 		return err
 	}
 
+	petSitter, err := rs.petSitterService.GetPetSitterByID(foundRequest.PetSitterUserID)
+	if err != nil {
+		return err
+	}
+
+	err = rs.petSitterService.PreloadFields(petSitter, []string{"Schedule"})
+	if err != nil {
+		return err
+	}
+
 	foundRequest.Status = enums.Canceled
 
-	// TODO: change sitter slots
+	err = rs.petSitterService.AutoUpdateSlots(petSitter, foundRequest.CalendarSlots, false)
+	if err != nil {
+		return err
+	}
 	requestRepo := rs.unitOfWork.Factory().RequestRepository()
-	requestRepo.EditRequest(foundRequest)
-
-	return nil
+	return requestRepo.EditRequest(foundRequest)
 }
 
 func (rs *RequestService) GetRequestFullData(info request.GetRequestFullDataRequest) (*request.RequestFullDataResponse, error) {
@@ -357,17 +366,19 @@ func (rs *RequestService) RespondToRequest(info request.RespondToRequestRequest)
 		err = rs.validateCalendarSlots(petSitter.Schedule, foundRequest.CalendarSlots)
 		if err != nil {
 			var ce exceptions.ConflictErrors
-			ce.Add(bootstrap.Run().Constants.ErrorFields.CalendarSlot, bootstrap.Run().Constants.ErrorTags.AlreadyExist)
+			ce.Add(bootstrap.Run().Constants.ErrorFields.CalendarSlot, bootstrap.Run().Constants.ErrorTags.CalendarConflict)
+		}
+
+		err = rs.petSitterService.AutoUpdateSlots(petSitter, foundRequest.CalendarSlots, true)
+		if err != nil {
+			return err
 		}
 	} else {
 		foundRequest.Status = enums.Dismissed
 	}
 
-	// TODO: Update PetSitter Slots if accepted
 	requestRepo := rs.unitOfWork.Factory().RequestRepository()
-	requestRepo.EditRequest(foundRequest)
-
-	return nil
+	return requestRepo.EditRequest(foundRequest)
 }
 
 func (rs *RequestService) validateCalendarSlots(petSitterSlots []entities.CalendarSlot, requestSlots []entities.CalendarSlot) error {
@@ -463,9 +474,7 @@ func (rs *RequestService) FindRequestByID(id uint) (*entities.Request, error) {
 		return nil, err
 	}
 	if foundRequest == nil {
-		var ve exceptions.ValidationErrors
-		ve.AddError(bootstrap.Run().Constants.ErrorFields.Request, bootstrap.Run().Constants.ErrorTags.NotFound)
-		return nil, &ve
+		return nil, exceptions.NewNotFoundError(bootstrap.Run().Constants.ErrorFields.Request)
 	}
 
 	return foundRequest, nil

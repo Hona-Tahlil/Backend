@@ -25,9 +25,7 @@ func (ss *ServiceService) FindServiceByID(id uint) (*entities.Service, error) {
 		return nil, err
 	}
 	if service == nil {
-		var ve exceptions.ValidationErrors
-		ve.AddError(bootstrap.Run().Constants.ErrorFields.Service, bootstrap.Run().Constants.ErrorTags.NotFound)
-		return nil, &ve
+		return nil, exceptions.NewNotFoundError(bootstrap.Run().Constants.ErrorFields.Service)
 	}
 
 	return service, nil

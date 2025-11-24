@@ -9,6 +9,8 @@ import (
 	"hona/backend/internal/domain/enums"
 	"hona/backend/internal/domain/exceptions"
 	"hona/backend/internal/domain/ports"
+
+	"github.com/samber/lo"
 )
 
 type PetSitterService struct {
@@ -87,9 +89,9 @@ func (ps *PetSitterService) ValidatePets(pets []entities.Pet, petKinds []enums.P
 			}
 		}
 		if !flag {
-			var ce exceptions.ConflictErrors
-			ce.Add(bootstrap.Run().Constants.ErrorFields.Pet, bootstrap.Run().Constants.ErrorTags.UnacceptableInput)
-			return &ce
+			var ve exceptions.ValidationErrors
+			ve.AddError(bootstrap.Run().Constants.ErrorFields.Pet, bootstrap.Run().Constants.ErrorTags.UnacceptableInput)
+			return &ve
 		}
 	}
 
@@ -102,7 +104,49 @@ func (ps *PetSitterService) ValidateService(services []entities.Service, service
 			return &service, nil
 		}
 	}
-	var ce exceptions.ConflictErrors
-	ce.Add(bootstrap.Run().Constants.ErrorFields.Service, bootstrap.Run().Constants.ErrorTags.UnacceptableInput)
-	return nil, &ce
+	var ve exceptions.ValidationErrors
+	ve.AddError(bootstrap.Run().Constants.ErrorFields.Service, bootstrap.Run().Constants.ErrorTags.UnacceptableInput)
+	return nil, &ve
+}
+
+// can be accept or cancel
+func (ps *PetSitterService) AutoUpdateSlots(petSitter *entities.PetSitter, calendarSlots []entities.CalendarSlot, accept bool) error {
+	newSlots := make([]entities.CalendarSlot, 0)
+	petSitterSlots := petSitter.Schedule
+	for _, petSitterSlot := range petSitterSlots {
+		for _, calendarSlot := range calendarSlots {
+			if petSitterSlot.Date.Equal(calendarSlot.Date) {
+				if accept && petSitterSlot.Status == enums.Free {
+					petSitterSlot.Slots, _ = lo.Difference(petSitterSlot.Slots, calendarSlot.Slots)
+				} else if !accept && petSitterSlot.Status == enums.Booked {
+					petSitterSlot.Slots, _ = lo.Difference(petSitterSlot.Slots, calendarSlot.Slots)
+				}
+				newSlots = append(newSlots, ps.makeSlot(&calendarSlot, accept))
+			}
+		}
+	}
+	petSitter.Schedule = append(petSitter.Schedule, newSlots...)
+	ps.removeEmptySitterSlots(petSitter)
+	petSitterRepo := ps.unitOfWork.Factory().PetSitterRepository()
+	return petSitterRepo.EditPetSitter(petSitter)
+}
+
+func (ps *PetSitterService) removeEmptySitterSlots(petSitter *entities.PetSitter) {
+	for i, slot := range petSitter.Schedule {
+		if len(slot.Slots) == 0 {
+			petSitter.Schedule = append(petSitter.Schedule[:i], petSitter.Schedule[i+1:]...)
+		}
+	}
+}
+
+func (ps *PetSitterService) makeSlot(calendarSlot *entities.CalendarSlot, accept bool) entities.CalendarSlot {
+	var slot entities.CalendarSlot
+	slot.Date = calendarSlot.Date
+	if accept {
+		slot.Status = enums.Booked
+	} else {
+		slot.Status = enums.Free
+	}
+	slot.Slots = calendarSlot.Slots
+	return slot
 }

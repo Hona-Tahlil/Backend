@@ -15,4 +15,5 @@ type PetSitterService interface {
 	PreloadFields(petSitter *entities.PetSitter, fields []string) error
 	ValidatePets(pets []entities.Pet, petKinds []enums.PetKind) error
 	ValidateService(services []entities.Service, serviceID uint) (*entities.Service, error)
+	AutoUpdateSlots(petSitter *entities.PetSitter, calendarSlots []entities.CalendarSlot, accept bool) error
 }

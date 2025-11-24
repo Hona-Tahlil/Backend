@@ -26,3 +26,7 @@ func (pr *PetSitterRepository) PreloadFields(petSitter *entities.PetSitter, fiel
 
 	return nil
 }
+
+func (pr *PetSitterRepository) EditPetSitter(petSitter *entities.PetSitter) error {
+	return pr.db.Save(petSitter).Error
+}

@@ -94,6 +94,7 @@ type ErrorTags struct {
 	NotFound               string
 	UnacceptableInput      string
 	DuplicateName          string
+	CalendarConflict       string
 }
 
 type JWTKeysPath struct {
@@ -172,6 +173,7 @@ func NewConstants() *Constants {
 			NotFound:               "errors.notFound",
 			UnacceptableInput:      "errors.unacceptableInput",
 			DuplicateName:          "errors.duplicateName",
+			CalendarConflict:       "errors.calendarConflict",
 		},
 		JWTConstants: JWTConstants{
 			AccessTokenType:  "access",
