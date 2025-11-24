@@ -8,6 +8,8 @@ import (
 	"hona/backend/internal/domain/enums"
 	"hona/backend/internal/domain/exceptions"
 	"hona/backend/internal/domain/ports"
+	"hona/backend/internal/infrastructure/mail"
+	"log"
 	"sort"
 	"time"
 )
@@ -21,9 +23,10 @@ type RequestService struct {
 	petSitterService    usecase.PetSitterService
 	calendarSlotService usecase.CalendarSlotService
 	unitOfWork          ports.UnitOfWork
+	emailService        *mail.EmailService
 }
 
-func NewRequestService(userService usecase.UserService, unitOfWork ports.UnitOfWork, provinceService usecase.ProvinceService, addressService usecase.AddressService, petService usecase.PetService, calendarSlotService usecase.CalendarSlotService) *RequestService {
+func NewRequestService(userService usecase.UserService, unitOfWork ports.UnitOfWork, provinceService usecase.ProvinceService, addressService usecase.AddressService, petService usecase.PetService, calendarSlotService usecase.CalendarSlotService, emailService *mail.EmailService) *RequestService {
 	return &RequestService{
 		userService:         userService,
 		unitOfWork:          unitOfWork,
@@ -31,6 +34,7 @@ func NewRequestService(userService usecase.UserService, unitOfWork ports.UnitOfW
 		addressService:      addressService,
 		petService:          petService,
 		calendarSlotService: calendarSlotService,
+		emailService:        emailService,
 	}
 }
 
@@ -105,6 +109,8 @@ func (rs *RequestService) CreateRequest(info request.CreateRequestRequest) error
 		Address:         *address,
 		Service:         *serviceEntity,
 	}
+
+	rs.sendNewRequestEmail(petSitter.UserID)
 
 	requestRepo := rs.unitOfWork.Factory().RequestRepository()
 	err = requestRepo.CreateRequest(newRequest)
@@ -229,8 +235,10 @@ func (rs *RequestService) EditRequest(info request.EditRequestRequest) error {
 	foundRequest.Service = *serviceEntity
 	foundRequest.TotalPrice = uint(totalPrice)
 
+	rs.sendEditRequestEmail(user, petSitter.UserID)
+
 	requestRepo := rs.unitOfWork.Factory().RequestRepository()
-	requestRepo.EditRequest(foundRequest)
+	err = requestRepo.EditRequest(foundRequest)
 	if err != nil {
 		return err
 	}
@@ -283,6 +291,11 @@ func (rs *RequestService) CancelRequest(info request.CancelRequestRequest) error
 	err = rs.petSitterService.AutoUpdateSlots(petSitter, foundRequest.CalendarSlots, false)
 	if err != nil {
 		return err
+	}
+	if info.UserID == foundRequest.PetSitterUserID {
+		rs.SendPetOwnerRequestCancelEmail(foundRequest.UserID, foundRequest.PetSitterUserID)
+	} else {
+		rs.SendPetSitterRequestCancelEmail(foundRequest.UserID, foundRequest.PetSitterUserID)
 	}
 	requestRepo := rs.unitOfWork.Factory().RequestRepository()
 	return requestRepo.EditRequest(foundRequest)
@@ -373,8 +386,12 @@ func (rs *RequestService) RespondToRequest(info request.RespondToRequestRequest)
 		if err != nil {
 			return err
 		}
+
+		rs.sendAcceptRequestEmail(foundRequest.UserID)
 	} else {
 		foundRequest.Status = enums.Dismissed
+
+		rs.sendDeclineRequestEmail(foundRequest.UserID)
 	}
 
 	requestRepo := rs.unitOfWork.Factory().RequestRepository()
@@ -483,4 +500,120 @@ func (rs *RequestService) FindRequestByID(id uint) (*entities.Request, error) {
 func (rs *RequestService) PreloadFields(request *entities.Request, fields []string) error {
 	requestRepo := rs.unitOfWork.Factory().RequestRepository()
 	return requestRepo.PreloadFields(request, fields)
+}
+
+func (rs *RequestService) sendNewRequestEmail(id uint) {
+	petSitterUser, err := rs.userService.FindUserByID(id)
+	if err != nil {
+		log.Println(err)
+	}
+	data := struct {
+		Year int
+	}{
+		Year: time.Now().Year(),
+	}
+	err = rs.emailService.SendEmail(petSitterUser.Email, "New Request Received", bootstrap.Run().Constants.TemplatesPath.NewRequest, data)
+	if err != nil {
+		log.Println(err)
+	}
+}
+
+func (rs *RequestService) sendEditRequestEmail(user *entities.User, id uint) {
+	petSitterUser, err := rs.userService.FindUserByID(id)
+	if err != nil {
+		log.Println(err)
+	}
+	data := struct {
+		RequesterName string
+		Year          int
+	}{
+		RequesterName: user.FirstName,
+		Year:          time.Now().Year(),
+	}
+	err = rs.emailService.SendEmail(petSitterUser.Email, "Request Edited", bootstrap.Run().Constants.TemplatesPath.RequestEdited, data)
+	if err != nil {
+		log.Println(err)
+	}
+}
+
+func (rs *RequestService) SendPetOwnerRequestCancelEmail(userID, petSitterUserID uint) {
+	user, err := rs.userService.FindUserByID(userID)
+	if err != nil {
+		log.Println(err)
+	}
+	petSitterUser, err := rs.userService.FindUserByID(petSitterUserID)
+	if err != nil {
+		log.Println(err)
+	}
+	data := struct {
+		RequesterName string
+		SitterName    string
+		Year          int
+	}{
+		RequesterName: user.FirstName,
+		SitterName:    petSitterUser.FirstName + " " + petSitterUser.LastName,
+		Year:          time.Now().Year(),
+	}
+	err = rs.emailService.SendEmail(user.Email, "Request Canceled", bootstrap.Run().Constants.TemplatesPath.PetOwnerRequestCancel, data)
+	if err != nil {
+		log.Println(err)
+	}
+}
+
+func (rs *RequestService) SendPetSitterRequestCancelEmail(userID, petSitterUserID uint) {
+	user, err := rs.userService.FindUserByID(userID)
+	if err != nil {
+		log.Println(err)
+	}
+	petSitterUser, err := rs.userService.FindUserByID(petSitterUserID)
+	if err != nil {
+		log.Println(err)
+	}
+	data := struct {
+		RequesterName string
+		Year          int
+	}{
+		RequesterName: user.FirstName,
+		Year:          time.Now().Year(),
+	}
+	err = rs.emailService.SendEmail(petSitterUser.Email, "Request Canceled", bootstrap.Run().Constants.TemplatesPath.PetSitterRequestCancel, data)
+	if err != nil {
+		log.Println(err)
+	}
+}
+
+func (rs *RequestService) sendAcceptRequestEmail(id uint) {
+	user, err := rs.userService.FindUserByID(id)
+	if err != nil {
+		log.Println(err)
+	}
+	data := struct {
+		RequesterName string
+		Year          int
+	}{
+		RequesterName: user.FirstName,
+		Year:          time.Now().Year(),
+	}
+	err = rs.emailService.SendEmail(user.Email, "Request Accepted", bootstrap.Run().Constants.TemplatesPath.RequestAccepted, data)
+	if err != nil {
+		log.Println(err)
+	}
+}
+
+func (rs *RequestService) sendDeclineRequestEmail(id uint) {
+	user, err := rs.userService.FindUserByID(id)
+	if err != nil {
+		log.Println(err)
+	}
+	data := struct {
+		RequesterName string
+		Year          int
+	}{
+		RequesterName: user.FirstName,
+		Year:          time.Now().Year(),
+	}
+	err = rs.emailService.SendEmail(user.Email, "Request Declined", bootstrap.Run().Constants.TemplatesPath.RequestDeclined, data)
+	if err != nil {
+		log.Println(err)
+	}
 }

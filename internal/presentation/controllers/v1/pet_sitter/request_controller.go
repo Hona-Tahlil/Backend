@@ -37,7 +37,6 @@ func (pc *PetSitterRequestController) GetRequestFullData(ctx *gin.Context) {
 
 // TODO: View Requests With Different Filters -> Accepted - Pending - Rejected - Canceled - ... / Different Sorts / Pagination
 
-// TODO: Email? / Policy
 func (pc *PetSitterRequestController) CancelRequest(ctx *gin.Context) {
 	type Params struct {
 		RequestID uint `json:"requestID"`

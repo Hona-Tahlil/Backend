@@ -11,6 +11,7 @@ type Env struct {
 	PrimaryDB    Database
 	TokenExpires TokenExpires
 	Storage      Storage
+	EmailConfig  EmailConfig
 }
 
 type Storage struct {
@@ -38,6 +39,14 @@ type Database struct {
 	Port     string
 }
 
+type EmailConfig struct {
+	Host     string
+	Port     string
+	Username string
+	Password string
+	From     string
+}
+
 func NewEnv() *Env {
 	godotenv.Load(".env")
 	return &Env{
@@ -60,6 +69,13 @@ func NewEnv() *Env {
 			Buckets: Buckets{
 				PetProfilePic: os.Getenv("STORAGE_PET_PROFILE_PIC_BUCKET"),
 			},
+		},
+		EmailConfig: EmailConfig{
+			Host:     os.Getenv("SMTP_HOST"),
+			Port:     os.Getenv("SMTP_PORT"),
+			Username: os.Getenv("SMTP_USERNAME"),
+			Password: os.Getenv("SMTP_PASSWORD"),
+			From:     os.Getenv("SMTP_FROM"),
 		},
 	}
 }

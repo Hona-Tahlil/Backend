@@ -42,7 +42,6 @@ func (rc *UserRequestController) GetCreateRequestInfo(ctx *gin.Context) {
 	controllers.Respond(ctx, 200, msg, *res)
 }
 
-// TODO Email?
 func (rc *UserRequestController) CreateRequest(ctx *gin.Context) {
 	type CalendarSlot struct {
 		Date  time.Time    `json:"date" validate:"required"`
@@ -93,7 +92,6 @@ func (rc *UserRequestController) CreateRequest(ctx *gin.Context) {
 	controllers.Respond(ctx, 200, msg, nil)
 }
 
-// TODO: Email?
 func (rc *UserRequestController) EditRequest(ctx *gin.Context) {
 	type CalendarSlot struct {
 		Date  time.Time    `json:"date" validate:"required"`
@@ -144,7 +142,7 @@ func (rc *UserRequestController) EditRequest(ctx *gin.Context) {
 	controllers.Respond(ctx, 200, msg, nil)
 }
 
-// TODO: Email? / Policy
+// TODO: Policy
 func (rc *UserRequestController) CancelRequest(ctx *gin.Context) {
 	type Params struct {
 		RequestID uint `json:"requestID"`

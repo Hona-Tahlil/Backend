@@ -8,6 +8,7 @@ type Constants struct {
 	JWTConstants    JWTConstants
 	SuccessMessages SuccessMessages
 	EntityConstants EntityConstants
+	TemplatesPath   TemplatesPath
 }
 
 type EntityConstants struct {
@@ -109,6 +110,17 @@ type Context struct {
 	AcceptLanguage string
 }
 
+type TemplatesPath struct {
+	Path                   string
+	EmailVerification      string
+	NewRequest             string
+	PetOwnerRequestCancel  string
+	PetSitterRequestCancel string
+	RequestAccepted        string
+	RequestDeclined        string
+	RequestEdited          string
+}
+
 func NewConstants() *Constants {
 	return &Constants{
 		Context: Context{
@@ -202,6 +214,16 @@ func NewConstants() *Constants {
 		},
 		EntityConstants: EntityConstants{
 			Request: "request",
+		},
+		TemplatesPath: TemplatesPath{
+			Path:                   "./internal/infrastructure/mail/",
+			EmailVerification:      "email_verification.html",
+			NewRequest:             "new_request.html",
+			PetOwnerRequestCancel:  "pet_owner_request_cancel.html",
+			PetSitterRequestCancel: "pet_sitter_request_cancel.html",
+			RequestAccepted:        "request_accepted.html",
+			RequestDeclined:        "request_declined.html",
+			RequestEdited:          "request_edited.html",
 		},
 	}
 }
