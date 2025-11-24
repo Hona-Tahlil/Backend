@@ -11,6 +11,7 @@ import (
 	domainjwt "hona/backend/internal/domain/jwt"
 	"hona/backend/internal/domain/ports"
 	"hona/backend/internal/infrastructure/jwt"
+	"hona/backend/internal/infrastructure/mail"
 	"hona/backend/internal/infrastructure/persistence"
 	"hona/backend/internal/infrastructure/persistence/seeder"
 	"hona/backend/internal/infrastructure/storage"
@@ -39,12 +40,15 @@ var ServiceProviderSet = wire.NewSet(
 	service.NewUserService,
 	jwt.NewJWTService,
 	jwt.NewJWTKeyManager,
+	mail.NewEmailService,
 	service.NewRBACService,
 	service.NewPetService,
 	service.NewRequestService,
 	service.NewProvinceService,
 	service.NewAddressService,
 	service.NewCalendarSlotService,
+	service.NewPetSitterService,
+	service.NewServiceService,
 	wire.Bind(new(domainjwt.JWTService), new(*jwt.JWTService)),
 	wire.Bind(new(domainjwt.JWTKeyManager), new(*jwt.JWTKeyManager)),
 	wire.Bind(new(usecase.RBACService), new(*service.RBACService)),
@@ -54,6 +58,8 @@ var ServiceProviderSet = wire.NewSet(
 	wire.Bind(new(usecase.ProvinceService), new(*service.ProvinceService)),
 	wire.Bind(new(usecase.AddressService), new(*service.AddressService)),
 	wire.Bind(new(usecase.CalendarSlotService), new(*service.CalendarSlotService)),
+	wire.Bind(new(usecase.PetSitterService), new(*service.PetSitterService)),
+	wire.Bind(new(usecase.ServiceService), new(*service.ServiceService)),
 )
 
 var GeneralControllersProviderSet = wire.NewSet(

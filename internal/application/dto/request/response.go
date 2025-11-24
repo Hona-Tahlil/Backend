@@ -10,7 +10,7 @@ import (
 type CreateRequestInfoResponse struct {
 	Services          []servicedto.ServiceInfoResponse
 	Addresses         []address.AddressInfoResponse
-	Pets              []pet.PetBasicDataResponse
+	Pets              []string
 	FreeCalendarSlots []calendarslot.CalendarSlotInfoResponse
 }
 

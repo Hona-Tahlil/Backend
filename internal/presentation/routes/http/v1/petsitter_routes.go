@@ -7,15 +7,15 @@ import (
 )
 
 func SetUpPetSitterRoutes(v1 *gin.RouterGroup, app *wire.Application) {
-	requests := v1.Group("/requests")
-	requests.Use(app.Middlewares.AuthMiddleware.AuthRequired)
+	petSitterRequests := v1.Group("/petsitter-requests")
+	petSitterRequests.Use(app.Middlewares.AuthMiddleware.AuthRequired)
 	{
 		// TODO: test
-		requests.GET("/:requestID", app.Controllers.PetSitterControllers.PetSitterRequestController.GetRequestFullData)
+		petSitterRequests.GET("/:requestID", app.Controllers.PetSitterControllers.PetSitterRequestController.GetRequestFullData)
 		// TODO: test
-		requests.PUT("/cancel", app.Controllers.PetSitterControllers.PetSitterRequestController.CancelRequest)
+		petSitterRequests.PUT("/cancel", app.Controllers.PetSitterControllers.PetSitterRequestController.CancelRequest)
 		// TODO: test
-		requests.PUT("/respond", app.Controllers.PetSitterControllers.PetSitterRequestController.RespondToRequest)
+		petSitterRequests.PUT("/respond", app.Controllers.PetSitterControllers.PetSitterRequestController.RespondToRequest)
 		// TODO: add View Requests Routes
 	}
 }

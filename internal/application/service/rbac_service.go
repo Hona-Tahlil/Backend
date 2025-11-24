@@ -206,7 +206,7 @@ func (rs *RBACService) GetUserRolesByID(info rbac.GetUserRolesByIDRequest) ([]rb
 		return nil, err
 	}
 
-	return rs.userService.GetRolesResponse(*user), nil
+	return rs.userService.GetRolesResponse(user), nil
 }
 
 func (rs *RBACService) GetUserRolesByEmail(info rbac.GetUserRolesByEmailRequest) ([]rbac.RoleResponse, error) {
@@ -215,7 +215,7 @@ func (rs *RBACService) GetUserRolesByEmail(info rbac.GetUserRolesByEmailRequest)
 		return nil, err
 	}
 
-	return rs.userService.GetRolesResponse(*user), nil
+	return rs.userService.GetRolesResponse(user), nil
 }
 
 func (rs *RBACService) RemoveRoleFromUserByID(info rbac.RemoveRoleFromUserByIDRequest) error {

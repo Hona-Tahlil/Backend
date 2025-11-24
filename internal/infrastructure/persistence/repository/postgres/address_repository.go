@@ -42,12 +42,14 @@ func (ar *AddressRepository) FindAddressesByUserID(id uint) ([]entities.Address,
 
 	var mainAddress entities.Address
 
-	err := ar.db.First(&mainAddress, "refer = ?", id).Error
-	if err != nil {
+	if err := ar.db.First(&mainAddress, "refer = ?", id).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return addresses, nil
+		}
 		return nil, err
 	}
 
-	err = ar.db.Preload("Province.Cities").First(&mainAddress, mainAddress.ID).Error
+	err := ar.db.Preload("Province.Cities").First(&mainAddress, mainAddress.ID).Error
 	if err != nil {
 		return nil, err
 	}

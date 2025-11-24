@@ -312,3 +312,12 @@ func (ps *PetService) GetPetsInUser(userPets []entities.Pet, petIDs []uint) ([]e
 
 	return pets, nil
 }
+
+func (ps *PetService) GetPetNames(pets []entities.Pet) []string {
+	names := make([]string, 0)
+	for _, pet := range pets {
+		names = append(names, pet.Name)
+	}
+
+	return names
+}

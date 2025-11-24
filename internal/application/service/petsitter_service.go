@@ -30,6 +30,9 @@ func NewPetSitterService(unitOfWork ports.UnitOfWork, userService usecase.UserSe
 }
 
 func (ps *PetSitterService) GetPetSitterFreeSlotsResponse(petSitter *entities.PetSitter) ([]calendarslot.CalendarSlotInfoResponse, error) {
+	if petSitter.Schedule == nil {
+		return nil, nil
+	}
 	petSitterCalendarSlots := petSitter.Schedule
 	freeSlots := make([]entities.CalendarSlot, 0)
 	for _, slot := range petSitterCalendarSlots {
@@ -44,6 +47,9 @@ func (ps *PetSitterService) GetPetSitterFreeSlotsResponse(petSitter *entities.Pe
 
 func (ps *PetSitterService) GetServicesResponse(petSitter *entities.PetSitter) ([]servicedto.ServiceInfoResponse, error) {
 	r := make([]servicedto.ServiceInfoResponse, 0)
+	if petSitter.Services == nil {
+		return r, nil
+	}
 	for _, service := range petSitter.Services {
 		r = append(r, ps.serviceService.GetServiceResponse(&service))
 	}
@@ -52,6 +58,9 @@ func (ps *PetSitterService) GetServicesResponse(petSitter *entities.PetSitter) (
 
 func (ps *PetSitterService) GetAvailableServicesResponse(petSitter *entities.PetSitter) ([]servicedto.ServiceInfoResponse, error) {
 	r := make([]servicedto.ServiceInfoResponse, 0)
+	if petSitter.Services == nil {
+		return r, nil
+	}
 	for _, service := range petSitter.Services {
 		if service.Price != 0 {
 			r = append(r, ps.serviceService.GetServiceResponse(&service))

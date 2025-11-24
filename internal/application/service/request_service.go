@@ -26,7 +26,7 @@ type RequestService struct {
 	emailService        *mail.EmailService
 }
 
-func NewRequestService(userService usecase.UserService, unitOfWork ports.UnitOfWork, provinceService usecase.ProvinceService, addressService usecase.AddressService, petService usecase.PetService, calendarSlotService usecase.CalendarSlotService, emailService *mail.EmailService) *RequestService {
+func NewRequestService(userService usecase.UserService, unitOfWork ports.UnitOfWork, provinceService usecase.ProvinceService, addressService usecase.AddressService, petService usecase.PetService, calendarSlotService usecase.CalendarSlotService, petSitterService usecase.PetSitterService, emailService *mail.EmailService) *RequestService {
 	return &RequestService{
 		userService:         userService,
 		unitOfWork:          unitOfWork,
@@ -34,6 +34,7 @@ func NewRequestService(userService usecase.UserService, unitOfWork ports.UnitOfW
 		addressService:      addressService,
 		petService:          petService,
 		calendarSlotService: calendarSlotService,
+		petSitterService:    petSitterService,
 		emailService:        emailService,
 	}
 }
@@ -137,10 +138,7 @@ func (rs *RequestService) GetCreateRequestInfo(info request.GetCreateRequestInfo
 		return nil, err
 	}
 
-	petsData, err := rs.petService.GetPetsBasicDataResponse(foundUser.Pets)
-	if err != nil {
-		return nil, err
-	}
+	petsData := rs.petService.GetPetNames(foundUser.Pets)
 
 	petSitter, err := rs.petSitterService.GetPetSitterByID(info.PetSitterUserID)
 	if err != nil {

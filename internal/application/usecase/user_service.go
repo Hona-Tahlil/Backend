@@ -13,7 +13,7 @@ type UserService interface {
 	FindVerifiedUserByID(id uint) (*entities.User, error)
 	FindUserByID(id uint) (*entities.User, error)
 	RefreshTokens(refreshTokenInfo rbac.RefreshTokenRequest) (*rbac.RefreshTokenResponse, string, int, error)
-	GetRolesResponse(user entities.User) []rbac.RoleResponse
+	GetRolesResponse(user *entities.User) []rbac.RoleResponse
 	GetRoleUsersByID(roleID uint, limit, offset int) ([]entities.User, error)
 	GetUserInfosResponse(users []entities.User) []rbac.UserInfoResponse
 	PreloadFields(user *entities.User, fields []string) error
