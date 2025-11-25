@@ -1,6 +1,7 @@
 package service
 
 import (
+	"fmt"
 	"hona/backend/bootstrap"
 	"hona/backend/internal/application/dto/rbac"
 	"hona/backend/internal/application/dto/user"
@@ -56,27 +57,32 @@ func (us *UserService) GetRolesResponse(user entities.User) []rbac.RoleResponse 
 
 func (us *UserService) Login(loginInfo user.LoginRequest) (*user.LoginResponse, string, int, error) {
 	foundUser, err := us.FindUserByEmail(loginInfo.Email)
+	fmt.Println("✅ 22")
+
 	if err != nil {
 		if _, ok := err.(*exceptions.NotFoundError); !ok {
 			return nil, "", 0, err
 		}
+		fmt.Println("✅ 33")
+
 		invalidCredentialsErr := exceptions.NewInvalidCredentialsError("password is wrong")
 		return nil, "", 0, invalidCredentialsErr
 	}
-
+	fmt.Println("✅ 44")
 	if err := bcrypt.CompareHashAndPassword([]byte(foundUser.Password), []byte(loginInfo.Password)); err != nil {
 		invalidCredentialsErr := exceptions.NewInvalidCredentialsError("password is wrong")
 		return nil, "", 0, invalidCredentialsErr
 	}
-
+	fmt.Println("✅ 55")
 	accessToken, refreshToken, expireTime := us.jwtService.GenerateTokens(foundUser.ID, loginInfo.RememberMe)
-
+	fmt.Println("✅ 66")
 	roles := us.GetRolesResponse(*foundUser)
-
-	return &user.LoginResponse{
+	r := &user.LoginResponse{
 		AccessToken: accessToken,
-		Roles:       roles,
-	}, refreshToken, expireTime, nil
+		Roles:      roles,
+	}
+	fmt.Println("✅ 77")
+	return r, refreshToken, expireTime, nil
 }
 
 func (us *UserService) GetUserInfosResponse(users []entities.User) []rbac.UserInfoResponse {

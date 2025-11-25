@@ -6,6 +6,15 @@ import (
 	"time"
 )
 
+type AddressInfo struct {
+	Province    enums.Province
+	City        enums.City	
+	Address     string
+	HouseNumber uint
+	Unit        uint
+	PostalCode  string
+}
+
 type GetPetSitterRequest struct {
 	UserID uint
 }

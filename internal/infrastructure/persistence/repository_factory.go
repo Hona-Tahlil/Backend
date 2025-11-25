@@ -32,3 +32,7 @@ func (f *RepositoryFactory) PetSitterRepository() domainpostgres.PetSitterReposi
 func (f *RepositoryFactory) AddressRepository() domainpostgres.AddressRepository {
 	return postgres.NewAddressRepository(f.db)
 }
+
+func (f *RepositoryFactory) ProvinceRepository() domainpostgres.ProvinceRepository {
+	return postgres.NewProvinceRepository(f.db)
+}

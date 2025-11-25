@@ -2,7 +2,6 @@ package petsitter
 
 import (
 	"hona/backend/internal/domain/enums"
-	"time"
 )
 
 type PetSitterStatusResponse struct {
@@ -15,14 +14,12 @@ type PersonalInfoResponse struct {
 	LastName       string                `json:"last_name"`
 	Email          string                `json:"email"`
 	Gender         enums.Gender          `json:"gender"`
-	BirthDate      *time.Time            `json:"birth_date"`
 	PhoneNumber    string                `json:"phone_number"`
 	Province       enums.Province        `json:"province"`
 	City           enums.City            `json:"city"`
 	Address        string                `json:"address"`
 	HouseNumber    uint                  `json:"house_number"`
 	Unit           uint                  `json:"unit"`
-	PostalCode     string                `json:"postal_code"`
 	Status         enums.PetSitterStatus `json:"status"`
 	OnboardingStep enums.OnboardingStep  `json:"onboarding_step"`
 }

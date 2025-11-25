@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"fmt"
 	"hona/backend/bootstrap"
 	"hona/backend/internal/domain/exceptions"
 
@@ -34,12 +35,16 @@ func GetRefreshTokenCookie(ctx *gin.Context) (refreshToken string) {
 	return
 }
 
-
 func GetID(ctx *gin.Context) uint {
-  id, ok := ctx.Get(bootstrap.Run().Constants.Context.ID)
-  if !ok {
-    panic(exceptions.NewNotFoundError(bootstrap.Run().Constants.ErrorFields.User))
-  }
-  ID, _ := id.(uint)
-  return ID
+	fmt.Println("✅ 02")
+
+	id, ok := ctx.Get(bootstrap.Run().Constants.Context.ID)
+	fmt.Println("✅ 01")
+
+	if !ok {
+		panic(exceptions.NewNotFoundError(bootstrap.Run().Constants.ErrorFields.User))
+	}
+	fmt.Println("✅ 00")
+	ID, _ := id.(uint)
+	return ID
 }

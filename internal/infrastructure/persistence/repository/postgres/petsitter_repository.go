@@ -28,7 +28,7 @@ func (pr *PetSitterRepository) UpdatePetSitter(petSitter *entities.PetSitter) er
 	return pr.db.Save(petSitter).Error
 }
 
-func (pr *PetSitterRepository) FindPetSitterByID(id uint) (*entities.PetSitter, error) {
+func (pr *PetSitterRepository) FindPetSitterByUserID(id uint) (*entities.PetSitter, error) {
 	var petsitter entities.PetSitter
 	err := pr.db.First(&petsitter, id).Error
 	if err != nil {
@@ -37,5 +37,13 @@ func (pr *PetSitterRepository) FindPetSitterByID(id uint) (*entities.PetSitter, 
 		}
 		return nil, err
 	}
+	// return &	, nil
+
+	// if result := pr.db.First(&petsitter, "userid = ?", id); result.Error != nil {
+	// 	if result.Error == gorm.ErrRecordNotFound {
+	// 		return nil, nil
+	// 	}
+	// 	return nil, result.Error
+	// }
 	return &petsitter, nil
 }
