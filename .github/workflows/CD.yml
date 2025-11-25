@@ -82,7 +82,7 @@ jobs:
         run: |
           scp -i ~/.ssh/id_rsa \
             -o StrictHostKeyChecking=no \
-            -o ProxyCommand="cloudflared access ssh --hostname ${{ secrets.SERVER_HOST }}:Backend" \
+            -o ProxyCommand="cloudflared access ssh --hostname ${{ secrets.SERVER_HOST }}" \
             docker-compose.yml \
             root@${{ secrets.SERVER_HOST }}:/Backend
 
@@ -91,12 +91,13 @@ jobs:
           ssh -i ~/.ssh/id_rsa \
             -o StrictHostKeyChecking=no \
             -o ProxyCommand="cloudflared access ssh --hostname ${{ secrets.SERVER_HOST }}" \
-            root@${{ secrets.SERVER_HOST }}:/Backend \
-            "docker logout ghcr.io && \
-             docker login ghcr.io -u '${{ secrets.USERNAME }}' -p '${{ secrets.PAT }}' && \
-             docker compose pull && \
-             docker compose down --remove-orphans && \
-             docker compose up -d && \
-             docker image prune -f"
+            root@${{ secrets.SERVER_HOST }} \
+            "mkdir -p Backend/ && cd Backend/ && \
+            docker logout ghcr.io && \
+            docker login ghcr.io -u '${{ secrets.USERNAME }}' -p '${{ secrets.PAT }}' && \
+            docker compose pull && \
+            docker compose down --remove-orphans && \
+            docker compose up -d && \
+            docker image prune -f"
 
 # test2
