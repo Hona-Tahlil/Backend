@@ -1,15 +1,16 @@
 package middleware
 
 import (
+	"hona/backend/bootstrap"
 	"hona/backend/internal/domain/exceptions"
 	"hona/backend/internal/presentation/controllers"
 	"log"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
 
-// ? should have constants?
+var errTags = bootstrap.Run().Constants.ErrorTags
+
 type RecoveryMiddleware struct {
 }
 
@@ -22,7 +23,7 @@ func (rm *RecoveryMiddleware) Recover(ctx *gin.Context) {
 		if r := recover(); r != nil {
 			if err, ok := r.(error); ok {
 				msgs, statusCode := handleError(err)
-				if len(msgs) == 1 {
+				if statusCode != 422 && statusCode != 409 {
 					controllers.Respond(ctx, statusCode, msgs[0], nil)
 				} else {
 					controllers.Respond(ctx, statusCode, msgs, nil)
@@ -39,21 +40,19 @@ func handleError(err error) ([]controllers.Message, int) {
 		return handleBindingError(bindingErr)
 	} else if validationErrs, ok := err.(*exceptions.ValidationErrors); ok {
 		return handleValidationErrors(validationErrs)
+	} else if authErr, ok := err.(*exceptions.AuthError); ok {
+		return handleAuthError(authErr)
+	} else if notFoundErr, ok := err.(*exceptions.NotFoundError); ok {
+		return handleNotFoundError(notFoundErr)
+	} else if conflictErrs, ok := err.(*exceptions.ConflictErrors); ok {
+		return handleConflictErrors(conflictErrs)
 	}
 	return unhandledErrors(err)
 }
 
 func handleBindingError(bindingErr *exceptions.BindingError) ([]controllers.Message, int) {
-	if numError, ok := bindingErr.Err.(*strconv.NumError); ok {
-		msg := controllers.Message{
-			Text:   "errors.numeric",
-			Params: []string{numError.Num},
-		}
-		return []controllers.Message{msg}, 400
-	}
 	msg := controllers.Message{
-		Text:   "errors.binding",
-		Params: []string{},
+		Text: errTags.Binding,
 	}
 	return []controllers.Message{msg}, 400
 }
@@ -70,11 +69,38 @@ func handleValidationErrors(validationErrs *exceptions.ValidationErrors) ([]cont
 	return msgs, 422
 }
 
+func handleAuthError(authErr *exceptions.AuthError) ([]controllers.Message, int) {
+	msg := controllers.Message{
+		Text: authErr.Type,
+	}
+	return []controllers.Message{msg}, 401
+}
+
+func handleNotFoundError(notFoundErr *exceptions.NotFoundError) ([]controllers.Message, int) {
+	msg := controllers.Message{
+		Text:   errTags.NotFound,
+		Params: []string{notFoundErr.Item},
+	}
+	return []controllers.Message{msg}, 404
+}
+
+func handleConflictErrors(conflictErrs *exceptions.ConflictErrors) ([]controllers.Message, int) {
+	msgs := []controllers.Message{}
+	for _, fieldErr := range conflictErrs.Errors {
+		msgs = append(msgs, controllers.Message{
+			Text:   fieldErr.Tag,
+			Params: []string{fieldErr.Field},
+		})
+
+	}
+	return msgs, 409
+}
+
 func unhandledErrors(err error) ([]controllers.Message, int) {
 	log.Println("an unhandled error occurred", err.Error())
 
 	msg := controllers.Message{
-		Text:   "errors.generic",
+		Text:   errTags.Generic,
 		Params: []string{},
 	}
 	return []controllers.Message{msg}, 500

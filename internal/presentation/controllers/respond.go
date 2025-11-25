@@ -25,14 +25,19 @@ type multipleMessageResponse struct {
 }
 
 func Respond[T Message | []Message](ctx *gin.Context, statusCode int, messages T, data interface{}) {
-	translator := GetTranslator(ctx, bootstrap.ProjectConfig.Constants.Context.Translator)
+	translator := GetTranslator(ctx, bootstrap.Run().Constants.Context.Translator)
 
 	switch msg := any(messages).(type) {
 	case Message:
 		if msg.Text == "" {
 			msg.Text = http.StatusText(statusCode)
 		}
-		message, _ := translator.T(msg.Text, msg.Params...)
+		var translatedParams []string
+		for _, param := range msg.Params {
+			p, _ := translator.T(param)
+			translatedParams = append(translatedParams, p)
+		}
+		message, _ := translator.T(msg.Text, translatedParams...)
 		ctx.JSON(statusCode, singleMessageResponse{
 			StatusCode: statusCode,
 			Message:    message,

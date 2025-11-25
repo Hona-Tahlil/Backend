@@ -1,0 +1,25 @@
+package enums
+
+type Gender uint
+
+const (
+	Male Gender = iota + 1
+	Female
+)
+
+func (gender Gender) String() string {
+	switch gender {
+	case Gender(Male):
+		return "آقا"
+	case Gender(Female):
+		return "خانم"
+	}
+	return ""
+}
+
+func GetAllGenders() []Gender {
+	return []Gender{
+		Male,
+		Female,
+	}
+}
