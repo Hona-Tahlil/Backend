@@ -82,7 +82,7 @@ jobs:
         run: |
           scp -i ~/.ssh/id_rsa \
             -o StrictHostKeyChecking=no \
-            -o ProxyCommand="cloudflared access ssh --hostname ${{ secrets.SERVER_HOST }}" \
+            -o ProxyCommand="cloudflared access ssh --hostname ${{ secrets.SERVER_HOST }}:Backend" \
             docker-compose.yml \
             root@${{ secrets.SERVER_HOST }}:/Backend
 
