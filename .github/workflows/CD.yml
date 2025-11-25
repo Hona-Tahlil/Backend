@@ -92,7 +92,7 @@ jobs:
             -o StrictHostKeyChecking=no \
             -o ProxyCommand="cloudflared access ssh --hostname ${{ secrets.SERVER_HOST }}" \
             root@${{ secrets.SERVER_HOST }} \
-            "mkdir -p /root/backend && cd /root/backend && \
+            "cd /root/backend && \
              docker logout ghcr.io && \
              docker login ghcr.io -u '${{ secrets.USERNAME }}' -p '${{ secrets.PAT }}' && \
              docker compose pull && \
