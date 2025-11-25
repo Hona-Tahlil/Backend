@@ -84,7 +84,7 @@ jobs:
             -o StrictHostKeyChecking=no \
             -o ProxyCommand="cloudflared access ssh --hostname ${{ secrets.SERVER_HOST }}" \
             docker-compose.yml \
-            root@${{ secrets.SERVER_HOST }}:/root/backend
+            root@${{ secrets.SERVER_HOST }}:/Backend
 
       - name: Deploy via SSH through Cloudflare Tunnel
         run: |
@@ -92,7 +92,7 @@ jobs:
             -o StrictHostKeyChecking=no \
             -o ProxyCommand="cloudflared access ssh --hostname ${{ secrets.SERVER_HOST }}" \
             root@${{ secrets.SERVER_HOST }} \
-            "cd /root && mkdir backend/ && cd backend/ && \
+            "cd /Backend && \
              docker logout ghcr.io && \
              docker login ghcr.io -u '${{ secrets.USERNAME }}' -p '${{ secrets.PAT }}' && \
              docker compose pull && \
