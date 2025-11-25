@@ -91,9 +91,8 @@ jobs:
           ssh -i ~/.ssh/id_rsa \
             -o StrictHostKeyChecking=no \
             -o ProxyCommand="cloudflared access ssh --hostname ${{ secrets.SERVER_HOST }}" \
-            root@${{ secrets.SERVER_HOST }} \
-            "sudo cd /Backend && \
-             docker logout ghcr.io && \
+            root@${{ secrets.SERVER_HOST }}:/Backend \
+            "docker logout ghcr.io && \
              docker login ghcr.io -u '${{ secrets.USERNAME }}' -p '${{ secrets.PAT }}' && \
              docker compose pull && \
              docker compose down --remove-orphans && \
