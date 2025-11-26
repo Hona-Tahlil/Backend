@@ -33,7 +33,7 @@ func (ps *PetService) AddPet(info pet.AddPetRequest) error {
 	if err != nil {
 		return err
 	}
-	isAdult, err := ps.validateBirthDate(info.BirthDate, info.IsAdult, info.Kind)
+	isAdult, err := ps.validateBirthDate(info.BirthDate, info.IsAdult)
 	if err != nil {
 		return err
 	}
@@ -89,7 +89,7 @@ func (ps *PetService) UpdatePet(info pet.UpdatePetRequest) error {
 		return err
 	}
 
-	isAdult, err := ps.validateBirthDate(info.BirthDate, info.IsAdult, info.Kind)
+	isAdult, err := ps.validateBirthDate(info.BirthDate, info.IsAdult)
 	if err != nil {
 		return err
 	}
@@ -238,9 +238,8 @@ func (ps *PetService) findPetByID(id uint) (*entities.Pet, error) {
 	return foundPet, nil
 }
 
-func (ps *PetService) validateBirthDate(birthDate *time.Time, isAdultInput bool, kind enums.PetKind) (isAdult bool, err error) {
+func (ps *PetService) validateBirthDate(birthDate *time.Time, isAdultInput bool) (isAdult bool, err error) {
 	if birthDate != nil {
-		// TODO: further implemention based on kind
 		age := time.Now().Year() - birthDate.Year()
 		if time.Now().YearDay() < birthDate.YearDay() {
 			age--
@@ -267,25 +266,105 @@ func (ps *PetService) getStorageKey(name string, userID uint) string {
 }
 
 func (ps *PetService) validateSpecies(species enums.Species, kind enums.PetKind) error {
+	var invalid = func() error {
+		var ce exceptions.ValidationErrors
+		ce.AddError(
+			bootstrap.Run().Constants.ErrorFields.Species,
+			bootstrap.Run().Constants.ErrorTags.UnacceptableInput,
+		)
+		return &ce
+	}
+
+	if species == enums.Other {
+		return nil
+	}
 	switch kind {
 	case enums.Dog:
-		if species > 6 {
-			var ce exceptions.ValidationErrors
-			ce.AddError(bootstrap.Run().Constants.ErrorFields.Species, bootstrap.Run().Constants.ErrorTags.UnacceptableInput)
-			return &ce
+		if species < 1 || species > 14 {
+			return invalid()
 		}
 	case enums.Cat:
-		if species < 7 || species > 10 {
-			var ce exceptions.ValidationErrors
-			ce.AddError(bootstrap.Run().Constants.ErrorFields.Species, bootstrap.Run().Constants.ErrorTags.UnacceptableInput)
-			return &ce
+		if species < 15 || species > 22 {
+			return invalid()
 		}
 	case enums.Bird:
-		if species < 11 {
-			var ce exceptions.ValidationErrors
-			ce.AddError(bootstrap.Run().Constants.ErrorFields.Species, bootstrap.Run().Constants.ErrorTags.UnacceptableInput)
-			return &ce
+		if species < 23 || species > 30 {
+			return invalid()
+		}
+	case enums.Fish:
+		if species < 31 || species > 36 {
+			return invalid()
+		}
+	case enums.Rodent:
+		if species < 37 || species > 43 {
+			return invalid()
+		}
+	case enums.Rabbit:
+		if species < 44 || species > 47 {
+			return invalid()
+		}
+	case enums.Reptile:
+		if species < 48 || species > 55 {
+			return invalid()
+		}
+	case enums.Amphibian:
+		if species < 56 || species > 58 {
+			return invalid()
+		}
+	case enums.Ferret:
+		if species != 59 {
+			return invalid()
+		}
+	case enums.Horse:
+		if species != 60 {
+			return invalid()
+		}
+	case enums.Hedgehog:
+		if species != 61 {
+			return invalid()
+		}
+	case enums.MiniPig:
+		if species != 62 {
+			return invalid()
+		}
+	case enums.Insect:
+		if species < 63 || species > 64 {
+			return invalid()
+		}
+	case enums.Arachnid:
+		if species != 65 {
+			return invalid()
+		}
+	case enums.HermitCrab:
+		if species != 66 {
+			return invalid()
 		}
 	}
+
 	return nil
+}
+
+func (ps *PetService) GetAllPetKinds() []pet.PetKindResponse {
+	kinds := enums.GetAllPetKinds()
+	res := make([]pet.PetKindResponse, 0)
+	for _, kind := range kinds {
+		res = append(res, pet.PetKindResponse{
+			Num:  kind,
+			Name: kind.String(),
+		})
+	}
+	return res
+}
+
+func (ps *PetService) GetPetKindSpecies(info pet.GetPetKindSpecies) []pet.PetSpeciesResponse {
+	species := enums.GetSpeciesByKind(info.Num)
+	species = append(species, enums.Other)
+	res := make([]pet.PetSpeciesResponse, 0)
+	for _, s := range species {
+		res = append(res, pet.PetSpeciesResponse{
+			Num:  s,
+			Name: s.String(),
+		})
+	}
+	return res
 }

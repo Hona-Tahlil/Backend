@@ -59,6 +59,7 @@ var ServiceProviderSet = wire.NewSet(
 
 var GeneralControllersProviderSet = wire.NewSet(
 	general.NewGeneralUserController,
+	general.NewGeneralPetController,
 	wire.Struct(new(GeneralControllers), "*"),
 )
 
@@ -104,6 +105,7 @@ var ProviderSet = wire.NewSet(
 
 type GeneralControllers struct {
 	GeneralUserController *general.GeneralUserController
+	GeneralPetController  *general.GeneralPetController
 }
 
 type AdminControllers struct {

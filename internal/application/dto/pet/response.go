@@ -26,3 +26,13 @@ type PetFullDataResponse struct {
 	Weight      *float32        `json:"weight"`
 	AboutPet    *string         `json:"aboutPet"`
 }
+
+type PetKindResponse struct {
+	Num  enums.PetKind `json:"num"`
+	Name string        `json:"name"`
+}
+
+type PetSpeciesResponse struct {
+	Num  enums.Species `json:"num"`
+	Name string        `json:"name"`
+}

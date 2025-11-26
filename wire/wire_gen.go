@@ -39,16 +39,18 @@ func InitializeApplication(container *bootstrap.Config) (*Application, error) {
 	emailService := mail.NewEmailService()
 	userService := service.NewUserService(jwtService, unitOfWork, userCacheRepository, emailService)
 	generalUserController := general.NewGeneralUserController(userService)
+	s3Storage := storage.NewS3Storage()
+	petService := service.NewPetService(unitOfWork, s3Storage, userService)
+	generalPetController := general.NewGeneralPetController(petService)
 	generalControllers := &GeneralControllers{
 		GeneralUserController: generalUserController,
+		GeneralPetController:  generalPetController,
 	}
 	rbacService := service.NewRBACService(unitOfWork, userService)
 	adminRBACController := admin.NewAdminRBACController(rbacService)
 	adminControllers := &AdminControllers{
 		AdminRBACController: adminRBACController,
 	}
-	s3Storage := storage.NewS3Storage()
-	petService := service.NewPetService(unitOfWork, s3Storage, userService)
 	userPetController := user.NewUserPetController(petService)
 	userControllers := &UserControllers{
 		UserPetController: userPetController,
@@ -89,7 +91,7 @@ var RepositoryProviderSet = wire.NewSet(persistence.NewRepositoryFactory, persis
 
 var ServiceProviderSet = wire.NewSet(service.NewUserService, jwt.NewJWTService, jwt.NewJWTKeyManager, service.NewRBACService, service.NewPetService, mail.NewEmailService, wire.Bind(new(domainjwt.JWTService), new(*jwt.JWTService)), wire.Bind(new(domainjwt.JWTKeyManager), new(*jwt.JWTKeyManager)), wire.Bind(new(usecase.RBACService), new(*service.RBACService)), wire.Bind(new(usecase.UserService), new(*service.UserService)), wire.Bind(new(usecase.PetService), new(*service.PetService)))
 
-var GeneralControllersProviderSet = wire.NewSet(general.NewGeneralUserController, wire.Struct(new(GeneralControllers), "*"))
+var GeneralControllersProviderSet = wire.NewSet(general.NewGeneralUserController, general.NewGeneralPetController, wire.Struct(new(GeneralControllers), "*"))
 
 var AdminControllersProviderSet = wire.NewSet(admin.NewAdminRBACController, wire.Struct(new(AdminControllers), "*"))
 
@@ -115,6 +117,7 @@ var ProviderSet = wire.NewSet(
 
 type GeneralControllers struct {
 	GeneralUserController *general.GeneralUserController
+	GeneralPetController  *general.GeneralPetController
 }
 
 type AdminControllers struct {
