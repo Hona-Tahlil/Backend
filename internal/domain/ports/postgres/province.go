@@ -8,4 +8,5 @@ import (
 type ProvinceRepository interface {
 	FindProvinceByName(name enums.Province) (*entities.Province, error)
 	CreateProvince(province *entities.Province) error
+	GetAllProvinces() ([]entities.Province, error)
 }
