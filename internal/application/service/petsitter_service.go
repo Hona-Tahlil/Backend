@@ -73,7 +73,7 @@ func (ps *PetSitterService) GetAvailableServicesResponse(petSitter *entities.Pet
 func (ps *PetSitterService) GetPetSitterByUserID(id uint) (*entities.PetSitter, error) {
 	user, err := ps.userService.FindUserByID(id)
 	if err != nil {
-		return nil, err
+		return nil, exceptions.NewNotFoundError(bootstrap.Run().Constants.ErrorFields.PetSitter)
 	}
 	ps.userService.PreloadFields(user, []string{"PetSitter"})
 	if user.PetSitter == nil {

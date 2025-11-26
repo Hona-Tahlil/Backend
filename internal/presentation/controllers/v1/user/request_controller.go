@@ -44,24 +44,23 @@ func (rc *UserRequestController) GetCreateRequestInfo(ctx *gin.Context) {
 
 func (rc *UserRequestController) CreateRequest(ctx *gin.Context) {
 	type CalendarSlot struct {
-		Date  time.Time    `json:"date" validate:"required"`
-		Slots []enums.Slot `json:"slots" validate:"required"`
+		Date  time.Time    `json:"date" binding:"required"`
+		Slots []enums.Slot `json:"slots" binding:"required"`
 	}
 	type AddressInfo struct {
-		ProvinceName  enums.Province `json:"provinceName" validate:"required"`
-		CityName      enums.City     `json:"cityName" validate:"required"`
-		StreetAddress string         `json:"streetAddress" validate:"required"`
-		HouseNumber   uint           `json:"houseNumber" validate:"required"`
-		Unit          uint           `json:"unit" validate:"required"`
+		ProvinceName  enums.Province `json:"provinceName" binding:"required"`
+		CityName      enums.City     `json:"cityName" binding:"required"`
+		StreetAddress string         `json:"streetAddress" binding:"required"`
+		HouseNumber   uint           `json:"houseNumber" binding:"required"`
+		Unit          uint           `json:"unit" binding:"required"`
 		PostalCode    *string        `json:"postalCode"`
 	}
-	// TODO: test if dive works
 	type Params struct {
 		PetSitterUserID uint           `json:"petSitterUserID" validate:"required"`
 		CalenderSlots   []CalendarSlot `json:"calendarSlots" validate:"required,min=1" binding:"dive"`
 		PetIDs          []uint         `json:"petIDs" validate:"required"`
 		Notes           *string        `json:"notes"`
-		AddressInfo     *AddressInfo   `json:"addressInfo" validate:"omitempty" binding:"dive,omitempty"`
+		AddressInfo     *AddressInfo   `json:"addressInfo" validate:"omitempty"`
 		AddressID       *uint          `json:"addressID"`
 		ServiceID       uint           `json:"serviceID" validate:"required"`
 	}
@@ -84,7 +83,6 @@ func (rc *UserRequestController) CreateRequest(ctx *gin.Context) {
 		AddressID:       params.AddressID,
 		ServiceID:       params.ServiceID,
 	}
-
 	if err := rc.requestService.CreateRequest(info); err != nil {
 		panic(err)
 	}
@@ -94,24 +92,23 @@ func (rc *UserRequestController) CreateRequest(ctx *gin.Context) {
 
 func (rc *UserRequestController) EditRequest(ctx *gin.Context) {
 	type CalendarSlot struct {
-		Date  time.Time    `json:"date" validate:"required"`
-		Slots []enums.Slot `json:"slots" validate:"required"`
+		Date  time.Time    `json:"date" binding:"required"`
+		Slots []enums.Slot `json:"slots" binding:"required"`
 	}
 	type AddressInfo struct {
-		ProvinceName  enums.Province `json:"provinceName" validate:"required"`
-		CityName      enums.City     `json:"cityName" validate:"required"`
-		StreetAddress string         `json:"streetAddress" validate:"required"`
-		HouseNumber   uint           `json:"houseNumber" validate:"required"`
-		Unit          uint           `json:"unit" validate:"required"`
+		ProvinceName  enums.Province `json:"provinceName" binding:"required"`
+		CityName      enums.City     `json:"cityName" binding:"required"`
+		StreetAddress string         `json:"streetAddress" binding:"required"`
+		HouseNumber   uint           `json:"houseNumber" binding:"required"`
+		Unit          uint           `json:"unit" binding:"required"`
 		PostalCode    *string        `json:"postalCode"`
 	}
-	// TODO: test if dive works
 	type Params struct {
 		RequestID     uint           `json:"requestID" validate:"required"`
 		CalenderSlots []CalendarSlot `json:"calendarSlots" validate:"required,min=1" binding:"dive"`
 		PetIDs        []uint         `json:"petIDs" validate:"required"`
 		Notes         *string        `json:"notes"`
-		AddressInfo   *AddressInfo   `json:"addressInfo" validate:"omitempty" binding:"dive,omitempty"`
+		AddressInfo   *AddressInfo   `json:"addressInfo" validate:"omitempty"`
 		AddressID     *uint          `json:"addressID" validate:"required"`
 		ServiceID     uint           `json:"serviceID" validate:"required"`
 	}
