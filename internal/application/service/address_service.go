@@ -12,13 +12,15 @@ import (
 
 type AddressService struct {
 	unitOfWork      ports.UnitOfWork
+	userService     usecase.UserService
 	provinceService usecase.ProvinceService
 }
 
-func NewAddressService(unitOfWork ports.UnitOfWork, provinceService usecase.ProvinceService) *AddressService {
+func NewAddressService(unitOfWork ports.UnitOfWork, provinceService usecase.ProvinceService, userService usecase.UserService) *AddressService {
 	return &AddressService{
 		unitOfWork:      unitOfWork,
 		provinceService: provinceService,
+		userService:     userService,
 	}
 }
 
@@ -38,11 +40,33 @@ func (as *AddressService) FindAddressByID(id uint) (*entities.Address, error) {
 }
 
 func (as *AddressService) GetUserAddressesInfo(id uint) ([]address.AddressInfoResponse, error) {
-	addressRepo := as.unitOfWork.Factory().AddressRepository()
-	addresses, err := addressRepo.FindAddressesByUserID(id)
+	user, err := as.userService.FindUserByID(id)
 	if err != nil {
 		return nil, err
 	}
+	err = as.userService.PreloadFields(user, []string{"Requests.Address.Province.Cities", "Requests.Address.City", "Address.Province.Cities", "Address.City"})
+	if err != nil {
+		return nil, err
+	}
+	var mainAddress *entities.Address
+	if user.Address != nil {
+		mainAddress = user.Address
+	}
+	addresses := make([]entities.Address, 0)
+	flag := false
+	if user.Requests != nil {
+		for _, request := range user.Requests {
+			addresses = append(addresses, request.Address)
+			if mainAddress != nil && request.Address.City == mainAddress.City && request.Address.Province.Name == mainAddress.Province.Name && request.Address.StreetAddress == mainAddress.StreetAddress {
+				flag = true
+			}
+		}
+	}
+
+	if !flag {
+		addresses = append(addresses, *mainAddress)
+	}
+
 	r := make([]address.AddressInfoResponse, 0)
 	for _, address := range addresses {
 		r = append(r, as.GetUserAddressInfo(&address))

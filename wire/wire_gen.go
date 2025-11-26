@@ -46,7 +46,7 @@ func InitializeApplication(container *bootstrap.Config) (*Application, error) {
 	petService := service.NewPetService(unitOfWork, s3Storage, userService)
 	userPetController := user.NewUserPetController(petService)
 	provinceService := service.NewProvinceService(unitOfWork)
-	addressService := service.NewAddressService(unitOfWork, provinceService)
+	addressService := service.NewAddressService(unitOfWork, provinceService, userService)
 	calendarSlotService := service.NewCalendarSlotService()
 	serviceService := service.NewServiceService(unitOfWork)
 	petSitterService := service.NewPetSitterService(unitOfWork, userService, serviceService, calendarSlotService)

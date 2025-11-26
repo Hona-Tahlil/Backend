@@ -40,7 +40,7 @@ func NewRequestService(userService usecase.UserService, unitOfWork ports.UnitOfW
 }
 
 func (rs *RequestService) CreateRequest(info request.CreateRequestRequest) error {
-	petSitter, err := rs.petSitterService.GetPetSitterByID(info.PetSitterUserID)
+	petSitter, err := rs.petSitterService.GetPetSitterByUserID(info.PetSitterUserID)
 	if err != nil {
 		return err
 	}
@@ -97,18 +97,18 @@ func (rs *RequestService) CreateRequest(info request.CreateRequestRequest) error
 	totalPrice := rs.calculateTotalPrice(serviceEntity, petSitter.Schedule, len(pets))
 
 	newRequest := &entities.Request{
-		UserID:          info.UserID,
-		PetSitterUserID: info.PetSitterUserID,
-		Status:          enums.Pending,
-		Chat:            entities.Chat{},
-		TransferID:      nil,
-		CalendarSlots:   calendarSlots,
-		Pets:            pets,
-		TotalPrice:      totalPrice,
-		Notes:           info.Notes,
-		Comment:         nil,
-		Address:         *address,
-		Service:         *serviceEntity,
+		UserID:        info.UserID,
+		PetSitterID:   petSitter.ID,
+		Status:        enums.Pending,
+		Chat:          entities.Chat{},
+		TransferID:    nil,
+		CalendarSlots: calendarSlots,
+		Pets:          pets,
+		TotalPrice:    totalPrice,
+		Notes:         info.Notes,
+		Comment:       nil,
+		Address:       *address,
+		Service:       *serviceEntity,
 	}
 
 	rs.sendNewRequestEmail(petSitter.UserID)
@@ -144,7 +144,7 @@ func (rs *RequestService) GetCreateRequestInfo(info request.GetCreateRequestInfo
 		return nil, exceptions.NewAccessDeniedError("first add a pet")
 	}
 
-	petSitter, err := rs.petSitterService.GetPetSitterByID(info.PetSitterUserID)
+	petSitter, err := rs.petSitterService.GetPetSitterByUserID(info.PetSitterUserID)
 	if err != nil {
 		return nil, err
 	}
@@ -191,7 +191,7 @@ func (rs *RequestService) EditRequest(info request.EditRequestRequest) error {
 		return err
 	}
 
-	petSitter, err := rs.petSitterService.GetPetSitterByID(foundRequest.PetSitterUserID)
+	petSitter, err := rs.petSitterService.GetPetSitterByID(foundRequest.PetSitterID)
 	if err != nil {
 		return err
 	}
@@ -266,8 +266,12 @@ func (rs *RequestService) CancelRequest(info request.CancelRequestRequest) error
 	if err != nil {
 		return err
 	}
+	petSitter, err := rs.petSitterService.GetPetSitterByID(foundRequest.PetSitterID)
+	if err != nil {
+		return err
+	}
 
-	if foundRequest.UserID != info.UserID || foundRequest.PetSitterUserID == info.UserID {
+	if foundRequest.UserID != info.UserID || petSitter.UserID == info.UserID {
 		err = exceptions.NewAccessDeniedError(bootstrap.Run().Constants.ErrorTags.ForbiddenStatus)
 		return err
 	}
@@ -286,11 +290,6 @@ func (rs *RequestService) CancelRequest(info request.CancelRequestRequest) error
 		return err
 	}
 
-	petSitter, err := rs.petSitterService.GetPetSitterByID(foundRequest.PetSitterUserID)
-	if err != nil {
-		return err
-	}
-
 	err = rs.petSitterService.PreloadFields(petSitter, []string{"Schedule"})
 	if err != nil {
 		return err
@@ -302,10 +301,10 @@ func (rs *RequestService) CancelRequest(info request.CancelRequestRequest) error
 	if err != nil {
 		return err
 	}
-	if info.UserID == foundRequest.PetSitterUserID {
-		rs.SendPetOwnerRequestCancelEmail(foundRequest.UserID, foundRequest.PetSitterUserID)
+	if info.UserID == petSitter.UserID {
+		rs.SendPetOwnerRequestCancelEmail(foundRequest.UserID, petSitter.UserID)
 	} else {
-		rs.SendPetSitterRequestCancelEmail(foundRequest.UserID, foundRequest.PetSitterUserID)
+		rs.SendPetSitterRequestCancelEmail(foundRequest.UserID, petSitter.UserID)
 	}
 	requestRepo := rs.unitOfWork.Factory().RequestRepository()
 	return requestRepo.EditRequest(foundRequest)
@@ -327,7 +326,7 @@ func (rs *RequestService) GetRequestFullData(info request.GetRequestFullDataRequ
 		return nil, err
 	}
 
-	petSitter, err := rs.petSitterService.GetPetSitterByID(foundRequest.PetSitterUserID)
+	petSitter, err := rs.petSitterService.GetPetSitterByID(foundRequest.PetSitterID)
 	if err != nil {
 		return nil, err
 	}
@@ -349,7 +348,7 @@ func (rs *RequestService) GetRequestFullData(info request.GetRequestFullDataRequ
 
 	return &request.RequestFullDataResponse{
 		RequestID:       foundRequest.ID,
-		PetSitterUserID: foundRequest.PetSitterUserID,
+		PetSitterUserID: petSitter.UserID,
 		Service:         rs.serviceService.GetServiceResponse(&foundRequest.Service),
 		Pets:            petsData,
 		Address:         rs.addressService.GetUserAddressInfo(&foundRequest.Address),
@@ -370,11 +369,15 @@ func (rs *RequestService) RespondToRequest(info request.RespondToRequestRequest)
 	if err != nil {
 		return err
 	}
+	petSitter, err := rs.petSitterService.GetPetSitterByID(foundRequest.PetSitterID)
+	if err != nil {
+		return err
+	}
 	if foundRequest.Status != enums.Pending {
 		err = exceptions.NewAccessDeniedError(bootstrap.Run().Constants.ErrorTags.ForbiddenStatus)
 		return err
 	}
-	if foundRequest.PetSitterUserID != info.UserID {
+	if petSitter.UserID != info.UserID {
 		err = exceptions.NewAccessDeniedError(bootstrap.Run().Constants.ErrorTags.ForbiddenStatus)
 		return err
 	}
@@ -382,10 +385,6 @@ func (rs *RequestService) RespondToRequest(info request.RespondToRequestRequest)
 	if info.Accept {
 		foundRequest.Status = enums.Accepted
 
-		petSitter, err := rs.petSitterService.GetPetSitterByID(foundRequest.PetSitterUserID)
-		if err != nil {
-			return err
-		}
 		err = rs.validateCalendarSlots(petSitter.Schedule, foundRequest.CalendarSlots)
 		if err != nil {
 			var ce exceptions.ConflictErrors

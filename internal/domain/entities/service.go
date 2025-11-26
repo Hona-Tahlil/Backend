@@ -8,11 +8,10 @@ import (
 
 type Service struct {
 	gorm.Model
-	PetSitterUserID uint              `gorm:"index"`
-	RequestID       *uint             `gorm:"index"`
-	Type            enums.ServiceType `gorm:"index"`
-	Price           uint              `gorm:"index"`
-	// PetKinds        []enums.PetKind   `gorm:"type:integer[];not null"`
+	PetSitterID uint              `gorm:"index"`
+	RequestID   *uint             `gorm:"index"`
+	Type        enums.ServiceType `gorm:"index"`
+	Price       uint              `gorm:"index"`
 	Description *string
-	Kind        string `gorm:"index"`
+	Kind        string `gorm:"index;default=petSitter"` // petSitter or request
 }

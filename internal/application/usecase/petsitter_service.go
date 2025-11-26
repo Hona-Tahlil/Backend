@@ -12,6 +12,7 @@ type PetSitterService interface {
 	GetServicesResponse(petSitter *entities.PetSitter) ([]servicedto.ServiceInfoResponse, error)
 	GetAvailableServicesResponse(petSitter *entities.PetSitter) ([]servicedto.ServiceInfoResponse, error)
 	GetPetSitterByID(id uint) (*entities.PetSitter, error)
+	GetPetSitterByUserID(id uint) (*entities.PetSitter, error)
 	PreloadFields(petSitter *entities.PetSitter, fields []string) error
 	ValidatePets(pets []entities.Pet, petKinds []enums.PetKind) error
 	ValidateService(services []entities.Service, serviceID uint) (*entities.Service, error)

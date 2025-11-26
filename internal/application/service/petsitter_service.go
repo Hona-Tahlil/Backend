@@ -70,7 +70,7 @@ func (ps *PetSitterService) GetAvailableServicesResponse(petSitter *entities.Pet
 	return r, nil
 }
 
-func (ps *PetSitterService) GetPetSitterByID(id uint) (*entities.PetSitter, error) {
+func (ps *PetSitterService) GetPetSitterByUserID(id uint) (*entities.PetSitter, error) {
 	user, err := ps.userService.FindUserByID(id)
 	if err != nil {
 		return nil, err
@@ -84,6 +84,18 @@ func (ps *PetSitterService) GetPetSitterByID(id uint) (*entities.PetSitter, erro
 		return nil, exceptions.NewNotFoundError(bootstrap.Run().Constants.ErrorFields.PetSitter)
 	}
 	return user.PetSitter, nil
+}
+
+func (ps *PetSitterService) GetPetSitterByID(id uint) (*entities.PetSitter, error) {
+	petSitterRepo := ps.unitOfWork.Factory().PetSitterRepository()
+	foundPetSitter, err := petSitterRepo.FindPetSitterByID(id)
+	if err != nil {
+		return nil, err
+	}
+	if foundPetSitter == nil {
+		return nil, exceptions.NewNotFoundError(bootstrap.Run().Constants.ErrorFields.PetSitter)
+	}
+	return foundPetSitter, nil
 }
 
 func (ps *PetSitterService) PreloadFields(petSitter *entities.PetSitter, fields []string) error {
@@ -112,7 +124,13 @@ func (ps *PetSitterService) ValidatePets(pets []entities.Pet, petKinds []enums.P
 func (ps *PetSitterService) ValidateService(services []entities.Service, serviceID uint) (*entities.Service, error) {
 	for _, service := range services {
 		if service.ID == serviceID && service.Price != 0 {
-			return &service, nil
+			return &entities.Service{
+				PetSitterID: service.PetSitterID,
+				Type:        service.Type,
+				Price:       service.Price,
+				Description: service.Description,
+				Kind:        bootstrap.Run().Constants.EntityConstants.Request,
+			}, nil
 		}
 	}
 	var ve exceptions.ValidationErrors

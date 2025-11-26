@@ -10,8 +10,8 @@ type PetSitter struct {
 	gorm.Model
 	UserID          uint            `gorm:"index"`
 	CertificateKeys []string        `gorm:"type:text[]"`
-	Requests        []Request       `gorm:"foreignKey:PetSitterUserID"`
-	Services        []Service       `gorm:"foreignKey:PetSitterUserID"`
+	Requests        []Request       `gorm:"foreignKey:PetSitterID"`
+	Services        []Service       `gorm:"foreignKey:PetSitterID"`
 	PetKinds        []enums.PetKind `gorm:"type:integer[];not null"`
 	Schedule        []CalendarSlot  `gorm:"foreignKey:Refer"`
 	Comments        []Comment       `gorm:"foreignKey:PetSitterID"`
