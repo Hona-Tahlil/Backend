@@ -28,3 +28,11 @@ func (f *RepositoryFactory) RBACRepository() domainpostgres.RBACRepository {
 func (f *RepositoryFactory) PetRepository() domainpostgres.PetRepository {
 	return postgres.NewPetRepository(f.db)
 }
+
+func (f *RepositoryFactory) ProvinceRepository() domainpostgres.ProvinceRepository {
+	return postgres.NewProvinceRepository(f.db)
+}
+
+func (f *RepositoryFactory) CityRepository() domainpostgres.CityRepository {
+	return postgres.NewCityRepository(f.db)
+}
