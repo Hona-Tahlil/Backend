@@ -416,6 +416,8 @@ func (rs *RequestService) RespondToRequest(info request.RespondToRequestRequest)
 		rs.sendDeclineRequestEmail(foundRequest.UserID)
 	}
 
+	// TODO: check updated time
+
 	requestRepo := rs.unitOfWork.Factory().RequestRepository()
 	return requestRepo.EditRequest(foundRequest)
 }
