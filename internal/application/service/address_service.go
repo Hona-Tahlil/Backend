@@ -31,9 +31,8 @@ func (as *AddressService) FindAddressByID(id uint) (*entities.Address, error) {
 		return nil, err
 	}
 	if address == nil {
-		var ve exceptions.ValidationErrors
-		ve.AddError(bootstrap.Run().Constants.ErrorFields.Address, bootstrap.Run().Constants.ErrorTags.NotFound)
-		return nil, &ve
+
+		return nil, exceptions.NewNotFoundError(bootstrap.Run().Constants.ErrorFields.Address)
 	}
 
 	return address, nil

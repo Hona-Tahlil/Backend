@@ -26,16 +26,29 @@ type RequestService struct {
 	emailService        *mail.EmailService
 }
 
-func NewRequestService(userService usecase.UserService, unitOfWork ports.UnitOfWork, provinceService usecase.ProvinceService, addressService usecase.AddressService, petService usecase.PetService, calendarSlotService usecase.CalendarSlotService, petSitterService usecase.PetSitterService, emailService *mail.EmailService) *RequestService {
+type RequestServiceDeps struct {
+	UserService         usecase.UserService
+	ProvinceService     usecase.ProvinceService
+	AddressService      usecase.AddressService
+	PetService          usecase.PetService
+	ServiceService      usecase.ServiceService
+	PetSitterService    usecase.PetSitterService
+	CalendarSlotService usecase.CalendarSlotService
+	UnitOfWork          ports.UnitOfWork
+	EmailService        *mail.EmailService
+}
+
+func NewRequestService(deps RequestServiceDeps) *RequestService {
 	return &RequestService{
-		userService:         userService,
-		unitOfWork:          unitOfWork,
-		provinceService:     provinceService,
-		addressService:      addressService,
-		petService:          petService,
-		calendarSlotService: calendarSlotService,
-		petSitterService:    petSitterService,
-		emailService:        emailService,
+		userService:         deps.UserService,
+		unitOfWork:          deps.UnitOfWork,
+		provinceService:     deps.ProvinceService,
+		addressService:      deps.AddressService,
+		serviceService:      deps.ServiceService,
+		petService:          deps.PetService,
+		calendarSlotService: deps.CalendarSlotService,
+		petSitterService:    deps.PetSitterService,
+		emailService:        deps.EmailService,
 	}
 }
 

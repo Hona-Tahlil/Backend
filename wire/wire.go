@@ -37,6 +37,7 @@ var RepositoryProviderSet = wire.NewSet(
 	wire.Bind(new(ports.UnitOfWork), new(*persistence.UnitOfWork)),
 )
 var ServiceProviderSet = wire.NewSet(
+	wire.Struct(new(service.RequestServiceDeps), "*"),
 	service.NewUserService,
 	jwt.NewJWTService,
 	jwt.NewJWTKeyManager,
