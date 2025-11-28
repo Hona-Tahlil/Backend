@@ -56,6 +56,7 @@ type ErrorFields struct {
 	IsAdult    string
 	Pet        string
 	Species    string
+	Comment    string
 }
 
 type ErrorTags struct {
@@ -141,6 +142,7 @@ func NewConstants() *Constants {
 			IsAdult:    "isAdult",
 			Pet:        "pet",
 			Species:    "species",
+			Comment:    "comment",
 		},
 		ErrorTags: ErrorTags{
 			AlreadyRegistered:      "errors.alreadyRegistered",

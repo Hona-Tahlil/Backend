@@ -16,6 +16,7 @@ var Persian = map[string]interface{}{
 	"magicLink":  "لینک تایید ایمیل",
 	"pet":        "پت",
 	"species":    "نژاد",
+	"comment":    "نظر",
 	"errors": map[string]interface{}{
 		"generic":                "خطایی رخ داده است، لطفا دوباره تلاش کنید.",
 		"binding":                "فرمت ورودی نادرست است",
