@@ -5,5 +5,4 @@ type ServiceInfoResponse struct {
 	Type        string  `json:"type"`
 	Description *string `json:"description"`
 	Price       uint    `json:"price"`
-	// PetKinds    []enums.PetKind `json:"petKinds"`
 }

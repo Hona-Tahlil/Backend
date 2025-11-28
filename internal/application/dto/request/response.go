@@ -8,22 +8,22 @@ import (
 )
 
 type CreateRequestInfoResponse struct {
-	Services          []servicedto.ServiceInfoResponse
-	Addresses         []address.AddressInfoResponse
-	Pets              []string
-	FreeCalendarSlots []calendarslot.CalendarSlotInfoResponse
+	Services          []servicedto.ServiceInfoResponse        `json:"services"`
+	Addresses         []address.AddressInfoResponse           `json:"addresses"`
+	Pets              []string                                `json:"pets"`
+	FreeCalendarSlots []calendarslot.CalendarSlotInfoResponse `json:"freeCalendarSlots"`
 }
 
 type RequestFullDataResponse struct {
-	RequestID       uint `json:"requestID"`
-	PetSitterUserID uint `json:"petSitterUserID"`
-	Service         servicedto.ServiceInfoResponse
-	Pets            []pet.PetBasicDataResponse
-	CalendarSlots   []calendarslot.CalendarSlotInfoResponse
-	Notes           *string `json:"notes"`
-	TotalPrice      uint    `json:"totalPrice"`
+	RequestID       uint                                    `json:"requestID"`
+	PetSitterUserID uint                                    `json:"petSitterUserID"`
+	Service         servicedto.ServiceInfoResponse          `json:"service"`
+	Pets            []pet.PetBasicDataResponse              `json:"pets"`
+	CalendarSlots   []calendarslot.CalendarSlotInfoResponse `json:"calendarSlots"`
+	Notes           *string                                 `json:"notes"`
+	TotalPrice      uint                                    `json:"totalPrice"`
 	// TODO: comment
-	Address    address.AddressInfoResponse
-	Status     string `json:"status"`
-	TransferID *uint  `json:"transferID"`
+	Address    address.AddressInfoResponse `json:"address"`
+	Status     string                      `json:"status"`
+	TransferID *uint                       `json:"transferID"`
 }
