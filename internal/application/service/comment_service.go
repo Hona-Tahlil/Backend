@@ -111,9 +111,10 @@ func (cs *CommentService) GetAllPetSitterComments(info comment.GetAllPetSitterCo
 		name := user.FirstName + " " + user.LastName
 		averageRating += float32(c.Rating)
 		r = append(r, comment.CommentResponse{
-			UserName: name,
-			Text:     c.Text,
-			Rating:   c.Rating,
+			UserName:  name,
+			Text:      c.Text,
+			Rating:    c.Rating,
+			UpdatedAt: c.UpdatedAt,
 		})
 	}
 	averageRating /= float32(len(r))
