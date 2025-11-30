@@ -172,20 +172,6 @@ func (us *UserService) FindUserByID(id uint) (*entities.User, error) {
 	return foundUser, nil
 }
 
-func (us *UserService) FindVerifiedUserByEmail(email string) (*entities.User, error) {
-	foundUser, err := us.FindUserByEmail(email)
-	if err != nil {
-		return nil, err
-	}
-
-	if !foundUser.IsEmailVerified {
-		notVerifiedErr := exceptions.NewNotVerifiedError()
-		return nil, notVerifiedErr
-	}
-
-	return foundUser, nil
-}
-
 func (us *UserService) validateDuplicateEmail(email string) error {
 	var ce exceptions.ConflictErrors
 	redisKey := bootstrap.Run().Constants.RedisKey.GenerateMLKey(email)
