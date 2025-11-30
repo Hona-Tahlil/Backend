@@ -4,6 +4,7 @@ import (
 	"hona/backend/internal/application/dto/rbac"
 	"hona/backend/internal/application/dto/user"
 	"hona/backend/internal/domain/entities"
+	"hona/backend/internal/infrastructure/dsl"
 )
 
 type UserService interface {
@@ -20,9 +21,9 @@ type UserService interface {
 	// ForgotPassword(forgetPasswordInfo user.ForgotPasswordRequest) error
 	RefreshTokens(refreshTokenInfo rbac.RefreshTokenRequest) (*rbac.RefreshTokenResponse, string, int, error)
 	GetRolesResponse(user entities.User) []rbac.RoleResponse
-	GetRoleUsersByID(roleID uint, limit, offset int) ([]entities.User, error)
+	GetRoleUsersByID(roleID uint, query *dsl.ParsedQuery) ([]entities.User, error)
 	GetUserInfosResponse(users []entities.User) []rbac.UserInfoResponse
-  Register(registerInfo user.RegisterRequest) error
+	Register(registerInfo user.RegisterRequest) error
 	ResetPassword(resetPasswordInfo user.ResetPasswordRequest) error
 	ForgotPassword(forgetPasswordInfo user.ForgotPasswordRequest) error
 	VerifyEmail(info user.VerifyEmailRequest) error

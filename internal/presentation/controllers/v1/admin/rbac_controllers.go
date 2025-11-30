@@ -4,6 +4,7 @@ import (
 	"hona/backend/bootstrap"
 	"hona/backend/internal/application/dto/rbac"
 	"hona/backend/internal/application/usecase"
+	"hona/backend/internal/infrastructure/dsl"
 	"hona/backend/internal/presentation/controllers"
 
 	"github.com/gin-gonic/gin"
@@ -22,14 +23,17 @@ func NewAdminRBACController(rbacService usecase.RBACService) *AdminRBACControlle
 var successMessages = bootstrap.Run().Constants.SuccessMessages
 
 func (ac *AdminRBACController) ListRolesWithUsers(ctx *gin.Context) {
-	type ListRolesWithUsersParams struct {
-		Page  int `form:"page" validate:"min=0"`
-		Count int `form:"count" validate:"min=0,max=100"`
-	}
-	params := controllers.Receive[ListRolesWithUsersParams](ctx)
+	Query := dsl.ParseQuery(ctx.Request.URL.Query())
+	// type ListRolesWithUsersParams struct {
+	// 	// Page  int `form:"page" validate:"min=0"`
+	// 	// Count int `form:"count" validate:"min=0,max=100"`
+
+	// }
+	// params := controllers.Receive[ListRolesWithUsersParams](ctx)
 	ListRolesWithUsersInfo := rbac.ListRolesWithUsersRequest{
-		Page:  params.Page,
-		Count: params.Count,
+		// Page:  params.Page,
+		// Count: params.Count,
+		Query: Query,
 	}
 	res, err := ac.rbacService.ListRolesWithUsers(ListRolesWithUsersInfo)
 	if err != nil {
@@ -364,3 +368,16 @@ func (ac *AdminRBACController) GetPermissionRoles(ctx *gin.Context) {
 	msg := controllers.Message{}
 	controllers.Respond(ctx, 200, msg, res)
 }
+
+
+// func (ac *AdminRBACController) ListUsers(ctx *gin.Context) {
+	
+// 	query := dsl.ParseQuery(ctx.Request.URL.Query())
+
+// 	res, err := ac.rbacService.ListUsers(query)
+// 	if err != nil {
+// 		panic(err)
+// 	}	
+// 	msg := controllers.Message{}
+// 	controllers.Respond(ctx, 200, msg, res)
+// }

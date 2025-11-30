@@ -1,5 +1,7 @@
 package rbac
 
+import "hona/backend/internal/infrastructure/dsl"
+
 type RefreshTokenRequest struct {
 	RefreshToken string
 }
@@ -80,6 +82,7 @@ type GetPermissionRolesRequest struct {
 }
 
 type ListRolesWithUsersRequest struct {
-	Page  int
-	Count int
+	// Page  int
+	// Count int
+	Query *dsl.ParsedQuery
 }

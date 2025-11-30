@@ -7,6 +7,7 @@ import (
 	"hona/backend/internal/domain/entities"
 	"hona/backend/internal/domain/exceptions"
 	"hona/backend/internal/domain/ports"
+	"hona/backend/internal/infrastructure/dsl"
 	"strings"
 )
 
@@ -52,15 +53,15 @@ func (rs *RBACService) GetRoleResponse(role entities.Role) *rbac.RoleResponse {
 func (rs *RBACService) ListRolesWithUsers(info rbac.ListRolesWithUsersRequest) ([]rbac.RoleWithUsersResponse, error) {
 	r := make([]rbac.RoleWithUsersResponse, 0)
 
-	limit := info.Count
-	offset := (info.Page - 1) * limit
+	// limit := info.Count
+	// offset := (info.Page - 1) * limit
 
 	roles, err := rs.unitOfWork.Factory().RBACRepository().GetAllRoles()
 	if err != nil {
 		return nil, err
 	}
 	for _, role := range roles {
-		res, err := rs.getRoleWithUsers(&role, limit, offset)
+		res, err := rs.getRoleWithUsers(&role, info.Query)
 		if err != nil {
 			return nil, err
 		}
@@ -70,9 +71,9 @@ func (rs *RBACService) ListRolesWithUsers(info rbac.ListRolesWithUsersRequest) (
 	return r, nil
 }
 
-func (rs *RBACService) getRoleWithUsers(role *entities.Role, limit, offset int) (*rbac.RoleWithUsersResponse, error) {
+func (rs *RBACService) getRoleWithUsers(role *entities.Role, query *dsl.ParsedQuery) (*rbac.RoleWithUsersResponse, error) {
 	rbacRepo := rs.unitOfWork.Factory().RBACRepository()
-	users, err := rs.userService.GetRoleUsersByID(role.ID, limit, offset)
+	users, err := rs.userService.GetRoleUsersByID(role.ID, query)
 	if err != nil {
 		return nil, err
 	}

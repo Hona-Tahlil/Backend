@@ -12,7 +12,8 @@ type ParsedQuery struct {
 	Page    int
 	Limit   int
 }
-
+// ctx := *gin.Contex
+// ctx.Request.URL.Query()
 func ParseQuery(values url.Values) *ParsedQuery {
 
 	filters := NewFilters()
