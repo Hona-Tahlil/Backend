@@ -142,7 +142,7 @@ func (rc *UserRequestController) EditRequest(ctx *gin.Context) {
 // TODO: Policy
 func (rc *UserRequestController) CancelRequest(ctx *gin.Context) {
 	type Params struct {
-		RequestID uint `json:"requestID"`
+		RequestID uint `json:"requestID" validate:"required"`
 	}
 	params := controllers.Receive[Params](ctx)
 	UserID := controllers.GetID(ctx)
@@ -161,7 +161,7 @@ func (rc *UserRequestController) CancelRequest(ctx *gin.Context) {
 
 func (rc *UserRequestController) GetRequestFullData(ctx *gin.Context) {
 	type Params struct {
-		RequestID uint `uri:"requestID"`
+		RequestID uint `uri:"requestID" validate:"required"`
 	}
 	params := controllers.Receive[Params](ctx)
 

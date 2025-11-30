@@ -5,6 +5,7 @@ import (
 	calendarslot "hona/backend/internal/application/dto/calendar_slot"
 	"hona/backend/internal/application/dto/pet"
 	"hona/backend/internal/application/dto/servicedto"
+	"time"
 )
 
 type CreateRequestInfoResponse struct {
@@ -26,4 +27,5 @@ type RequestFullDataResponse struct {
 	Address    address.AddressInfoResponse `json:"address"`
 	Status     string                      `json:"status"`
 	TransferID *uint                       `json:"transferID"`
+	UpdatedAt  time.Time                   `json:"updatedAt"`
 }

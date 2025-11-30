@@ -370,6 +370,7 @@ func (rs *RequestService) GetRequestFullData(info request.GetRequestFullDataRequ
 		Status:          foundRequest.Status.String(),
 		TransferID:      foundRequest.TransferID,
 		CalendarSlots:   rs.calendarSlotService.GetCalendarSlotsResponse(foundRequest.CalendarSlots),
+		UpdatedAt:       foundRequest.UpdatedAt,
 	}, nil
 }
 
@@ -395,6 +396,12 @@ func (rs *RequestService) RespondToRequest(info request.RespondToRequestRequest)
 		return err
 	}
 
+	if foundRequest.UpdatedAt.After(info.GetTime) {
+		var ce exceptions.ConflictErrors
+		ce.Add(bootstrap.Run().Constants.ErrorFields.Request, bootstrap.Run().Constants.ErrorTags.OldInfo)
+		return &ce
+	}
+
 	if info.Accept {
 		foundRequest.Status = enums.Accepted
 
@@ -415,8 +422,6 @@ func (rs *RequestService) RespondToRequest(info request.RespondToRequestRequest)
 
 		rs.sendDeclineRequestEmail(foundRequest.UserID)
 	}
-
-	// TODO: check updated time
 
 	requestRepo := rs.unitOfWork.Factory().RequestRepository()
 	return requestRepo.EditRequest(foundRequest)

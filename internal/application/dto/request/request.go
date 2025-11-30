@@ -56,6 +56,7 @@ type GetRequestFullDataRequest struct {
 }
 
 type RespondToRequestRequest struct {
+	GetTime   time.Time
 	RequestID uint
 	Accept    bool
 	UserID    uint

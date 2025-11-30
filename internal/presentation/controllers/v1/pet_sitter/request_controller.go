@@ -4,6 +4,7 @@ import (
 	"hona/backend/internal/application/dto/request"
 	"hona/backend/internal/application/service"
 	"hona/backend/internal/presentation/controllers"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -20,7 +21,7 @@ func NewPetSitterRequestController(requestService *service.RequestService) *PetS
 
 func (pc *PetSitterRequestController) GetRequestFullData(ctx *gin.Context) {
 	type Params struct {
-		RequestID uint `uri:"requestID"`
+		RequestID uint `uri:"requestID" validate:"required"`
 	}
 	params := controllers.Receive[Params](ctx)
 
@@ -39,7 +40,7 @@ func (pc *PetSitterRequestController) GetRequestFullData(ctx *gin.Context) {
 
 func (pc *PetSitterRequestController) CancelRequest(ctx *gin.Context) {
 	type Params struct {
-		RequestID uint `json:"requestID"`
+		RequestID uint `json:"requestID" validate:"required"`
 	}
 	params := controllers.Receive[Params](ctx)
 	UserID := controllers.GetID(ctx)
@@ -58,8 +59,9 @@ func (pc *PetSitterRequestController) CancelRequest(ctx *gin.Context) {
 
 func (pc *PetSitterRequestController) RespondToRequest(ctx *gin.Context) {
 	type Params struct {
-		Accept    bool `json:"accept"`
-		RequestID uint `json:"requestID"`
+		GetTime   time.Time `json:"getTime" validate:"required"`
+		Accept    bool      `json:"accept" validate:"required"`
+		RequestID uint      `json:"requestID" validate:"required"`
 	}
 	params := controllers.Receive[Params](ctx)
 	UserID := controllers.GetID(ctx)
