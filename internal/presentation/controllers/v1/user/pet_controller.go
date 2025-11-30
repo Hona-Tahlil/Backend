@@ -26,8 +26,8 @@ var successMessages = bootstrap.Run().Constants.SuccessMessages
 func (uc *UserPetController) AddPet(ctx *gin.Context) {
 	type AddPetParams struct {
 		Name      string          `json:"name" validate:"required,min=1,max=100"`
-		Kind      enums.PetKind   `json:"kind" validate:"required,min=1,max=20"`     // TODO: exact number for max
-		Species   enums.Species   `json:"species" validate:"required,min=1,max=100"` // TODO: exact number for max
+		Kind      enums.PetKind   `json:"kind" validate:"required,min=1,max=18"`
+		Species   enums.Species   `json:"species" validate:"required,min=1,max=67"`
 		BirthDate *time.Time      `json:"birthDate"`
 		IsAdult   bool            `json:"isAdult" validate:"omitempty"`
 		Gender    enums.PetGender `json:"gender" validate:"omitempty,min=1,max=3"`
@@ -67,8 +67,8 @@ func (uc *UserPetController) UpdatePet(ctx *gin.Context) {
 	type UpdatePetParams struct {
 		ID        uint            `json:"id" validate:"required"`
 		Name      string          `json:"name" validate:"required,min=1,max=100"`
-		Kind      enums.PetKind   `json:"kind" validate:"required,min=1,max=20"`     // TODO: exact number for max
-		Species   enums.Species   `json:"species" validate:"required,min=1,max=100"` // TODO: exact number for max
+		Kind      enums.PetKind   `json:"kind" validate:"required,min=1,max=18"`
+		Species   enums.Species   `json:"species" validate:"required,min=1,max=67"`
 		BirthDate *time.Time      `json:"birthDate" validate:"omitempty,datetime"`
 		IsAdult   bool            `json:"isAdult" validate:"omitempty"`
 		Gender    enums.PetGender `json:"gender" validate:"omitempty,min=1,max=3"`

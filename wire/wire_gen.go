@@ -39,16 +39,21 @@ func InitializeApplication(container *bootstrap.Config) (*Application, error) {
 	emailService := mail.NewEmailService()
 	userService := service.NewUserService(jwtService, unitOfWork, userCacheRepository, emailService)
 	generalUserController := general.NewGeneralUserController(userService)
+	s3Storage := storage.NewS3Storage()
+	petService := service.NewPetService(unitOfWork, s3Storage, userService)
+	generalPetController := general.NewGeneralPetController(petService)
+	provinceService := service.NewProvinceService(unitOfWork)
+	generalProvinceController := general.NewGeneralProvinceController(provinceService)
 	generalControllers := &GeneralControllers{
-		GeneralUserController: generalUserController,
+		GeneralUserController:     generalUserController,
+		GeneralPetController:      generalPetController,
+		GeneralProvinceController: generalProvinceController,
 	}
 	rbacService := service.NewRBACService(unitOfWork, userService)
 	adminRBACController := admin.NewAdminRBACController(rbacService)
 	adminControllers := &AdminControllers{
 		AdminRBACController: adminRBACController,
 	}
-	s3Storage := storage.NewS3Storage()
-	petService := service.NewPetService(unitOfWork, s3Storage, userService)
 	userPetController := user.NewUserPetController(petService)
 	userControllers := &UserControllers{
 		UserPetController: userPetController,
@@ -87,9 +92,9 @@ var StorageProviderSet = wire.NewSet(storage.NewS3Storage, wire.Bind(new(domains
 
 var RepositoryProviderSet = wire.NewSet(persistence.NewRepositoryFactory, persistence.NewUnitOfWork, persistence.NewPostgresDatabase, persistence.NewRedisDatabase, redis.NewUserCacheRepository, wire.Bind(new(persistence.Cache), new(*persistence.RedisDatabase)), wire.Bind(new(domainredis.UserCacheRepository), new(*redis.UserCacheRepository)), wire.Bind(new(ports.RepositoryFactory), new(*persistence.RepositoryFactory)), wire.Bind(new(ports.UnitOfWork), new(*persistence.UnitOfWork)))
 
-var ServiceProviderSet = wire.NewSet(service.NewUserService, jwt.NewJWTService, jwt.NewJWTKeyManager, service.NewRBACService, service.NewPetService, mail.NewEmailService, wire.Bind(new(domainjwt.JWTService), new(*jwt.JWTService)), wire.Bind(new(domainjwt.JWTKeyManager), new(*jwt.JWTKeyManager)), wire.Bind(new(usecase.RBACService), new(*service.RBACService)), wire.Bind(new(usecase.UserService), new(*service.UserService)), wire.Bind(new(usecase.PetService), new(*service.PetService)))
+var ServiceProviderSet = wire.NewSet(service.NewUserService, jwt.NewJWTService, jwt.NewJWTKeyManager, service.NewRBACService, service.NewPetService, service.NewProvinceService, mail.NewEmailService, wire.Bind(new(domainjwt.JWTService), new(*jwt.JWTService)), wire.Bind(new(domainjwt.JWTKeyManager), new(*jwt.JWTKeyManager)), wire.Bind(new(usecase.RBACService), new(*service.RBACService)), wire.Bind(new(usecase.UserService), new(*service.UserService)), wire.Bind(new(usecase.PetService), new(*service.PetService)), wire.Bind(new(usecase.ProvinceService), new(*service.ProvinceService)))
 
-var GeneralControllersProviderSet = wire.NewSet(general.NewGeneralUserController, wire.Struct(new(GeneralControllers), "*"))
+var GeneralControllersProviderSet = wire.NewSet(general.NewGeneralUserController, general.NewGeneralPetController, general.NewGeneralProvinceController, wire.Struct(new(GeneralControllers), "*"))
 
 var AdminControllersProviderSet = wire.NewSet(admin.NewAdminRBACController, wire.Struct(new(AdminControllers), "*"))
 
@@ -114,7 +119,9 @@ var ProviderSet = wire.NewSet(
 )
 
 type GeneralControllers struct {
-	GeneralUserController *general.GeneralUserController
+	GeneralUserController     *general.GeneralUserController
+	GeneralPetController      *general.GeneralPetController
+	GeneralProvinceController *general.GeneralProvinceController
 }
 
 type AdminControllers struct {
