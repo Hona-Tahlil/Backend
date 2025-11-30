@@ -42,7 +42,9 @@ func InitializeApplication(container *bootstrap.Config) (*Application, error) {
 		AdminRBACController: adminRBACController,
 	}
 	s3Storage := storage.NewS3Storage()
-	petSitterService := service.NewPetSitterService(unitOfWork, s3Storage, userService)
+	provinceService := service.NewProvinceService(unitOfWork)
+	addressService := service.NewAddressService(unitOfWork, provinceService)
+	petSitterService := service.NewPetSitterService(unitOfWork, s3Storage, userService, addressService)
 	petSitterController := petsitter.NewPetsitterController(petSitterService)
 	wirePetSitterController := &PetSitterController{
 		PetSitterController: petSitterController,
@@ -79,7 +81,7 @@ var StorageProviderSet = wire.NewSet(storage.NewS3Storage, wire.Bind(new(domains
 
 var RepositoryProviderSet = wire.NewSet(persistence.NewRepositoryFactory, persistence.NewUnitOfWork, persistence.NewPostgresDatabase, wire.Bind(new(ports.RepositoryFactory), new(*persistence.RepositoryFactory)), wire.Bind(new(ports.UnitOfWork), new(*persistence.UnitOfWork)))
 
-var ServiceProviderSet = wire.NewSet(service.NewUserService, jwt.NewJWTService, jwt.NewJWTKeyManager, service.NewRBACService, service.NewPetSitterService, wire.Bind(new(domainjwt.JWTService), new(*jwt.JWTService)), wire.Bind(new(domainjwt.JWTKeyManager), new(*jwt.JWTKeyManager)), wire.Bind(new(usecase.RBACService), new(*service.RBACService)), wire.Bind(new(usecase.UserService), new(*service.UserService)), wire.Bind(new(usecase.PetSitterService), new(*service.PetSitterService)))
+var ServiceProviderSet = wire.NewSet(service.NewUserService, jwt.NewJWTService, jwt.NewJWTKeyManager, service.NewRBACService, service.NewProvinceService, service.NewAddressService, service.NewPetSitterService, wire.Bind(new(domainjwt.JWTService), new(*jwt.JWTService)), wire.Bind(new(domainjwt.JWTKeyManager), new(*jwt.JWTKeyManager)), wire.Bind(new(usecase.RBACService), new(*service.RBACService)), wire.Bind(new(usecase.UserService), new(*service.UserService)), wire.Bind(new(usecase.ProvinceService), new(*service.ProvinceService)), wire.Bind(new(usecase.AddressService), new(*service.AddressService)), wire.Bind(new(usecase.PetSitterService), new(*service.PetSitterService)))
 
 var GeneralControllersProviderSet = wire.NewSet(general.NewGeneralUserController, wire.Struct(new(GeneralControllers), "*"))
 

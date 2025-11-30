@@ -62,7 +62,6 @@ func (ps *PetSitterService) CreateSignupSession(PetsitterInfo petsitter.GetPetSi
 	}, nil
 }
 
-
 func (ps *PetSitterService) GetPersonalInfo(userID uint) (*petsitter.PersonalInfoResponse, error) {
 	userRepo := ps.unitOfWork.Factory().UserRepository()
 	// addressRepo := ps.unitOfWork.Factory().AddressRepository()
@@ -182,19 +181,23 @@ func (ps *PetSitterService) GetDocuments(userID uint) (*petsitter.DocumentRespon
 }
 
 func (ps *PetSitterService) SubmitSkills(SkillsInfo petsitter.SubmitSkillsRequest) error {
-	userRepo := ps.unitOfWork.Factory().UserRepository()
+	_, err := ps.userService.FindVerifiedUserByID(SkillsInfo.UserID)
+	if err != nil {
+		return err
+	}
+	// userRepo := ps.unitOfWork.Factory().UserRepository()
 	petSitterRepo := ps.unitOfWork.Factory().PetSitterRepository()
-	foundUser, err := userRepo.FindUserByID(SkillsInfo.UserID)
-	if err != nil {
-		return err
-	}
-	err = userRepo.PreloadPetSitter(foundUser)
-	if err != nil {
-		return err
-	}
-	if foundUser.PetSitter == nil {
-		return errors.New("petsitter record missing")
-	}
+	// foundUser, err := userRepo.FindUserByID(SkillsInfo.UserID)
+	// if err != nil {
+	// 	return err
+	// }
+	// err = userRepo.PreloadPetSitter(foundUser)
+	// if err != nil {
+	// 	return err
+	// }
+	// if foundUser.PetSitter == nil {
+	// 	return errors.New("petsitter record missing")
+	// }
 	foundPetSitter, err := ps.FindPetSitterByID(SkillsInfo.UserID)
 	if err != nil {
 		return err
@@ -203,6 +206,7 @@ func (ps *PetSitterService) SubmitSkills(SkillsInfo petsitter.SubmitSkillsReques
 	if err != nil {
 		return err
 	}
+	
 	services := ps.GetServicesResponse(SkillsInfo.Services)
 	if foundPetSitter.OnboardingStep != enums.OBS_Documents {
 		return errors.New("invalid onboarding step: cannot submit skills now")

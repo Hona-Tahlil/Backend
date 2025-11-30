@@ -41,11 +41,15 @@ var ServiceProviderSet = wire.NewSet(
 	jwt.NewJWTService,
 	jwt.NewJWTKeyManager,
 	service.NewRBACService,
+	service.NewProvinceService,
+	service.NewAddressService,
 	service.NewPetSitterService,
 	wire.Bind(new(domainjwt.JWTService), new(*jwt.JWTService)),
 	wire.Bind(new(domainjwt.JWTKeyManager), new(*jwt.JWTKeyManager)),
 	wire.Bind(new(usecase.RBACService), new(*service.RBACService)),
 	wire.Bind(new(usecase.UserService), new(*service.UserService)),
+	wire.Bind(new(usecase.ProvinceService), new(*service.ProvinceService)),
+	wire.Bind(new(usecase.AddressService), new(*service.AddressService)),
 	wire.Bind(new(usecase.PetSitterService), new(*service.PetSitterService)),
 )
 

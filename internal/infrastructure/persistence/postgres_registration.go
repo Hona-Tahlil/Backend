@@ -84,7 +84,7 @@ func NewPostgresDatabase() *gorm.DB {
 
 		dbInstance = db
 
-		if err := db.Migrator().DropTable(
+		if err = db.Migrator().DropTable(
 			&entities.User{},
 			&entities.Role{},
 			&entities.Permission{},

@@ -65,7 +65,11 @@ type EmailConfig struct {
 }
 
 func NewEnv() *Env {
+	// Try loading .env from multiple paths
 	godotenv.Load(".env")
+	godotenv.Load("../../.env")
+	godotenv.Load("../../../.env")
+	
 	expireMinutes, _ := strconv.Atoi(os.Getenv("EMAIL_EXPIRE_MINUTES"))
 	return &Env{
 		PrimaryDB: Database{

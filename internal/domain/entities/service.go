@@ -10,6 +10,6 @@ type Service struct {
 	gorm.Model
 	PetSitterID uint              `gorm:"index"`
 	Type        enums.ServiceType `gorm:"index"`
-	Price       uint              `gorm:"index"`
+	Price       *uint              `gorm:"index"`
 	Description *string
 }
