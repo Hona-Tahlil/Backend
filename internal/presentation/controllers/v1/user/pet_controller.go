@@ -25,14 +25,14 @@ var successMessages = bootstrap.Run().Constants.SuccessMessages
 
 func (uc *UserPetController) AddPet(ctx *gin.Context) {
 	type AddPetParams struct {
-		Name      string          `json:"name" validate:"required,min=1,max=100"`
-		Kind      enums.PetKind   `json:"kind" validate:"required,min=1,max=20"`     // TODO: exact number for max
-		Species   enums.Species   `json:"species" validate:"required,min=1,max=100"` // TODO: exact number for max
-		BirthDate *time.Time      `json:"birthDate"`
-		IsAdult   bool            `json:"isAdult" validate:"omitempty"`
-		Gender    enums.PetGender `json:"gender" validate:"omitempty,min=1,max=3"`
-		Weight    *float32        `json:"weight" validate:"omitempty,min=0.1,max=500"`
-		AboutPet  *string         `json:"aboutPet" validate:"omitempty,max=10000"`
+		Name      string          `form:"name" validate:"required,min=1,max=100"`
+		Kind      enums.PetKind   `form:"kind" validate:"required,min=1,max=20"`     // TODO: exact number for max
+		Species   enums.Species   `form:"species" validate:"required,min=1,max=100"` // TODO: exact number for max
+		BirthDate *time.Time      `form:"birthDate"`
+		IsAdult   bool            `form:"isAdult" validate:"omitempty"`
+		Gender    enums.PetGender `form:"gender" validate:"omitempty,min=1,max=3"`
+		Weight    *float32        `form:"weight" validate:"omitempty,min=0.1,max=500"`
+		AboutPet  *string         `form:"aboutPet" validate:"omitempty,max=10000"`
 	}
 	file, err := ctx.FormFile(bootstrap.Run().Env.Storage.Buckets.PetProfilePic)
 	if err != nil {
@@ -65,15 +65,15 @@ func (uc *UserPetController) AddPet(ctx *gin.Context) {
 
 func (uc *UserPetController) UpdatePet(ctx *gin.Context) {
 	type UpdatePetParams struct {
-		ID        uint            `json:"id" validate:"required"`
-		Name      string          `json:"name" validate:"required,min=1,max=100"`
-		Kind      enums.PetKind   `json:"kind" validate:"required,min=1,max=20"`     // TODO: exact number for max
-		Species   enums.Species   `json:"species" validate:"required,min=1,max=100"` // TODO: exact number for max
-		BirthDate *time.Time      `json:"birthDate" validate:"omitempty,datetime"`
-		IsAdult   bool            `json:"isAdult" validate:"omitempty"`
-		Gender    enums.PetGender `json:"gender" validate:"omitempty,min=1,max=3"`
-		Weight    *float32        `json:"weight" validate:"omitempty,min=0.1,max=500"`
-		AboutPet  *string         `json:"aboutPet" validate:"omitempty,max=10000"`
+		ID        uint            `form:"id" validate:"required"`
+		Name      string          `form:"name" validate:"required,min=1,max=100"`
+		Kind      enums.PetKind   `form:"kind" validate:"required,min=1,max=20"`     // TODO: exact number for max
+		Species   enums.Species   `form:"species" validate:"required,min=1,max=100"` // TODO: exact number for max
+		BirthDate *time.Time      `form:"birthDate" validate:"omitempty,datetime"`
+		IsAdult   bool            `form:"isAdult" validate:"omitempty"`
+		Gender    enums.PetGender `form:"gender" validate:"omitempty,min=1,max=3"`
+		Weight    *float32        `form:"weight" validate:"omitempty,min=0.1,max=500"`
+		AboutPet  *string         `form:"aboutPet" validate:"omitempty,max=10000"`
 	}
 	file, err := ctx.FormFile(bootstrap.Run().Env.Storage.Buckets.PetProfilePic)
 	if err != nil {
