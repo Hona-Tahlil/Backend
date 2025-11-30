@@ -79,7 +79,7 @@ func (ps *PetService) AddPet(info pet.AddPetRequest) error {
 }
 
 func (ps *PetService) UpdatePet(info pet.UpdatePetRequest) error {
-	foundPet, err := ps.findPetByID(info.ID)
+	foundPet, err := ps.FindPetByID(info.ID)
 	if err != nil {
 		return err
 	}
@@ -133,7 +133,7 @@ func (ps *PetService) UpdatePet(info pet.UpdatePetRequest) error {
 }
 
 func (ps *PetService) RemovePet(info pet.RemovePetRequest) error {
-	foundPet, err := ps.findPetByID(info.ID)
+	foundPet, err := ps.FindPetByID(info.ID)
 	if err != nil {
 		return err
 	}
@@ -150,28 +150,16 @@ func (ps *PetService) RemovePet(info pet.RemovePetRequest) error {
 }
 
 func (ps *PetService) GetPetsBasicData(info pet.GetPetsBasicDataRequest) ([]pet.PetBasicDataResponse, error) {
-	r := make([]pet.PetBasicDataResponse, 0)
 	user, err := ps.userService.FindUserByID(info.UserID)
 	if err != nil {
 		return nil, err
 	}
-	petRepo := ps.unitOfWork.Factory().PetRepository()
-	err = petRepo.PreloadUserPets(user)
-	if err != nil {
-		return nil, err
-	}
-	for _, pet := range user.Pets {
-		res, err := ps.getPetBasicDataResponse(&pet)
-		if err != nil {
-			return nil, err
-		}
-		r = append(r, *res)
-	}
-	return r, nil
+	ps.userService.PreloadFields(user, []string{"Pets"})
+	return ps.GetPetsBasicDataResponse(user.Pets)
 }
 
 func (ps *PetService) GetPetFullData(info pet.GetPetFullDataRequest) (*pet.PetFullDataResponse, error) {
-	foundPet, err := ps.findPetByID(info.ID)
+	foundPet, err := ps.FindPetByID(info.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -225,7 +213,7 @@ func (ps *PetService) findPet(name string, userID uint) (*entities.Pet, error) {
 	return foundPet, nil
 }
 
-func (ps *PetService) findPetByID(id uint) (*entities.Pet, error) {
+func (ps *PetService) FindPetByID(id uint) (*entities.Pet, error) {
 	petRepo := ps.unitOfWork.Factory().PetRepository()
 	foundPet, err := petRepo.FindPetByID(id)
 	if err != nil {
@@ -367,4 +355,48 @@ func (ps *PetService) GetPetKindSpecies(info pet.GetPetKindSpecies) []pet.PetSpe
 		})
 	}
 	return res
+}
+
+func (ps *PetService) GetPetsBasicDataResponse(pets []entities.Pet) ([]pet.PetBasicDataResponse, error) {
+	r := make([]pet.PetBasicDataResponse, 0)
+
+	for _, petEntity := range pets {
+		res, err := ps.getPetBasicDataResponse(&petEntity)
+		if err != nil {
+			return nil, err
+		}
+		r = append(r, *res)
+	}
+
+	return r, nil
+}
+
+func (ps *PetService) GetPetsInUser(userPets []entities.Pet, petIDs []uint) ([]entities.Pet, error) {
+	pets := make([]entities.Pet, 0)
+	for _, petID := range petIDs {
+		flag := false
+		for _, pet := range userPets {
+			if pet.ID == petID {
+				flag = true
+				pets = append(pets, pet)
+				break
+			}
+		}
+		if !flag {
+			var ce exceptions.ConflictErrors
+			ce.Add(bootstrap.Run().Constants.ErrorFields.Pet, bootstrap.Run().Constants.ErrorTags.UnacceptableInput)
+			return nil, &ce
+		}
+	}
+
+	return pets, nil
+}
+
+func (ps *PetService) GetPetNames(pets []entities.Pet) []string {
+	names := make([]string, 0)
+	for _, pet := range pets {
+		names = append(names, pet.Name)
+	}
+
+	return names
 }

@@ -123,9 +123,9 @@ func (rr *RBACRepository) GetPermissionRolesByID(permissionID uint) ([]entities.
 	return roles, nil
 }
 
-func (rr *RBACRepository) PreloadUserRoles(user *entities.User) error {
-	return rr.db.Preload("Roles.Permissions").First(user, user.ID).Error
-}
+// func (rr *RBACRepository) PreloadUserRoles(user *entities.User) error {
+// 	return rr.db.Preload("Roles.Permissions").First(user, user.ID).Error
+// }
 
 func (rr *RBACRepository) PreloadRolePermissions(role *entities.Role) error {
 	return rr.db.Preload("Permissions").First(role, role.ID).Error

@@ -10,4 +10,8 @@ type RepositoryFactory interface {
 	PetRepository() domainpostgres.PetRepository
 	ProvinceRepository() domainpostgres.ProvinceRepository
 	CityRepository() domainpostgres.CityRepository
+	AddressRepository() domainpostgres.AddressRepository
+	ServiceRepository() domainpostgres.ServiceRepository
+	RequestRepository() domainpostgres.RequestRepository
+	PetSitterRepository() domainpostgres.PetSitterRepository
 }

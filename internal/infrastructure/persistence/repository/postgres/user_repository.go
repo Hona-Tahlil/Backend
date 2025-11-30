@@ -70,3 +70,13 @@ func (up *UserRepository) GetRoleUsersByID(roleID uint, limit, offset int) ([]en
 
 	return users, nil
 }
+
+func (up *UserRepository) PreloadFields(user *entities.User, fields []string) error {
+	for _, field := range fields {
+		err := up.db.Preload(field).First(user, user.ID).Error
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}

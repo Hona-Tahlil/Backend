@@ -17,6 +17,8 @@ require (
 	github.com/golang-jwt/jwt/v5 v5.3.0
 	github.com/google/wire v0.7.0
 	github.com/joho/godotenv v1.5.1
+	github.com/samber/lo v1.52.0
+	github.com/wneessen/go-mail v0.7.2
 	golang.org/x/crypto v0.43.0
 	gorm.io/driver/postgres v1.6.0
 	gorm.io/gorm v1.31.0
