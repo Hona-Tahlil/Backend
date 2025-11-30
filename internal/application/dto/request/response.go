@@ -11,7 +11,7 @@ import (
 type CreateRequestInfoResponse struct {
 	Services          []servicedto.ServiceInfoResponse        `json:"services"`
 	Addresses         []address.AddressInfoResponse           `json:"addresses"`
-	Pets              []string                                `json:"pets"`
+	Pets              []pet.PetBasicDataResponse              `json:"pets"`
 	FreeCalendarSlots []calendarslot.CalendarSlotInfoResponse `json:"freeCalendarSlots"`
 }
 

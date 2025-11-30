@@ -151,7 +151,10 @@ func (rs *RequestService) GetCreateRequestInfo(info request.GetCreateRequestInfo
 		return nil, err
 	}
 
-	petsData := rs.petService.GetPetNames(foundUser.Pets)
+	petsData, err := rs.petService.GetPetsBasicDataResponse(foundUser.Pets)
+	if err != nil {
+		return nil, err
+	}
 
 	if len(petsData) == 0 {
 		return nil, exceptions.NewAccessDeniedError("first add a pet")
