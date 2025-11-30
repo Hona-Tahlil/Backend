@@ -1,6 +1,6 @@
 services:
   db:
-    image: postgres:latest
+    image: postgres:17
     restart: always
     environment:
       POSTGRES_USER: ${DB_USER}
@@ -11,10 +11,28 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
 
+  rdb:
+    image: redis:latest
+    container_name: rdb
+    restart: unless-stopped
+    ports:
+      - ${RDB_PORT}:${RDB_PORT}
+    volumes:
+      - rdb_data:/var/lib/redis/data
+    deploy:
+      resources:
+        limits:
+          cpus: "0.2"
+          memory: 256M
+        reservations:
+          cpus: "0.1"
+          memory: 64M
+
   app:
     build: .
     depends_on:
       - db
+      - rdb
     environment:
       DB_HOST: ${DB_HOST}
       DB_USER: ${DB_USER}
@@ -27,3 +45,4 @@ services:
 
 volumes:
   pgdata:
+  rdb_data:

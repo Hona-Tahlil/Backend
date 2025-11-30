@@ -29,7 +29,7 @@ var Persian = map[string]interface{}{
 		"containsUppercase":      "باید حتما دارای حرف بزرگ باشد.",
 		"containsNumber":         "باید حتما دارای عدد باشد.",
 		"containsSpecialChar":    "باید حتما دارای حروف خاص باشد.",
-		"alreadyRegistered":      "قبلا با این {0} ثبت نام کرده است.",
+		"alreadyRegistered":      "قبلا با این {0} ثبت نام شده است.",
 		"required":               "بخش {0} باید کامل شود.",
 		"e164":                   "شماره تلفن به درستی ثبت نشده است.",
 		"Expired":                "رمز یکبار مصرف شما منقضی شده است.",

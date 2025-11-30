@@ -10,10 +10,13 @@ import (
 	"hona/backend/internal/application/usecase"
 	domainjwt "hona/backend/internal/domain/jwt"
 	"hona/backend/internal/domain/ports"
+	domainredis "hona/backend/internal/domain/ports/redis"
+	domainstorage "hona/backend/internal/domain/storage"
 	"hona/backend/internal/infrastructure/jwt"
 	"hona/backend/internal/infrastructure/mail"
 	"hona/backend/internal/infrastructure/persistence"
-	"hona/backend/internal/infrastructure/persistence/seeder"
+	"hona/backend/internal/infrastructure/persistence/repository/redis"
+	"hona/backend/internal/infrastructure/seeder"
 	"hona/backend/internal/infrastructure/storage"
 	"hona/backend/internal/presentation/controllers/v1/admin"
 	"hona/backend/internal/presentation/controllers/v1/general"
@@ -26,6 +29,7 @@ import (
 
 var StorageProviderSet = wire.NewSet(
 	storage.NewS3Storage,
+	wire.Bind(new(domainstorage.Storage), new(*storage.S3Storage)),
 	wire.Struct(new(Storage), "*"),
 )
 
@@ -33,6 +37,10 @@ var RepositoryProviderSet = wire.NewSet(
 	persistence.NewRepositoryFactory,
 	persistence.NewUnitOfWork,
 	persistence.NewPostgresDatabase,
+	persistence.NewRedisDatabase,
+	redis.NewUserCacheRepository,
+	wire.Bind(new(persistence.Cache), new(*persistence.RedisDatabase)),
+	wire.Bind(new(domainredis.UserCacheRepository), new(*redis.UserCacheRepository)),
 	wire.Bind(new(ports.RepositoryFactory), new(*persistence.RepositoryFactory)),
 	wire.Bind(new(ports.UnitOfWork), new(*persistence.UnitOfWork)),
 )
@@ -65,6 +73,8 @@ var ServiceProviderSet = wire.NewSet(
 
 var GeneralControllersProviderSet = wire.NewSet(
 	general.NewGeneralUserController,
+	general.NewGeneralPetController,
+	general.NewGeneralProvinceController,
 	wire.Struct(new(GeneralControllers), "*"),
 )
 
@@ -93,6 +103,7 @@ var MiddlewaresProviderSet = wire.NewSet(
 	middleware.NewRecoveryMiddleware,
 	middleware.NewRBACMiddleware,
 	middleware.NewAuthMiddleware,
+	middleware.NewCORSMiddleware,
 	wire.Struct(new(Middlewares), "*"),
 )
 
@@ -115,7 +126,9 @@ var ProviderSet = wire.NewSet(
 )
 
 type GeneralControllers struct {
-	GeneralUserController *general.GeneralUserController
+	GeneralUserController     *general.GeneralUserController
+	GeneralPetController      *general.GeneralPetController
+	GeneralProvinceController *general.GeneralProvinceController
 }
 
 type AdminControllers struct {
@@ -143,6 +156,7 @@ type Middlewares struct {
 	RecoveryMiddleware     *middleware.RecoveryMiddleware
 	AuthMiddleware         *middleware.AuthMiddleware
 	RBACMiddleware         *middleware.RBACMiddleware
+	CORSMiddleware         *middleware.CORSMiddleware
 }
 
 type Seeder struct {

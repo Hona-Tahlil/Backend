@@ -40,6 +40,19 @@ func (up *UserRepository) FindUserByID(userID uint) (*entities.User, error) {
 	return &foundUser, nil
 }
 
+func (up *UserRepository) CreateUser(user *entities.User) error {
+	return up.db.Create(user).Error
+}
+
+func (up *UserRepository) DeleteUserByEmail(email string) error {
+	return up.db.Where("email = ?", email).Delete(&entities.User{}).Error
+}
+
+
+func (up *UserRepository) SaveUser(user *entities.User) error {
+	return up.db.Save(user).Error
+}
+
 func (up *UserRepository) GetRoleUsersByID(roleID uint, limit, offset int) ([]entities.User, error) {
 	var users []entities.User
 

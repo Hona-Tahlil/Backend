@@ -33,6 +33,10 @@ func (f *RepositoryFactory) ProvinceRepository() domainpostgres.ProvinceReposito
 	return postgres.NewProvinceRepository(f.db)
 }
 
+func (f *RepositoryFactory) CityRepository() domainpostgres.CityRepository {
+	return postgres.NewCityRepository(f.db)
+}
+
 func (f *RepositoryFactory) AddressRepository() domainpostgres.AddressRepository {
 	return postgres.NewAddressRepository(f.db)
 }

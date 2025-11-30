@@ -8,10 +8,13 @@ import (
 )
 
 type Env struct {
-	PrimaryDB    Database
-	TokenExpires TokenExpires
-	Storage      Storage
-	EmailConfig  EmailConfig
+	PrimaryDB         Database
+	TokenExpires      TokenExpires
+	Storage           Storage
+	PrimaryRedis      Redis
+	EmailConfig       EmailConfig
+	URLs              URLs
+	EmailVerification EmailVerification
 }
 
 type Storage struct {
@@ -39,6 +42,20 @@ type Database struct {
 	Port     string
 }
 
+type EmailVerification struct {
+	ExpireMinutes int
+}
+
+type URLs struct {
+	BaseURL string
+}
+
+type Redis struct {
+	Port      string
+	Address   string
+	Password  string
+	RDBNumber string
+}
 type EmailConfig struct {
 	Host     string
 	Port     string
@@ -49,6 +66,7 @@ type EmailConfig struct {
 
 func NewEnv() *Env {
 	godotenv.Load(".env")
+	expireMinutes, _ := strconv.Atoi(os.Getenv("EMAIL_EXPIRE_MINUTES"))
 	return &Env{
 		PrimaryDB: Database{
 			Host:     os.Getenv("DB_HOST"),
@@ -70,12 +88,24 @@ func NewEnv() *Env {
 				PetProfilePic: os.Getenv("STORAGE_PET_PROFILE_PIC_BUCKET"),
 			},
 		},
+		PrimaryRedis: Redis{
+			Port:      os.Getenv("RDB_PORT"),
+			Address:   os.Getenv("RDB_ADDRESS"),
+			Password:  os.Getenv("RDB_PASSWORD"),
+			RDBNumber: os.Getenv("RDB_NUMBER"),
+		},
 		EmailConfig: EmailConfig{
 			Host:     os.Getenv("SMTP_HOST"),
 			Port:     os.Getenv("SMTP_PORT"),
 			Username: os.Getenv("SMTP_USERNAME"),
 			Password: os.Getenv("SMTP_PASSWORD"),
 			From:     os.Getenv("SMTP_FROM"),
+		},
+		URLs: URLs{
+			BaseURL: os.Getenv("BASE_URL"),
+		},
+		EmailVerification: EmailVerification{
+			ExpireMinutes: expireMinutes,
 		},
 	}
 }

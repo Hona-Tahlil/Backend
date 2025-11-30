@@ -16,5 +16,10 @@ type UserService interface {
 	GetRolesResponse(user *entities.User) []rbac.RoleResponse
 	GetRoleUsersByID(roleID uint, limit, offset int) ([]entities.User, error)
 	GetUserInfosResponse(users []entities.User) []rbac.UserInfoResponse
+	Register(registerInfo user.RegisterRequest) error
+	ResetPassword(resetPasswordInfo user.ResetPasswordRequest) error
+	ForgotPassword(forgetPasswordInfo user.ForgotPasswordRequest) error
+	VerifyEmail(info user.VerifyEmailRequest) error
+	SendVerificationEmail(info user.SendVerificationEmailRequest) error
 	PreloadFields(user *entities.User, fields []string) error
 }

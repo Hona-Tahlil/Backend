@@ -1,5 +1,7 @@
 package bootstrap
 
+import "fmt"
+
 type Constants struct {
 	Context         Context
 	JWTKeysPath     JWTKeysPath
@@ -7,6 +9,7 @@ type Constants struct {
 	ErrorTags       ErrorTags
 	JWTConstants    JWTConstants
 	SuccessMessages SuccessMessages
+	RedisKey        RedisKey
 	EntityConstants EntityConstants
 	TemplatesPath   TemplatesPath
 }
@@ -109,6 +112,9 @@ type Context struct {
 	ID             string
 	RefreshToken   string
 	AcceptLanguage string
+	Authorization  string
+}
+type RedisKey struct {
 }
 
 type TemplatesPath struct {
@@ -129,6 +135,7 @@ func NewConstants() *Constants {
 			ID:             "id",
 			RefreshToken:   "refreshToken",
 			AcceptLanguage: "Accept-Language",
+			Authorization:  "Authorization",
 		},
 		JWTKeysPath: JWTKeysPath{
 			PublicKey:  "./internal/infrastructure/jwt/public_key.pem",
@@ -228,4 +235,12 @@ func NewConstants() *Constants {
 			RequestEdited:          "request_edited.html",
 		},
 	}
+}
+
+func (r *RedisKey) GenerateMLKey(value string) string {
+	return fmt.Sprintf("ML:%s", value)
+}
+
+func (r *RedisKey) GenerateFPKey(value string) string {
+	return fmt.Sprintf("FP:%s", value)
 }

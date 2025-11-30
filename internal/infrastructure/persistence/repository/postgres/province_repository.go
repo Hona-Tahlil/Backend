@@ -20,17 +20,24 @@ func NewProvinceRepository(db *gorm.DB) *ProvinceRepository {
 func (pr *ProvinceRepository) FindProvinceByName(name enums.Province) (*entities.Province, error) {
 	var province entities.Province
 
-	if result := pr.db.First(&province, "name = ?", name); result.Error != nil {
+	if result := pr.db.Preload("Cities").First(&province, "name = ?", name); result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
 			return nil, nil
 		}
 		return nil, result.Error
 	}
 
-	err := pr.db.Preload("Cities").First(province, province.ID).Error
-	if err != nil {
+	return &province, nil
+}
+
+func (pr *ProvinceRepository) CreateProvince(province *entities.Province) error {
+	return pr.db.Create(province).Error
+}
+
+func (pr *ProvinceRepository) GetAllProvinces() ([]entities.Province, error) {
+	var provinces []entities.Province
+	if err := pr.db.Preload("Cities").Find(&provinces).Error; err != nil {
 		return nil, err
 	}
-
-	return &province, nil
+	return provinces, nil
 }
