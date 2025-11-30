@@ -43,3 +43,7 @@ type GetPetsBasicDataRequest struct {
 type GetPetFullDataRequest struct {
 	ID uint
 }
+
+type GetPetKindSpecies struct {
+	Num enums.PetKind
+}

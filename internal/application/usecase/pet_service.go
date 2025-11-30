@@ -8,4 +8,6 @@ type PetService interface {
 	RemovePet(info pet.RemovePetRequest) error
 	GetPetsBasicData(info pet.GetPetsBasicDataRequest) ([]pet.PetBasicDataResponse, error)
 	GetPetFullData(info pet.GetPetFullDataRequest) (*pet.PetFullDataResponse, error)
+	GetAllPetKinds() []pet.PetKindResponse
+	GetPetKindSpecies(info pet.GetPetKindSpecies) []pet.PetSpeciesResponse
 }
