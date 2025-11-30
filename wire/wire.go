@@ -49,17 +49,20 @@ var ServiceProviderSet = wire.NewSet(
 	jwt.NewJWTKeyManager,
 	service.NewRBACService,
 	service.NewPetService,
+	service.NewProvinceService,
 	mail.NewEmailService,
 	wire.Bind(new(domainjwt.JWTService), new(*jwt.JWTService)),
 	wire.Bind(new(domainjwt.JWTKeyManager), new(*jwt.JWTKeyManager)),
 	wire.Bind(new(usecase.RBACService), new(*service.RBACService)),
 	wire.Bind(new(usecase.UserService), new(*service.UserService)),
 	wire.Bind(new(usecase.PetService), new(*service.PetService)),
+	wire.Bind(new(usecase.ProvinceService), new(*service.ProvinceService)),
 )
 
 var GeneralControllersProviderSet = wire.NewSet(
 	general.NewGeneralUserController,
 	general.NewGeneralPetController,
+	general.NewGeneralProvinceController,
 	wire.Struct(new(GeneralControllers), "*"),
 )
 
@@ -104,8 +107,9 @@ var ProviderSet = wire.NewSet(
 )
 
 type GeneralControllers struct {
-	GeneralUserController *general.GeneralUserController
-	GeneralPetController  *general.GeneralPetController
+	GeneralUserController     *general.GeneralUserController
+	GeneralPetController      *general.GeneralPetController
+	GeneralProvinceController *general.GeneralProvinceController
 }
 
 type AdminControllers struct {
