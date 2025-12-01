@@ -28,3 +28,22 @@ type DocumentResponse struct {
 	CertificateFiles []string `json:"certificate_files"`
 	Files            []string `json:"files"`
 }
+
+type PetSitterListItemResponse struct {
+	ID             uint                  `json:"id"`
+	UserID         uint                  `json:"user_id"`
+	FirstName      string                `json:"first_name"`
+	LastName       string                `json:"last_name"`
+	Email          string                `json:"email"`
+	PhoneNumber    string                `json:"phone_number"`
+	Status         enums.PetSitterStatus `json:"status"`
+	OnboardingStep enums.OnboardingStep  `json:"onboarding_step"`
+	CreatedAt      string                `json:"created_at"`
+}
+
+type PetSittersListResponse struct {
+	Total      int64                      `json:"total"`
+	Page       int                        `json:"page"`
+	Count      int                        `json:"count"`
+	PetSitters []PetSitterListItemResponse `json:"pet_sitters"`
+}

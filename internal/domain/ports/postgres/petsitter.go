@@ -7,4 +7,6 @@ type PetSitterRepository interface {
 	UpdatePetSitter(petSitter *entities.PetSitter) error
 	PreloadServices(petSitter *entities.PetSitter) error
 	FindPetSitterByUserID(id uint) (*entities.PetSitter, error)
+	GetAllPetSitters(limit, offset int) ([]entities.PetSitter, error)
+	GetPetSittersCount() (int64, error)
 }

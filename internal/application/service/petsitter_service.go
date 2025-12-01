@@ -206,7 +206,7 @@ func (ps *PetSitterService) SubmitSkills(SkillsInfo petsitter.SubmitSkillsReques
 	if err != nil {
 		return err
 	}
-	
+
 	services := ps.GetServicesResponse(SkillsInfo.Services)
 	if foundPetSitter.OnboardingStep != enums.OBS_Documents {
 		return errors.New("invalid onboarding step: cannot submit skills now")
@@ -291,6 +291,56 @@ func (ps *PetSitterService) CheckPetSitterStep(currentStep enums.OnboardingStep,
 	return nil
 }
 
+func (ps *PetSitterService) GetAllPetSitters(page, count int) (*petsitter.PetSittersListResponse, error) {
+	if page < 1 {
+		page = 1
+	}
+	if count <= 0 || count > 100 {
+		count = 10
+	}
+
+	offset := (page - 1) * count
+	petSitterRepo := ps.unitOfWork.Factory().PetSitterRepository()
+
+	total, err := petSitterRepo.GetPetSittersCount()
+	if err != nil {
+		return nil, err
+	}
+
+	petSitters, err := petSitterRepo.GetAllPetSitters(count, offset)
+	if err != nil {
+		return nil, err
+	}
+
+	userRepo := ps.unitOfWork.Factory().UserRepository()
+	items := make([]petsitter.PetSitterListItemResponse, 0, len(petSitters))
+
+	for _, ps := range petSitters {
+		user, err := userRepo.FindUserByID(ps.UserID)
+		if err != nil {
+			continue
+		}
+		items = append(items, petsitter.PetSitterListItemResponse{
+			ID:             ps.ID,
+			UserID:         ps.UserID,
+			FirstName:      user.FirstName,
+			LastName:       user.LastName,
+			Email:          user.Email,
+			PhoneNumber:    *user.Phone,
+			Status:         ps.Status,
+			OnboardingStep: ps.OnboardingStep,
+			CreatedAt:      ps.CreatedAt.Format("2006-01-02 15:04:05"),
+		})
+	}
+
+	return &petsitter.PetSittersListResponse{
+		Total:      total,
+		Page:       page,
+		Count:      count,
+		PetSitters: items,
+	}, nil
+}
+
 func (ps *PetSitterService) SubmitPersonalInfo(petSitterInfo petsitter.SubmitPersonalInfoRequest) error {
 	foundUser, err := ps.userService.FindVerifiedUserByID(petSitterInfo.UserID)
 	if err != nil {
@@ -359,10 +409,8 @@ func (ps *PetSitterService) SubmitPersonalInfo(petSitterInfo petsitter.SubmitPer
 		foundUser.Gender = petSitterInfo.Gender
 		foundUser.BirthDate = petSitterInfo.BirthDate
 		foundUser.Phone = &petSitterInfo.Phone
-		foundUser.PetSitter = &entities.PetSitter{
-			Status:         enums.PSS_Draft,
-			OnboardingStep: enums.OBS_Profile,
-		}
+		foundUser.PetSitter.Status = enums.PSS_Draft
+		foundUser.PetSitter.OnboardingStep = enums.OBS_Profile
 		err = userRepo.UpdateUser(foundUser)
 		if err != nil {
 			return err

@@ -47,3 +47,18 @@ func (pr *PetSitterRepository) FindPetSitterByUserID(id uint) (*entities.PetSitt
 	// }
 	return &petsitter, nil
 }
+
+func (pr *PetSitterRepository) GetAllPetSitters(limit, offset int) ([]entities.PetSitter, error) {
+	var petSitters []entities.PetSitter
+	err := pr.db.Limit(limit).Offset(offset).Find(&petSitters).Error
+	if err != nil {
+		return nil, err
+	}
+	return petSitters, nil
+}
+
+func (pr *PetSitterRepository) GetPetSittersCount() (int64, error) {
+	var count int64
+	err := pr.db.Model(&entities.PetSitter{}).Count(&count).Error
+	return count, err
+}
