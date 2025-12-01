@@ -84,7 +84,7 @@ func NewPostgresDatabase() *gorm.DB {
 
 		dbInstance = db
 
-		if err = db.Migrator().DropTable(
+		db.AutoMigrate(
 			&entities.User{},
 			&entities.Role{},
 			&entities.Permission{},
@@ -124,61 +124,7 @@ func NewPostgresDatabase() *gorm.DB {
 			&entities.TextMessage{},
 			&entities.Transaction{},
 			&entities.Transfer{},
-		); err != nil {
-			log.Fatalf("❌ AutoMigrate failed: %v", err)
-		}
-
-		pass, _ := bcrypt.GenerateFromPassword([]byte("password"), bcrypt.DefaultCost)
-		user := entities.User{
-			Email:           "test1@email.com",
-			Password:        string(pass),
-			FirstName:       "John",
-			LastName:        "Doe",
-			IsEmailVerified: true,
-			Gender:          1,
-		}
-		db.Create(&user)
-		var foundUser entities.User
-		err = db.First(&foundUser, "email = ?", "test1@email.com").Error
-		province := entities.Province{
-			Name: 1,
-		}
-		db.Create(&province)
-		var foundProvince entities.Province
-		err = db.First(&foundProvince, "name = ?", 1).Error
-		// err := db.First(&foundUser, "email = ?", "test1@email.com").Error
-		// var foundUser entities.User
-		city := entities.City{
-			Name:       11,
-			ProvinceID: foundProvince.ID,
-		}
-		db.Create(&city)
-		var foundCity entities.City
-		err = db.First(&foundCity, "name = ?", 11).Error
-		address := entities.Address{
-			Province:      foundProvince,
-			ProvinceID:    foundProvince.ID,
-			City:          foundCity,
-			CityID:        foundCity.ID,
-			StreetAddress: "123 Main St",
-			HouseNumber:   123,
-			Unit:          1,
-			Refer: 	  foundUser.ID,
-			Type:    "User",
-			// OwnerID:       foundUser.ID,
-		}
-		db.Create(&address)
-		var foundAddress entities.Address
-		err = db.First(&foundAddress, "refer = ?", foundUser.ID).Error
-		foundUser.Address = &foundAddress
-		db.Save(foundUser)
-		petsitter := entities.PetSitter{
-			UserID:      foundUser.ID,
-			Status: enums.PSS_Draft,
-			OnboardingStep: enums.OBS_Review,
-		}
-		db.Create(&petsitter)
-		fmt.Println("✅ Database initialized successfully.")
+		)
 	})
 
 	return dbInstance

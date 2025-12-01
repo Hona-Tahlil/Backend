@@ -23,7 +23,7 @@ func (rm *RecoveryMiddleware) Recover(ctx *gin.Context) {
 		if r := recover(); r != nil {
 			if err, ok := r.(error); ok {
 				msgs, statusCode := handleError(err)
-				if statusCode != 422 {
+				if statusCode != 422 && statusCode != 409 {
 					controllers.Respond(ctx, statusCode, msgs[0], nil)
 				} else {
 					controllers.Respond(ctx, statusCode, msgs, nil)
@@ -44,7 +44,7 @@ func handleError(err error) ([]controllers.Message, int) {
 		return handleAuthError(authErr)
 	} else if notFoundErr, ok := err.(*exceptions.NotFoundError); ok {
 		return handleNotFoundError(notFoundErr)
-	} else if conflictErrs, ok := err.(exceptions.ConflictErrors); ok {
+	} else if conflictErrs, ok := err.(*exceptions.ConflictErrors); ok {
 		return handleConflictErrors(conflictErrs)
 	}
 	return unhandledErrors(err)
@@ -61,7 +61,7 @@ func handleValidationErrors(validationErrs *exceptions.ValidationErrors) ([]cont
 	msgs := []controllers.Message{}
 	for _, fieldErr := range validationErrs.FieldErrors {
 		msgs = append(msgs, controllers.Message{
-			Text:   fieldErr.Tag,
+			Text:   "errors." + fieldErr.Tag,
 			Params: []string{fieldErr.Field},
 		})
 
@@ -84,7 +84,7 @@ func handleNotFoundError(notFoundErr *exceptions.NotFoundError) ([]controllers.M
 	return []controllers.Message{msg}, 404
 }
 
-func handleConflictErrors(conflictErrs exceptions.ConflictErrors) ([]controllers.Message, int) {
+func handleConflictErrors(conflictErrs *exceptions.ConflictErrors) ([]controllers.Message, int) {
 	msgs := []controllers.Message{}
 	for _, fieldErr := range conflictErrs.Errors {
 		msgs = append(msgs, controllers.Message{

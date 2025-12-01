@@ -1,9 +1,16 @@
 package main
 
 import (
+	"context"
 	"hona/backend/bootstrap"
 	"hona/backend/internal/presentation/routes"
 	"hona/backend/wire"
+	"log"
+	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -20,9 +27,31 @@ func main() {
 		panic(err)
 	}
 
-	app.Seeder.DatabaseSeeder.SeedAll()
-
 	routes.SetUpRoutes(ginEngine, app)
 
-	ginEngine.Run()
+	srv := &http.Server{
+		Addr:    ":8080",
+		Handler: ginEngine.Handler(),
+	}
+
+	go func() {
+		log.Println("Server Running ...")
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("listen: %s\n", err)
+		}
+	}()
+
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+	log.Println("Shutdown Server ...")
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	if err := srv.Shutdown(ctx); err != nil {
+		log.Println("Server Shutdown:", err)
+	}
+	log.Println("Server exiting")
 }
+
+// TODO: use len and index instead of append everywhere!

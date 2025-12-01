@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تأیید درخواست نگهداری - پتیار</title>
+    <style>
+        /*
+         * تنظیمات فونت و استایل‌های اصلی
+         */
+        @font-face {
+            font-family: 'Vazir';
+            src: url('https://cdnjs.cloudflare.com/ajax/libs/vazir-font/30.1.0/Vazir.eot');
+            src: url('https://cdnjs.cloudflare.com/ajax/libs/vazir-font/30.1.0/Vazir.eot?#iefix') format('embedded-opentype'),
+                url('https://cdnjs.cloudflare.com/ajax/libs/vazir-font/30.1.0/Vazir.woff2') format('woff2'),
+                url('https://cdnjs.cloudflare.com/ajax/libs/vazir-font/30.1.0/Vazir.woff') format('woff'),
+                url('https://cdnjs.cloudflare.com/ajax/libs/vazir-font/30.1.0/Vazir.ttf') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        body {
+            font-family: 'Vazir', Tahoma, Arial, sans-serif !important;
+            line-height: 1.7;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            background-color: #fff8f3;
+            text-align: right;
+            direction: rtl;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 40px auto;
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 3px 15px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+        }
+
+        .header {
+            background-color: #ff7a00;
+            color: #ffffff;
+            text-align: center;
+            padding: 25px 20px;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 22px;
+        }
+
+        .content {
+            padding: 30px 25px;
+            direction: rtl;
+        }
+
+        p {
+            margin: 10px 0;
+            font-size: 15px;
+        }
+
+        .button-container {
+            text-align: center;
+            margin: 40px 0;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 20px 10px;
+            font-size: 12px;
+            color: #888888;
+            border-top: 1px solid #eeeeee;
+            background-color: #fff4eb;
+        }
+
+        strong {
+            color: #ff7a00;
+        }
+
+        /* استایل‌های مختص تأیید (سبز) */
+        .primary-color {
+            color: #28a745;
+        }
+
+        .action-button {
+            background-color: #28a745;
+            /* سبز */
+            color: #ffffff !important;
+            padding: 14px 28px;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 16px;
+            display: inline-block;
+            transition: background-color 0.3s ease;
+        }
+
+        .action-button:hover {
+            opacity: 0.9;
+            background-color: #218838;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-weight: bold;
+            color: #ffffff;
+            background-color: #28a745;
+            /* سبز */
+        }
+    </style>
+</head>
+
+<body dir="rtl">
+    <div class="container" dir="rtl">
+        <div class="header">
+            <h1>تأیید درخواست نگهداری</h1>
+        </div>
+
+        <div class="content">
+            <p>سلام **{{.RequesterName}}**،</p>
+
+            <p>وضعیت درخواست نگهداری حیوان خانگی شما توسط پتیار مورد بررسی قرار گرفت:</p>
+
+            <h2 class="primary-color" style="font-size: 20px; margin-bottom: 15px;">
+                درخواست شما:
+                <span class="status-badge">تأیید شد 🎉</span>
+            </h2>
+
+            <p>
+                تبریک می‌گوییم! پتیار مورد نظر شما درخواست نگهداری را **تأیید کرده است**. می‌توانید مراحل نهایی رزرو و
+                پرداخت را در داشبورد خود تکمیل کنید.
+            </p>
+
+            <p>با آرزوی بهترین‌ها برای شما و حیوان دوست‌داشتنی‌تان!</p>
+        </div>
+
+        <div class="footer">
+            <p>© {{.Year}} پتیار. تمامی حقوق محفوظ است.</p>
+            <p>در صورت وجود هرگونه سؤال، با تیم پشتیبانی ما در تماس باشید.</p>
+        </div>
+    </div>
+</body>
+
+</html>

@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ورود با لینک جادویی - پتیار</title>
+    <style>
+        @font-face {
+            font-family: 'Vazir';
+            src: url('https://cdnjs.cloudflare.com/ajax/libs/vazir-font/30.1.0/Vazir.eot');
+            src: url('https://cdnjs.cloudflare.com/ajax/libs/vazir-font/30.1.0/Vazir.eot?#iefix') format('embedded-opentype'),
+                 url('https://cdnjs.cloudflare.com/ajax/libs/vazir-font/30.1.0/Vazir.woff2') format('woff2'),
+                 url('https://cdnjs.cloudflare.com/ajax/libs/vazir-font/30.1.0/Vazir.woff') format('woff'),
+                 url('https://cdnjs.cloudflare.com/ajax/libs/vazir-font/30.1.0/Vazir.ttf') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        body {
+            font-family: 'Vazir', Tahoma, Arial, sans-serif !important;
+            line-height: 1.7;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            background-color: #fff8f3;
+            text-align: right;
+            direction: rtl;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 40px auto;
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 3px 15px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+        }
+
+        .header {
+            background-color: #ff7a00;
+            color: #ffffff;
+            text-align: center;
+            padding: 25px 20px;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 22px;
+        }
+
+        .content {
+            padding: 30px 25px;
+            direction: rtl;
+        }
+
+        h2 {
+            color: #ff7a00;
+            font-size: 20px;
+            margin-bottom: 15px;
+        }
+
+        p {
+            margin: 10px 0;
+            font-size: 15px;
+        }
+
+        .link-container {
+            text-align: center;
+            margin: 40px 0;
+        }
+
+        .magic-link {
+            background-color: #ff7a00;
+            color: #ffffff !important;
+            padding: 14px 28px;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 16px;
+            display: inline-block;
+            transition: background-color 0.3s ease;
+        }
+
+        .magic-link:hover {
+            background-color: #e96a00;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 20px 10px;
+            font-size: 12px;
+            color: #888888;
+            border-top: 1px solid #eeeeee;
+            background-color: #fff4eb;
+        }
+
+        strong {
+            color: #ff7a00;
+        }
+    </style>
+</head>
+<body dir="rtl">
+    <div class="container" dir="rtl">
+        <div class="header">
+            <h1>پتیار - لینک ورود جادویی</h1>
+        </div>
+
+        <div class="content">
+            <h2>ورود سریع و امن به حساب کاربری</h2>
+            <p>سلام {{.FirstName}} {{.LastName}}،</p>
+            <p>برای ورود به حساب کاربری خود در <strong>پتیار</strong>، کافی است روی دکمه زیر کلیک کنید. این لینک فقط برای مدت محدودی فعال است و پس از <strong>{{.ExpiryMinute}} دقیقه</strong> منقضی می‌شود.</p>
+
+            <div class="link-container">
+                <a href="{{.MagicLink}}" class="magic-link">ورود به پتیار</a>
+            </div>
+
+            <p>اگر شما درخواست این لینک را نداده‌اید، لطفاً این ایمیل را نادیده بگیرید و هیچ اقدامی انجام ندهید.</p>
+        </div>
+
+        <div class="footer">
+            <p>© {{.Year}} پتیار. تمامی حقوق محفوظ است.</p>
+            <p>در صورت وجود هرگونه سؤال، با تیم پشتیبانی ما در تماس باشید.</p>
+        </div>
+    </div>
+</body>
+</html>

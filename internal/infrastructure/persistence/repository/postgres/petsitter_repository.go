@@ -16,6 +16,16 @@ func NewPetSitterRepository(db *gorm.DB) *PetSitterRepository {
 	}
 }
 
+func (pr *PetSitterRepository) PreloadFields(petSitter *entities.PetSitter, fields []string) error {
+	for _, field := range fields {
+		err := pr.db.Preload(field).First(petSitter, petSitter.ID).Error
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
 func (pr *PetSitterRepository) PreloadServices(petSitter *entities.PetSitter) error {
 	return pr.db.Preload("Services").First(petSitter, petSitter.ID).Error
 }
@@ -24,28 +34,20 @@ func (pr *PetSitterRepository) CreatePetSitter(petSitter *entities.PetSitter) er
 	return pr.db.Create(petSitter).Error
 }
 
-func (pr *PetSitterRepository) UpdatePetSitter(petSitter *entities.PetSitter) error {
+func (pr *PetSitterRepository) EditPetSitter(petSitter *entities.PetSitter) error {
 	return pr.db.Save(petSitter).Error
 }
 
-func (pr *PetSitterRepository) FindPetSitterByUserID(id uint) (*entities.PetSitter, error) {
-	var petsitter entities.PetSitter
-	err := pr.db.First(&petsitter, id).Error
-	if err != nil {
-		if err == gorm.ErrRecordNotFound {
+func (pr *PetSitterRepository) FindPetSitterByID(id uint) (*entities.PetSitter, error) {
+	var petSitter entities.PetSitter
+	result := pr.db.First(&petSitter, id)
+	if result.Error != nil {
+		if result.Error == gorm.ErrRecordNotFound {
 			return nil, nil
 		}
-		return nil, err
+		return nil, result.Error
 	}
-	// return &	, nil
-
-	// if result := pr.db.First(&petsitter, "userid = ?", id); result.Error != nil {
-	// 	if result.Error == gorm.ErrRecordNotFound {
-	// 		return nil, nil
-	// 	}
-	// 	return nil, result.Error
-	// }
-	return &petsitter, nil
+	return &petSitter, nil
 }
 
 func (pr *PetSitterRepository) GetAllPetSitters(limit, offset int) ([]entities.PetSitter, error) {

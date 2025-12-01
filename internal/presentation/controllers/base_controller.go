@@ -36,15 +36,10 @@ func GetRefreshTokenCookie(ctx *gin.Context) (refreshToken string) {
 }
 
 func GetID(ctx *gin.Context) uint {
-	fmt.Println("✅ 02")
-
 	id, ok := ctx.Get(bootstrap.Run().Constants.Context.ID)
-	fmt.Println("✅ 01")
-
 	if !ok {
 		panic(exceptions.NewNotFoundError(bootstrap.Run().Constants.ErrorFields.User))
 	}
-	fmt.Println("✅ 00")
 	ID, _ := id.(uint)
 	return ID
 }

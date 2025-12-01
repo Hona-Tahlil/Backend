@@ -14,6 +14,5 @@ type RBACRepository interface {
 	GetPermissionByID(id uint) (*entities.Permission, error)
 	RemovePermissionFromRole(role *entities.Role, permission *entities.Permission) error
 	GetPermissionRolesByID(permissionID uint) ([]entities.Role, error)
-	PreloadUserRoles(user *entities.User) error
 	PreloadRolePermissions(role *entities.Role) error
 }

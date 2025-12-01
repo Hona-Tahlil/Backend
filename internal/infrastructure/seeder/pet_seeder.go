@@ -21,9 +21,6 @@ func NewPetSeeder(db *gorm.DB) *PetSeeder {
 }
 
 func (s *PetSeeder) Seed(count int) error {
-	rand.Seed(time.Now().UnixNano())
-
-	// Get existing users to assign pets to them
 	var users []entities.User
 	if err := s.db.Limit(100).Find(&users).Error; err != nil {
 		return fmt.Errorf("failed to fetch users: %w", err)
@@ -36,14 +33,11 @@ func (s *PetSeeder) Seed(count int) error {
 	pets := make([]entities.Pet, 0, count)
 
 	for i := 0; i < count; i++ {
-		// Random user
 		user := users[rand.Intn(len(users))]
 
-		// Random pet kind
 		petKinds := enums.GetAllPetKinds()
 		kind := petKinds[rand.Intn(len(petKinds))]
 
-		// Select appropriate species based on kind
 		var species enums.Species
 		switch kind {
 		case enums.Dog:
@@ -64,65 +58,47 @@ func (s *PetSeeder) Seed(count int) error {
 				enums.BritishShorthair,
 			}
 			species = catSpecies[rand.Intn(len(catSpecies))]
-		case enums.Rabbit:
-			species = 0 // No specific breed for rabbits in your enum
 		}
 
-		// Random gender
 		genders := []enums.PetGender{enums.MalePet, enums.FemalePet}
 		gender := genders[rand.Intn(len(genders))]
 
-		// Random age (0-15 years for pets)
 		now := time.Now()
 		yearsAgo := rand.Intn(16)
 		daysOffset := rand.Intn(365)
 		hoursOffset := rand.Intn(24)
 		birthDate := now.AddDate(-yearsAgo, 0, -daysOffset).Add(-time.Duration(hoursOffset) * time.Hour)
 
-		// IsAdult logic (typically pets are adult after 1-2 years)
 		isAdult := yearsAgo >= 2
 
-		// Random weight based on pet kind (in appropriate units)
-		var weight *uint
-		var w uint
+		var weight *float32
+		var w float32
 		switch kind {
 		case enums.Dog:
-			w = uint(10 + rand.Intn(40)) // 10-50 kg for dogs
+			w = float32(10 + rand.Intn(40))
 		case enums.Cat:
-			w = uint(3 + rand.Intn(7)) // 3-10 kg for cats
-		case enums.Rabbit:
-			w = uint(2 + rand.Intn(5)) // 2-7 kg for rabbits
+			w = float32(3 + rand.Intn(7))
 		}
 		weight = &w
 
-		// Random picture link (50% chance)
-		var pictureLink *string
-		if rand.Intn(2) == 1 {
-			link := faker.URL()
-			pictureLink = &link
-		}
-
-		// Random about text (70% chance)
 		var aboutPet *string
 		if rand.Intn(10) < 7 {
 			about := generatePetAbout(kind)
 			aboutPet = &about
 		}
 
-		// Pet names based on kind
 		name := generatePetName(kind)
 
 		pet := entities.Pet{
-			UserID:      user.ID,
-			Name:        name,
-			Kind:        kind,
-			Species:     species,
-			BirthDate:   &birthDate,
-			IsAdult:     isAdult,
-			Gender:      gender,
-			Weight:      weight,
-			PictureLink: pictureLink,
-			AboutPet:    aboutPet,
+			UserID:    user.ID,
+			Name:      name,
+			Kind:      kind,
+			Species:   species,
+			BirthDate: &birthDate,
+			IsAdult:   isAdult,
+			Gender:    gender,
+			Weight:    weight,
+			AboutPet:  aboutPet,
 		}
 
 		pets = append(pets, pet)
@@ -148,18 +124,11 @@ func generatePetName(kind enums.PetKind) string {
 		"اسکار", "میلو", "فلیکس", "گارفیلد", "پرنس", "پرنسس", "شادو", "میسی",
 	}
 
-	rabbitNames := []string{
-		"خرگوشی", "پنبه", "برفی", "توپولی", "گوشی", "هاپی", "بانی", "کلوور",
-		"پاپکورن", "تامپر", "کوکی", "مارشملو", "اسنوبال", "کاتن", "ورق", "پیتر",
-	}
-
 	switch kind {
 	case enums.Dog:
 		return dogNames[rand.Intn(len(dogNames))]
 	case enums.Cat:
 		return catNames[rand.Intn(len(catNames))]
-	case enums.Rabbit:
-		return rabbitNames[rand.Intn(len(rabbitNames))]
 	default:
 		return faker.FirstName()
 	}
@@ -187,23 +156,11 @@ func generatePetAbout(kind enums.PetKind) string {
 		"عاشق بلندی‌هاست و دوست دارد روی قفسه‌ها بنشیند.",
 	}
 
-	rabbitAbouts := []string{
-		"خرگوش آرام و دوست‌داشتنی که عاشق هویج است.",
-		"بسیار تمیز و به راحتی آموزش می‌بیند.",
-		"دوست دارد آزادانه در خانه بگردد و کاوش کند.",
-		"با حیوانات دیگر کنار می‌آید و اجتماعی است.",
-		"نیاز به فضای امن برای پرش و بازی دارد.",
-		"بسیار ملایم و برای کودکان مناسب است.",
-		"عاشق سبزیجات تازه و علف است.",
-	}
-
 	switch kind {
 	case enums.Dog:
 		return dogAbouts[rand.Intn(len(dogAbouts))]
 	case enums.Cat:
 		return catAbouts[rand.Intn(len(catAbouts))]
-	case enums.Rabbit:
-		return rabbitAbouts[rand.Intn(len(rabbitAbouts))]
 	default:
 		return "حیوان خانگی دوست‌داشتنی و مهربان."
 	}

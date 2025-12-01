@@ -29,6 +29,7 @@ import (
 // }
 type User struct {
 	gorm.Model
+<<<<<<< HEAD
 	Email           string  `gorm:"not null;unique;index"`
 	IsEmailVerified bool    `gorm:"default=false;index"`
 	Password        string  `gorm:"not null"`
@@ -37,6 +38,16 @@ type User struct {
 	Address         *Address `gorm:"polymorphicType:Type;polymorphicId:Refer;polymorphicValue:User"`
 	Phone           *string `gorm:"index"`
 	IsPhoneVerified bool    `gorm:"default=false;index"`
+=======
+	Email           string   `gorm:"not null;unique;index"`
+	IsEmailVerified bool     `gorm:"default=false;index"`
+	Password        string   `gorm:"not null"`
+	FirstName       string   `gorm:"not null"`
+	LastName        string   `gorm:"not null"`
+	Address         *Address `gorm:"polymorphicType:Type;polymorphicId:Refer;polymorphicValue:User"`
+	Phone           *string  `gorm:"index"`
+	IsPhoneVerified bool     `gorm:"default=false;index"`
+>>>>>>> dev
 	Gender          enums.Gender
 	BirthDate       *time.Time
 	PictureLink     *string

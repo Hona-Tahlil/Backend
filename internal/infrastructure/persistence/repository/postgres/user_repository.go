@@ -49,7 +49,7 @@ func (up *UserRepository) DeleteUserByEmail(email string) error {
 }
 
 
-func (up *UserRepository) UpdateUser(user *entities.User) error {
+func (up *UserRepository) SaveUser(user *entities.User) error {
 	return up.db.Save(user).Error
 }
 
@@ -71,10 +71,12 @@ func (up *UserRepository) GetRoleUsersByID(roleID uint, limit, offset int) ([]en
 	return users, nil
 }
 
-func (up *UserRepository) PreloadPetSitter(user *entities.User) error {
-	return up.db.Preload("PetSitter").First(user, user.ID).Error
-}
-
-func (up *UserRepository) PreloadAddress(user *entities.User) error {
-	return up.db.Preload("Address").First(user, user.ID).Error
+func (up *UserRepository) PreloadFields(user *entities.User, fields []string) error {
+	for _, field := range fields {
+		err := up.db.Preload(field).First(user, user.ID).Error
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }

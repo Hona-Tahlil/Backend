@@ -20,7 +20,7 @@ func NewAuthMiddleware(jwtService *jwt.JWTService) *AuthMiddleware {
 }
 
 func (am *AuthMiddleware) AuthRequired(ctx *gin.Context) {
-	authHeader := ctx.GetHeader("Authorization")
+	authHeader := ctx.GetHeader(bootstrap.Run().Constants.Context.Authorization)
 	if authHeader == "" {
 		unauthorizedError := exceptions.NewUnauthorizedError("empty auth header")
 		panic(unauthorizedError)
