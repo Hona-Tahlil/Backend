@@ -99,5 +99,3 @@ func (cc *UserCommentController) GetAllPetSitterComments(ctx *gin.Context) {
 	msg := controllers.Message{}
 	controllers.Respond(ctx, 200, msg, *res)
 }
-
-// TODO: comment info in request full data

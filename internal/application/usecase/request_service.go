@@ -13,4 +13,5 @@ type RequestService interface {
 	GetRequestFullData(info request.GetRequestFullDataRequest) (*request.RequestFullDataResponse, error)
 	RespondToRequest(info request.RespondToRequestRequest) error
 	PreloadFields(request *entities.Request, fields []string) error
+	FindRequestByID(id uint) (*entities.Request, error)
 }

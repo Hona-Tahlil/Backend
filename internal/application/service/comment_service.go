@@ -5,37 +5,45 @@ import (
 	"hona/backend/internal/application/dto/comment"
 	"hona/backend/internal/application/usecase"
 	"hona/backend/internal/domain/entities"
+	"hona/backend/internal/domain/enums"
 	"hona/backend/internal/domain/exceptions"
 	"hona/backend/internal/domain/ports"
 )
 
 type CommentService struct {
-	unitOfWork  ports.UnitOfWork
-	userService usecase.UserService
+	unitOfWork     ports.UnitOfWork
+	userService    usecase.UserService
+	requestService usecase.RequestService
 }
 
-func NewCommentService(unitOfWork ports.UnitOfWork, userService usecase.UserService) *CommentService {
+func NewCommentService(unitOfWork ports.UnitOfWork, userService usecase.UserService, requestService usecase.RequestService) *CommentService {
 	return &CommentService{
-		unitOfWork:  unitOfWork,
-		userService: userService,
+		unitOfWork:     unitOfWork,
+		userService:    userService,
+		requestService: requestService,
 	}
 }
 
 func (cs *CommentService) CreateComment(info comment.CreateCommentRequest) error {
-	// TODO: Check if the request exists
+	foundRequest, err := cs.requestService.FindRequestByID(info.RequestID)
+	if err != nil {
+		return err
+	}
 
-	// TODO: check if it's status is finished
+	if foundRequest.Status != enums.Finished {
+		return exceptions.NewAccessDeniedError("can't comment on unfinished requests")
+	}
 
 	newComment := &entities.Comment{
-		UserID: info.UserID,
-		// PetSitterID: ,
-		// RequestID: ,
-		Text:   info.Text,
-		Rating: info.Rating,
+		UserID:      info.UserID,
+		PetSitterID: foundRequest.PetSitterID,
+		RequestID:   foundRequest.ID,
+		Text:        info.Text,
+		Rating:      info.Rating,
 	}
 
 	commentRepo := cs.unitOfWork.Factory().CommentRepository()
-	err := commentRepo.CreateComment(newComment)
+	err = commentRepo.CreateComment(newComment)
 	if err != nil {
 		return err
 	}
