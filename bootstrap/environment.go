@@ -3,6 +3,7 @@ package bootstrap
 import (
 	"os"
 	"strconv"
+	"time"
 
 	"github.com/joho/godotenv"
 )
@@ -15,6 +16,17 @@ type Env struct {
 	EmailConfig       EmailConfig
 	URLs              URLs
 	EmailVerification EmailVerification
+	RabbitMQ          RabbitMQ
+}
+
+type RabbitMQ struct {
+	User          string
+	Password      string
+	Host          string
+	Port          string
+	VHost         string
+	MaxRetryCount int
+	RetryDelay    time.Duration
 }
 
 type Storage struct {
@@ -107,12 +119,30 @@ func NewEnv() *Env {
 		EmailVerification: EmailVerification{
 			ExpireMinutes: expireMinutes,
 		},
+		RabbitMQ: RabbitMQ{
+			User:          os.Getenv("AMQP_USER"),
+			Password:      os.Getenv("AMQP_PASSWORD"),
+			Host:          os.Getenv("AMQP_HOST"),
+			Port:          os.Getenv("AMQP_PORT"),
+			VHost:         os.Getenv("AMQP_VHOST"),
+			MaxRetryCount: getEnvInt("AMQP_MAX_RETRY", 3),
+			RetryDelay:    getEnvDuration("AMQP_RETRY_DELAY", 5*time.Second),
+		},
 	}
 }
 
 func getEnvInt(key string, defaultVal int) int {
 	if val := os.Getenv(key); val != "" {
 		if parsed, err := strconv.Atoi(val); err == nil {
+			return parsed
+		}
+	}
+	return defaultVal
+}
+
+func getEnvDuration(key string, defaultVal time.Duration) time.Duration {
+	if val := os.Getenv(key); val != "" {
+		if parsed, err := time.ParseDuration(val); err == nil {
 			return parsed
 		}
 	}
