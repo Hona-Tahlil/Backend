@@ -65,7 +65,6 @@ type ErrorFields struct {
 	Request      string
 	CalendarSlot string
 	Service      string
-	PetSitter  string
 }
 
 type ErrorTags struct {
@@ -162,7 +161,6 @@ func NewConstants() *Constants {
 			Request:      "request",
 			CalendarSlot: "calendarSlot",
 			Service:      "service",
-			User:       "user",
 		},
 		ErrorTags: ErrorTags{
 			AlreadyRegistered:      "errors.alreadyRegistered",
