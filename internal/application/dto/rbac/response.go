@@ -20,10 +20,10 @@ type RefreshTokenResponse struct {
 }
 
 type RoleWithUsersResponse struct {
-	Role  RoleResponse
-	Users []UserInfoResponse
+	Role  RoleResponse       `json:"role"`
+	Users []UserInfoResponse `json:"users"`
 }
 
 type UserInfoResponse struct {
-	Email string
+	Email string `json:"email"`
 }

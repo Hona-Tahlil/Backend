@@ -12,5 +12,6 @@ type Address struct {
 	HouseNumber   uint
 	Unit          uint    `gorm:"default=1"`
 	PostalCode    *string `gorm:"index"`
-	OwnerID       uint    `gorm:"index"`
+	Refer         uint    `gorm:"index"`
+	Type          string  `gorm:"index"`
 }

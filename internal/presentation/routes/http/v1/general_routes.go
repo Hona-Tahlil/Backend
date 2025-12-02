@@ -15,4 +15,15 @@ func SetUpGeneralRoutes(v1 *gin.RouterGroup, app *wire.Application) {
 		auth.POST("/forgot-password", app.Controllers.GeneralControllers.GeneralUserController.ForgotPassword)
 		auth.PUT("/reset-password", app.Controllers.GeneralControllers.GeneralUserController.ResetPassword)
 	}
+
+	provinces := v1.Group("/provinces")
+	{
+		provinces.GET("/", app.Controllers.GeneralControllers.GeneralProvinceController.GetAllProvinces)
+		provinces.GET("/:province_num/cities", app.Controllers.GeneralControllers.GeneralProvinceController.GetCitiesByProvinceName)
+	}
+	pets := v1.Group("/pets")
+	{
+		pets.GET("/kinds", app.Controllers.GeneralControllers.GeneralPetController.GetAllPetKinds)
+		pets.GET("/kinds/:petKind/species", app.Controllers.GeneralControllers.GeneralPetController.GetPetKindSpecies)
+	}
 }

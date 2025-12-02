@@ -35,7 +35,7 @@ func NewUserService(jwtService domainjwt.JWTService, unitOfWork ports.UnitOfWork
 	}
 }
 
-func (us *UserService) GetRolesResponse(user entities.User) []rbac.RoleResponse {
+func (us *UserService) GetRolesResponse(user *entities.User) []rbac.RoleResponse {
 	r := make([]rbac.RoleResponse, 0)
 	for _, role := range user.Roles {
 		p := make([]rbac.PermissionResponse, 0)
@@ -75,6 +75,11 @@ func (us *UserService) Login(loginInfo user.LoginRequest) (*user.LoginResponse, 
 		return nil, "", 0, invalidCredentialsErr
 	}
 
+	err = us.PreloadFields(foundUser, []string{"Roles.Permissions"})
+	if err != nil {
+		return nil, "", 0, err
+	}
+
 	if err := bcrypt.CompareHashAndPassword([]byte(foundUser.Password), []byte(loginInfo.Password)); err != nil {
 		invalidCredentialsErr := exceptions.NewInvalidCredentialsError("password is wrong")
 		return nil, "", 0, invalidCredentialsErr
@@ -82,7 +87,7 @@ func (us *UserService) Login(loginInfo user.LoginRequest) (*user.LoginResponse, 
 
 	accessToken, refreshToken, expireTime := us.jwtService.GenerateTokens(foundUser.ID, loginInfo.RememberMe)
 
-	roles := us.GetRolesResponse(*foundUser)
+	roles := us.GetRolesResponse(foundUser)
 
 	return &user.LoginResponse{
 		AccessToken: accessToken,
@@ -109,7 +114,7 @@ func (us *UserService) GetRoleUsersByID(roleID uint, limit, offset int) ([]entit
 	return users, nil
 }
 
-func (us *UserService) findVerifiedUserByEmail(email string) (*entities.User, error) {
+func (us *UserService) FindVerifiedUserByEmail(email string) (*entities.User, error) {
 	foundUser, err := us.FindUserByEmail(email)
 	if err != nil {
 		return nil, err
@@ -138,7 +143,7 @@ func (us *UserService) FindUserByEmail(email string) (*entities.User, error) {
 	return foundUser, nil
 }
 
-func (us *UserService) findVerifiedUserByID(id uint) (*entities.User, error) {
+func (us *UserService) FindVerifiedUserByID(id uint) (*entities.User, error) {
 	foundUser, err := us.FindUserByID(id)
 	if err != nil {
 		return nil, err
@@ -162,20 +167,6 @@ func (us *UserService) FindUserByID(id uint) (*entities.User, error) {
 
 	if err != nil {
 		return nil, err
-	}
-
-	return foundUser, nil
-}
-
-func (us *UserService) FindVerifiedUserByEmail(email string) (*entities.User, error) {
-	foundUser, err := us.FindUserByEmail(email)
-	if err != nil {
-		return nil, err
-	}
-
-	if !foundUser.IsEmailVerified {
-		notVerifiedErr := exceptions.NewNotVerifiedError()
-		return nil, notVerifiedErr
 	}
 
 	return foundUser, nil
@@ -440,10 +431,20 @@ func (us *UserService) RefreshTokens(refreshTokenInfo rbac.RefreshTokenRequest) 
 		return nil, "", 0, err
 	}
 
-	roles := us.GetRolesResponse(*foundUser)
+	err = us.PreloadFields(foundUser, []string{"Roles.Permissions"})
+	if err != nil {
+		return nil, "", 0, err
+	}
+
+	roles := us.GetRolesResponse(foundUser)
 
 	return &rbac.RefreshTokenResponse{
 		AccessToken: accessToken,
 		Roles:       roles,
 	}, refreshToken, expireTime, nil
+}
+
+func (us *UserService) PreloadFields(user *entities.User, fields []string) error {
+	userRepo := us.unitOfWork.Factory().UserRepository()
+	return userRepo.PreloadFields(user, fields)
 }

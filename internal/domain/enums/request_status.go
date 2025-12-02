@@ -8,6 +8,8 @@ const (
 	Paid
 	Finished
 	Canceled
+	Dismissed
+	Conflict
 	// paid and canceled or unpaid
 	// user canceled or pet sitter
 )
@@ -24,6 +26,10 @@ func (requestStatus RequestStatus) String() string {
 		return "خدمت مورد نظر تمام شده است"
 	case RequestStatus(Canceled):
 		return "درخواست کنسل شده است"
+	case RequestStatus(Dismissed):
+		return "درخواست توسط پت سیتر رد شده است"
+	case RequestStatus(Conflict):
+		return "این درخواست با درخواست دیگری از پتیار همپوشانی دارد"
 	}
 	return ""
 }

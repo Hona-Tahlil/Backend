@@ -33,7 +33,7 @@ func (ps *PetService) AddPet(info pet.AddPetRequest) error {
 	if err != nil {
 		return err
 	}
-	isAdult, err := ps.validateBirthDate(info.BirthDate, info.IsAdult, info.Kind)
+	isAdult, err := ps.validateBirthDate(info.BirthDate, info.IsAdult)
 	if err != nil {
 		return err
 	}
@@ -79,7 +79,7 @@ func (ps *PetService) AddPet(info pet.AddPetRequest) error {
 }
 
 func (ps *PetService) UpdatePet(info pet.UpdatePetRequest) error {
-	foundPet, err := ps.findPetByID(info.ID)
+	foundPet, err := ps.FindPetByID(info.ID)
 	if err != nil {
 		return err
 	}
@@ -89,7 +89,7 @@ func (ps *PetService) UpdatePet(info pet.UpdatePetRequest) error {
 		return err
 	}
 
-	isAdult, err := ps.validateBirthDate(info.BirthDate, info.IsAdult, info.Kind)
+	isAdult, err := ps.validateBirthDate(info.BirthDate, info.IsAdult)
 	if err != nil {
 		return err
 	}
@@ -133,7 +133,7 @@ func (ps *PetService) UpdatePet(info pet.UpdatePetRequest) error {
 }
 
 func (ps *PetService) RemovePet(info pet.RemovePetRequest) error {
-	foundPet, err := ps.findPetByID(info.ID)
+	foundPet, err := ps.FindPetByID(info.ID)
 	if err != nil {
 		return err
 	}
@@ -150,28 +150,16 @@ func (ps *PetService) RemovePet(info pet.RemovePetRequest) error {
 }
 
 func (ps *PetService) GetPetsBasicData(info pet.GetPetsBasicDataRequest) ([]pet.PetBasicDataResponse, error) {
-	r := make([]pet.PetBasicDataResponse, 0)
 	user, err := ps.userService.FindUserByID(info.UserID)
 	if err != nil {
 		return nil, err
 	}
-	petRepo := ps.unitOfWork.Factory().PetRepository()
-	err = petRepo.PreloadUserPets(user)
-	if err != nil {
-		return nil, err
-	}
-	for _, pet := range user.Pets {
-		res, err := ps.getPetBasicDataResponse(&pet)
-		if err != nil {
-			return nil, err
-		}
-		r = append(r, *res)
-	}
-	return r, nil
+	ps.userService.PreloadFields(user, []string{"Pets"})
+	return ps.GetPetsBasicDataResponse(user.Pets)
 }
 
 func (ps *PetService) GetPetFullData(info pet.GetPetFullDataRequest) (*pet.PetFullDataResponse, error) {
-	foundPet, err := ps.findPetByID(info.ID)
+	foundPet, err := ps.FindPetByID(info.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -225,7 +213,7 @@ func (ps *PetService) findPet(name string, userID uint) (*entities.Pet, error) {
 	return foundPet, nil
 }
 
-func (ps *PetService) findPetByID(id uint) (*entities.Pet, error) {
+func (ps *PetService) FindPetByID(id uint) (*entities.Pet, error) {
 	petRepo := ps.unitOfWork.Factory().PetRepository()
 	foundPet, err := petRepo.FindPetByID(id)
 	if err != nil {
@@ -238,9 +226,8 @@ func (ps *PetService) findPetByID(id uint) (*entities.Pet, error) {
 	return foundPet, nil
 }
 
-func (ps *PetService) validateBirthDate(birthDate *time.Time, isAdultInput bool, kind enums.PetKind) (isAdult bool, err error) {
+func (ps *PetService) validateBirthDate(birthDate *time.Time, isAdultInput bool) (isAdult bool, err error) {
 	if birthDate != nil {
-		// TODO: further implemention based on kind
 		age := time.Now().Year() - birthDate.Year()
 		if time.Now().YearDay() < birthDate.YearDay() {
 			age--
@@ -267,25 +254,149 @@ func (ps *PetService) getStorageKey(name string, userID uint) string {
 }
 
 func (ps *PetService) validateSpecies(species enums.Species, kind enums.PetKind) error {
+	var invalid = func() error {
+		var ce exceptions.ValidationErrors
+		ce.AddError(
+			bootstrap.Run().Constants.ErrorFields.Species,
+			bootstrap.Run().Constants.ErrorTags.UnacceptableInput,
+		)
+		return &ce
+	}
+
+	if species == enums.Other {
+		return nil
+	}
 	switch kind {
 	case enums.Dog:
-		if species > 6 {
-			var ce exceptions.ValidationErrors
-			ce.AddError(bootstrap.Run().Constants.ErrorFields.Species, bootstrap.Run().Constants.ErrorTags.UnacceptableInput)
-			return &ce
+		if species < 1 || species > 14 {
+			return invalid()
 		}
 	case enums.Cat:
-		if species < 7 || species > 10 {
-			var ce exceptions.ValidationErrors
-			ce.AddError(bootstrap.Run().Constants.ErrorFields.Species, bootstrap.Run().Constants.ErrorTags.UnacceptableInput)
-			return &ce
+		if species < 15 || species > 22 {
+			return invalid()
 		}
 	case enums.Bird:
-		if species < 11 {
-			var ce exceptions.ValidationErrors
-			ce.AddError(bootstrap.Run().Constants.ErrorFields.Species, bootstrap.Run().Constants.ErrorTags.UnacceptableInput)
-			return &ce
+		if species < 23 || species > 30 {
+			return invalid()
+		}
+	case enums.Fish:
+		if species < 31 || species > 36 {
+			return invalid()
+		}
+	case enums.Rodent:
+		if species < 37 || species > 43 {
+			return invalid()
+		}
+	case enums.Rabbit:
+		if species < 44 || species > 47 {
+			return invalid()
+		}
+	case enums.Reptile:
+		if species < 48 || species > 55 {
+			return invalid()
+		}
+	case enums.Amphibian:
+		if species < 56 || species > 58 {
+			return invalid()
+		}
+	case enums.Ferret:
+		if species != 59 {
+			return invalid()
+		}
+	case enums.Horse:
+		if species != 60 {
+			return invalid()
+		}
+	case enums.Hedgehog:
+		if species != 61 {
+			return invalid()
+		}
+	case enums.MiniPig:
+		if species != 62 {
+			return invalid()
+		}
+	case enums.Insect:
+		if species < 63 || species > 64 {
+			return invalid()
+		}
+	case enums.Arachnid:
+		if species != 65 {
+			return invalid()
+		}
+	case enums.HermitCrab:
+		if species != 66 {
+			return invalid()
 		}
 	}
+
 	return nil
+}
+
+func (ps *PetService) GetAllPetKinds() []pet.PetKindResponse {
+	kinds := enums.GetAllPetKinds()
+	res := make([]pet.PetKindResponse, 0)
+	for _, kind := range kinds {
+		res = append(res, pet.PetKindResponse{
+			Num:  kind,
+			Name: kind.String(),
+		})
+	}
+	return res
+}
+
+func (ps *PetService) GetPetKindSpecies(info pet.GetPetKindSpecies) []pet.PetSpeciesResponse {
+	species := enums.GetSpeciesByKind(info.Num)
+	species = append(species, enums.Other)
+	res := make([]pet.PetSpeciesResponse, 0)
+	for _, s := range species {
+		res = append(res, pet.PetSpeciesResponse{
+			Num:  s,
+			Name: s.String(),
+		})
+	}
+	return res
+}
+
+func (ps *PetService) GetPetsBasicDataResponse(pets []entities.Pet) ([]pet.PetBasicDataResponse, error) {
+	r := make([]pet.PetBasicDataResponse, 0)
+
+	for _, petEntity := range pets {
+		res, err := ps.getPetBasicDataResponse(&petEntity)
+		if err != nil {
+			return nil, err
+		}
+		r = append(r, *res)
+	}
+
+	return r, nil
+}
+
+func (ps *PetService) GetPetsInUser(userPets []entities.Pet, petIDs []uint) ([]entities.Pet, error) {
+	pets := make([]entities.Pet, 0)
+	for _, petID := range petIDs {
+		flag := false
+		for _, pet := range userPets {
+			if pet.ID == petID {
+				flag = true
+				pets = append(pets, pet)
+				break
+			}
+		}
+		if !flag {
+			var ce exceptions.ConflictErrors
+			ce.Add(bootstrap.Run().Constants.ErrorFields.Pet, bootstrap.Run().Constants.ErrorTags.UnacceptableInput)
+			return nil, &ce
+		}
+	}
+
+	return pets, nil
+}
+
+func (ps *PetService) GetPetNames(pets []entities.Pet) []string {
+	names := make([]string, 0)
+	for _, pet := range pets {
+		names = append(names, pet.Name)
+	}
+
+	return names
 }

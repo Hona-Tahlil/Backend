@@ -12,12 +12,12 @@ type Request struct {
 	PetSitterID   uint `gorm:"index"`
 	Status        enums.RequestStatus
 	Chat          Chat `gorm:"foreignKey:RequestID;not null"`
-	TransferID    uint
-	CalenderSlots []CalendarSlot `gorm:"foreignKey:Refer"`
-	Pets          []RequestPet   `gorm:"foreignKey:RequestID"`
+	TransferID    *uint
+	CalendarSlots []CalendarSlot `gorm:"foreignKey:Refer;not null"`
+	Pets          []Pet          `gorm:"foreignKey:RequestID;not null"`
 	TotalPrice    uint
 	Notes         *string
-	Comment       *Comment         `gorm:"foreignKey:RequestID"`
-	Address       RequestAddress   `gorm:"foreignKey:RequestID;not null"`
-	Services      []RequestService `gorm:"foreignKey:RequestID"`
+	Comment       *Comment `gorm:"foreignKey:RequestID"`
+	Address       Address  `gorm:"polymorphicType:Type;polymorphicId:Refer;polymorphicValue:Request"`
+	Service       Service  `gorm:"foreignKey:RequestID;not null"`
 }

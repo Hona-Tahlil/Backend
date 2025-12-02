@@ -10,7 +10,12 @@ type Constants struct {
 	JWTConstants    JWTConstants
 	SuccessMessages SuccessMessages
 	RedisKey        RedisKey
+	EntityConstants EntityConstants
 	TemplatesPath   TemplatesPath
+}
+
+type EntityConstants struct {
+	Request string
 }
 
 type SuccessMessages struct {
@@ -41,21 +46,25 @@ type JWTConstants struct {
 }
 
 type ErrorFields struct {
-	User       string
-	Phone      string
-	Email      string
-	Password   string
-	MagicLink  string
-	Address    string
-	Name       string
-	Province   string
-	City       string
-	Role       string
-	Permission string
-	BirthDate  string
-	IsAdult    string
-	Pet        string
-	Species    string
+	User         string
+	Phone        string
+	Email        string
+	Password     string
+	MagicLink    string
+	Address      string
+	Name         string
+	Province     string
+	City         string
+	Role         string
+	Permission   string
+	BirthDate    string
+	IsAdult      string
+	Pet          string
+	Species      string
+	PetSitter    string
+	Request      string
+	CalendarSlot string
+	Service      string
 	Comment    string
 }
 
@@ -90,6 +99,8 @@ type ErrorTags struct {
 	NotFound               string
 	UnacceptableInput      string
 	DuplicateName          string
+	CalendarConflict       string
+	OldInfo                string
 }
 
 type JWTKeysPath struct {
@@ -104,13 +115,18 @@ type Context struct {
 	AcceptLanguage string
 	Authorization  string
 }
-
-type TemplatesPath struct {
-	Path              string
-	EmailVerification string
+type RedisKey struct {
 }
 
-type RedisKey struct {
+type TemplatesPath struct {
+	Path                   string
+	EmailVerification      string
+	NewRequest             string
+	PetOwnerRequestCancel  string
+	PetSitterRequestCancel string
+	RequestAccepted        string
+	RequestDeclined        string
+	RequestEdited          string
 }
 
 func NewConstants() *Constants {
@@ -127,22 +143,26 @@ func NewConstants() *Constants {
 			PrivateKey: "./internal/infrastructure/jwt/private_key.pem",
 		},
 		ErrorFields: ErrorFields{
-			User:       "user",
-			Phone:      "phone",
-			Email:      "email",
-			Password:   "password",
-			MagicLink:  "magicLink",
-			Address:    "address",
-			Name:       "name",
-			Province:   "province",
-			City:       "city",
-			Role:       "role",
-			Permission: "permission",
-			BirthDate:  "birthDate",
-			IsAdult:    "isAdult",
-			Pet:        "pet",
-			Species:    "species",
+			User:         "user",
+			Phone:        "phone",
+			Email:        "email",
+			Password:     "password",
+			MagicLink:    "magicLink",
+			Address:      "address",
+			Name:         "name",
+			Province:     "province",
+			City:         "city",
+			Role:         "role",
+			Permission:   "permission",
+			BirthDate:    "birthDate",
+			IsAdult:      "isAdult",
+			Pet:          "pet",
+			Species:      "species",
 			Comment:    "comment",
+			PetSitter:    "petSitter",
+			Request:      "request",
+			CalendarSlot: "calendarSlot",
+			Service:      "service",
 		},
 		ErrorTags: ErrorTags{
 			AlreadyRegistered:      "errors.alreadyRegistered",
@@ -175,6 +195,8 @@ func NewConstants() *Constants {
 			NotFound:               "errors.notFound",
 			UnacceptableInput:      "errors.unacceptableInput",
 			DuplicateName:          "errors.duplicateName",
+			CalendarConflict:       "errors.calendarConflict",
+			OldInfo:                "errors.oldInfo",
 		},
 		JWTConstants: JWTConstants{
 			AccessTokenType:  "access",
@@ -201,9 +223,18 @@ func NewConstants() *Constants {
 			RemovePet:         "successMessage.removePet",
 			UpdatePet:         "successMessage.updatePet",
 		},
+		EntityConstants: EntityConstants{
+			Request: "request",
+		},
 		TemplatesPath: TemplatesPath{
-			Path:              "./internal/infrastructure/mail/",
-			EmailVerification: "email_verification.html",
+			Path:                   "./internal/infrastructure/mail/",
+			EmailVerification:      "email_verification.html",
+			NewRequest:             "new_request.html",
+			PetOwnerRequestCancel:  "pet_owner_request_cancel.html",
+			PetSitterRequestCancel: "pet_sitter_request_cancel.html",
+			RequestAccepted:        "request_accepted.html",
+			RequestDeclined:        "request_declined.html",
+			RequestEdited:          "request_edited.html",
 		},
 	}
 }
