@@ -1,6 +1,7 @@
 package request
 
 import (
+	"hona/backend/internal/application/dto/address"
 	"hona/backend/internal/domain/enums"
 	"time"
 )
@@ -11,7 +12,7 @@ type CreateRequestRequest struct {
 	CalenderSlots   []RequestCalendarSlotRequest
 	PetIDs          []uint
 	Notes           *string
-	AddressInfo     *AddressInfoRequest
+	AddressInfo     *address.AddressInfo
 	AddressID       *uint
 	ServiceID       uint
 }
@@ -22,19 +23,19 @@ type EditRequestRequest struct {
 	CalenderSlots []RequestCalendarSlotRequest
 	PetIDs        []uint
 	Notes         *string
-	AddressInfo   *AddressInfoRequest
+	AddressInfo   *address.AddressInfo
 	AddressID     *uint
 	ServiceID     uint
 }
 
-type AddressInfoRequest struct {
-	ProvinceName  enums.Province
-	CityName      enums.City
-	StreetAddress string
-	HouseNumber   uint
-	Unit          uint
-	PostalCode    *string
-}
+// type AddressInfoRequest struct {
+// 	ProvinceName  enums.Province
+// 	CityName      enums.City
+// 	StreetAddress string
+// 	HouseNumber   uint
+// 	Unit          uint
+// 	PostalCode    *string
+// }
 
 type RequestCalendarSlotRequest struct {
 	Date  time.Time

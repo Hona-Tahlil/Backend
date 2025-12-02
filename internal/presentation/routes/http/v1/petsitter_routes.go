@@ -13,26 +13,22 @@ func SetUpPetSitterRoutes(v1 *gin.RouterGroup, app *wire.Application) {
 		register := petsitter.Group("/register")
 		{
 			// STEP 0: Create signup session
-			register.POST("/", app.Controllers.PetSitterControllers.PetSitterController.CreateSignupSession)
-
+			register.POST("/", app.Controllers.PetSitterControllers.PetSitterRegisterController.CreateSignupSession)
 
 			// STEP 1: Personal info
-			register.PUT("/personal", app.Controllers.PetSitterControllers.PetSitterController.SubmitPersonalInfo)
-			register.GET("/personal", app.Controllers.PetSitterControllers.PetSitterController.GetPersonalInfo)
-
+			register.PUT("/personal", app.Controllers.PetSitterControllers.PetSitterRegisterController.SubmitPersonalInfo)
+			register.GET("/personal", app.Controllers.PetSitterControllers.PetSitterRegisterController.GetPersonalInfo)
 
 			// STEP 2: Upload documents
-			register.PUT("/documents", app.Controllers.PetSitterControllers.PetSitterController.UploadDocuments)
-			register.GET("/documents", app.Controllers.PetSitterControllers.PetSitterController.GetDocuments)
-
+			register.PUT("/documents", app.Controllers.PetSitterControllers.PetSitterRegisterController.UploadDocuments)
+			register.GET("/documents", app.Controllers.PetSitterControllers.PetSitterRegisterController.GetDocuments)
 
 			// STEP 3: Skills + Bio
-			register.PUT("/skills", app.Controllers.PetSitterControllers.PetSitterController.SubmitSkills)
+			register.PUT("/skills", app.Controllers.PetSitterControllers.PetSitterRegisterController.SubmitSkills)
 			// register.GET("/skills", app.Controllers.PetSitterController.PetSitterController.GetSkills)
 
-
 			// Optional: Get current status
-			register.GET("/status", app.Controllers.PetSitterControllers.PetSitterController.GetPetsitterStatus)
+			register.GET("/status", app.Controllers.PetSitterControllers.PetSitterRegisterController.GetPetsitterStatus)
 		}
 		requests := petsitter.Group("/requests")
 		{

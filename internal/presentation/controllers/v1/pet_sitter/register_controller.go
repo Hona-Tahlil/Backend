@@ -3,7 +3,7 @@ package petsitter
 import (
 	"fmt"
 	"hona/backend/internal/application/dto/petsitter"
-	"hona/backend/internal/application/service"
+	"hona/backend/internal/application/usecase"
 	"hona/backend/internal/domain/enums"
 	"hona/backend/internal/presentation/controllers"
 	"time"
@@ -11,17 +11,17 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type PetSitterController struct {
-	petSitterService *service.PetSitterService
+type PetSitterRegisterController struct {
+	petSitterService usecase.PetSitterService
 }
 
-func NewPetsitterController(petSitterService *service.PetSitterService) *PetSitterController {
-	return &PetSitterController{
+func NewPetSitterRegisterController(petSitterService usecase.PetSitterService) *PetSitterRegisterController {
+	return &PetSitterRegisterController{
 		petSitterService: petSitterService,
 	}
 }
 
-func (pc *PetSitterController) CreateSignupSession(ctx *gin.Context) {
+func (pc *PetSitterRegisterController) CreateSignupSession(ctx *gin.Context) {
 	fmt.Println("✅ PETSITTER REGISTER CONTROLLER")
 	UserID := controllers.GetID(ctx)
 	fmt.Println("✅ PETSITTER REGISTER CONTROLLER")
@@ -37,7 +37,7 @@ func (pc *PetSitterController) CreateSignupSession(ctx *gin.Context) {
 	controllers.Respond(ctx, 200, msg, res)
 }
 
-func (pc *PetSitterController) SubmitPersonalInfo(ctx *gin.Context) {
+func (pc *PetSitterRegisterController) SubmitPersonalInfo(ctx *gin.Context) {
 	UserID := controllers.GetID(ctx)
 	fmt.Println("✅ 1655400")
 
@@ -81,7 +81,7 @@ func (pc *PetSitterController) SubmitPersonalInfo(ctx *gin.Context) {
 	controllers.Respond(ctx, 200, msg, nil)
 }
 
-func (pc *PetSitterController) GetPersonalInfo(ctx *gin.Context) {
+func (pc *PetSitterRegisterController) GetPersonalInfo(ctx *gin.Context) {
 	UserID := controllers.GetID(ctx)
 	fmt.Println("✅ 00131546")
 	res, err := pc.petSitterService.GetPersonalInfo(UserID)
@@ -95,7 +95,7 @@ func (pc *PetSitterController) GetPersonalInfo(ctx *gin.Context) {
 	controllers.Respond(ctx, 200, msg, *res)
 }
 
-func (pc *PetSitterController) UploadDocuments(ctx *gin.Context) {
+func (pc *PetSitterRegisterController) UploadDocuments(ctx *gin.Context) {
 	UserID := controllers.GetID(ctx)
 	form, err := ctx.MultipartForm()
 	if err != nil {
@@ -117,7 +117,7 @@ func (pc *PetSitterController) UploadDocuments(ctx *gin.Context) {
 	controllers.Respond(ctx, 200, msg, nil)
 }
 
-func (pc *PetSitterController) GetDocuments(ctx *gin.Context) {
+func (pc *PetSitterRegisterController) GetDocuments(ctx *gin.Context) {
 	UserID := controllers.GetID(ctx)
 	res, err := pc.petSitterService.GetDocuments(UserID)
 	if err != nil {
@@ -127,7 +127,7 @@ func (pc *PetSitterController) GetDocuments(ctx *gin.Context) {
 	controllers.Respond(ctx, 200, msg, res)
 }
 
-func (pc *PetSitterController) SubmitSkills(ctx *gin.Context) {
+func (pc *PetSitterRegisterController) SubmitSkills(ctx *gin.Context) {
 	userID := controllers.GetID(ctx)
 
 	type SkillsParams struct {
@@ -152,7 +152,7 @@ func (pc *PetSitterController) SubmitSkills(ctx *gin.Context) {
 	controllers.Respond(ctx, 200, msg, nil)
 }
 
-func (pc *PetSitterController) GetPetsitterStatus(ctx *gin.Context) {
+func (pc *PetSitterRegisterController) GetPetsitterStatus(ctx *gin.Context) {
 	UserID := controllers.GetID(ctx)
 	res, err := pc.petSitterService.GetPetsitterStatus(UserID)
 	if err != nil {

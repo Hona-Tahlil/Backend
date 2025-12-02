@@ -89,8 +89,9 @@ var UserControllersProviderSet = wire.NewSet(
 )
 
 var PetSitterControllersProviderSet = wire.NewSet(
+	petsitter.NewPetSitterRegisterController,
 	petsitter.NewPetSitterRequestController,
-	wire.Struct(new(PetSitterControllers)),
+	wire.Struct(new(PetSitterControllers), "*"),
 )
 
 var ControllersProviderSet = wire.NewSet(
@@ -122,7 +123,6 @@ var ProviderSet = wire.NewSet(
 	RepositoryProviderSet,
 	SeederProviderSet,
 	StorageProviderSet,
-	PetSitterControllersProviderSet,
 )
 
 type GeneralControllers struct {
@@ -141,6 +141,7 @@ type UserControllers struct {
 }
 
 type PetSitterControllers struct {
+	PetSitterRegisterController *petsitter.PetSitterRegisterController
 	PetSitterRequestController *petsitter.PetSitterRequestController
 }
 

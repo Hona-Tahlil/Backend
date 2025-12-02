@@ -7,13 +7,14 @@
 package wire
 
 import (
+	"github.com/google/wire"
 	"hona/backend/bootstrap"
 	"hona/backend/internal/application/service"
 	"hona/backend/internal/application/usecase"
-	domainjwt "hona/backend/internal/domain/jwt"
+	"hona/backend/internal/domain/jwt"
 	"hona/backend/internal/domain/ports"
-	domainredis "hona/backend/internal/domain/ports/redis"
-	domainstorage "hona/backend/internal/domain/storage"
+	"hona/backend/internal/domain/ports/redis"
+	"hona/backend/internal/domain/storage"
 	"hona/backend/internal/infrastructure/jwt"
 	"hona/backend/internal/infrastructure/mail"
 	"hona/backend/internal/infrastructure/persistence"
@@ -22,11 +23,9 @@ import (
 	"hona/backend/internal/infrastructure/storage"
 	"hona/backend/internal/presentation/controllers/v1/admin"
 	"hona/backend/internal/presentation/controllers/v1/general"
-	petsitter "hona/backend/internal/presentation/controllers/v1/pet_sitter"
+	"hona/backend/internal/presentation/controllers/v1/pet_sitter"
 	"hona/backend/internal/presentation/controllers/v1/user"
 	"hona/backend/internal/presentation/middleware"
-
-	"github.com/google/wire"
 )
 
 // Injectors from wire.go:
@@ -61,8 +60,6 @@ func InitializeApplication(container *bootstrap.Config) (*Application, error) {
 	serviceService := service.NewServiceService(unitOfWork)
 	calendarSlotService := service.NewCalendarSlotService()
 	petSitterService := service.NewPetSitterService(unitOfWork, s3Storage, userService, addressService, serviceService, calendarSlotService)
-	petSitterController := petsitter.NewPetsitterController(petSitterService)
-	petSitterRequestController := petsitter.NewPetSitterRequestController(requestService)
 	requestServiceDeps := service.RequestServiceDeps{
 		UserService:         userService,
 		ProvinceService:     provinceService,
@@ -80,9 +77,11 @@ func InitializeApplication(container *bootstrap.Config) (*Application, error) {
 		UserPetController:     userPetController,
 		UserRequestController: userRequestController,
 	}
+	petSitterRegisterController := petsitter.NewPetSitterRegisterController(petSitterService)
+	petSitterRequestController := petsitter.NewPetSitterRequestController(requestService)
 	petSitterControllers := &PetSitterControllers{
-		PetSitterController:        petSitterController,
-		PetSitterRequestController: petSitterRequestController,
+		PetSitterRegisterController: petSitterRegisterController,
+		PetSitterRequestController:  petSitterRequestController,
 	}
 	controllers := &Controllers{
 		GeneralControllers:   generalControllers,
@@ -127,7 +126,7 @@ var AdminControllersProviderSet = wire.NewSet(admin.NewAdminRBACController, wire
 
 var UserControllersProviderSet = wire.NewSet(user.NewUserPetController, user.NewUserRequestController, wire.Struct(new(UserControllers), "*"))
 
-var PetSitterControllersProviderSet = wire.NewSet(petsitter.NewPetSitterRequestController, wire.Struct(new(PetSitterControllers)))
+var PetSitterControllersProviderSet = wire.NewSet(petsitter.NewPetSitterRegisterController, petsitter.NewPetSitterRequestController, wire.Struct(new(PetSitterControllers), "*"))
 
 var ControllersProviderSet = wire.NewSet(wire.Struct(new(Controllers), "*"))
 
@@ -164,8 +163,8 @@ type UserControllers struct {
 }
 
 type PetSitterControllers struct {
-	PetSitterController        *petsitter.PetSitterController
-	PetSitterRequestController *petsitter.PetSitterRequestController
+	PetSitterRegisterController *petsitter.PetSitterRegisterController
+	PetSitterRequestController  *petsitter.PetSitterRequestController
 }
 
 type Controllers struct {
