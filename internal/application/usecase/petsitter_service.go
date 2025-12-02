@@ -1,10 +1,5 @@
 package usecase
 
-<<<<<<< HEAD
-type PetSitterService interface {
-	GetAllPetSitters(page, count int) (interface{}, error)
-}
-=======
 import (
 	calendarslot "hona/backend/internal/application/dto/calendar_slot"
 	"hona/backend/internal/application/dto/servicedto"
@@ -22,5 +17,6 @@ type PetSitterService interface {
 	ValidatePets(pets []entities.Pet, petKinds []enums.PetKind) error
 	ValidateService(services []entities.Service, serviceID uint) (*entities.Service, error)
 	AutoUpdateSlots(petSitter *entities.PetSitter, calendarSlots []entities.CalendarSlot, accept bool) error
+	GetAllPetSitters(page, count int) (interface{}, error)
+	GetPetsitterServicesResponse(Services []enums.ServiceType) []entities.Service
 }
->>>>>>> dev

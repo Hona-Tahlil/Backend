@@ -12,8 +12,6 @@ func SetUpRoutes(ginEngine *gin.Engine, app *wire.Application) {
 	ginEngine.Use(app.Middlewares.LocalizationMiddleware.AddTranslator)
 	ginEngine.Use(app.Middlewares.RecoveryMiddleware.Recover)
 
-
-	
 	v1 := ginEngine.Group("/v1")
 	httpv1.SetUpGeneralRoutes(v1, app)
 	httpv1.SetUpAdminRoutes(v1, app)

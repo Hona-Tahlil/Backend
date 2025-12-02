@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"fmt"
 	"hona/backend/bootstrap"
 	"hona/backend/internal/domain/exceptions"
 

@@ -36,7 +36,7 @@ func (ss *ServiceService) GetServiceResponse(serviceEntity *entities.Service) se
 		ID:          serviceEntity.ID,
 		Type:        serviceEntity.Type.String(),
 		Description: serviceEntity.Description,
-		Price:       serviceEntity.Price,
+		// Price:       serviceEntity.Price,
 		// PetKinds:    serviceEntity.PetKinds,
 	}
 }

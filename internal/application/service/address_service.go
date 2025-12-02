@@ -3,7 +3,6 @@ package service
 import (
 	"hona/backend/bootstrap"
 	"hona/backend/internal/application/dto/address"
-	"hona/backend/internal/application/dto/request"
 	"hona/backend/internal/application/usecase"
 	"hona/backend/internal/domain/entities"
 	"hona/backend/internal/domain/exceptions"
@@ -39,13 +38,6 @@ func (as *AddressService) FindAddressByID(id uint) (*entities.Address, error) {
 }
 
 func (as *AddressService) GetUserAddressesInfo(id uint) ([]address.AddressInfoResponse, error) {
-<<<<<<< HEAD
-	addressRepo := as.unitOfWork.Factory().AddressRepository()
-	addresses, err := addressRepo.FindAddressesByUserID(id)
-	if err != nil {
-		return nil, err
-	}
-=======
 	user, err := as.userService.FindUserByID(id)
 	if err != nil {
 		return nil, err
@@ -73,7 +65,6 @@ func (as *AddressService) GetUserAddressesInfo(id uint) ([]address.AddressInfoRe
 		addresses = append(addresses, *mainAddress)
 	}
 
->>>>>>> dev
 	r := make([]address.AddressInfoResponse, 0)
 	for _, address := range addresses {
 		r = append(r, as.GetUserAddressInfo(&address))

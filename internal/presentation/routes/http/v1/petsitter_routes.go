@@ -13,26 +13,26 @@ func SetUpPetSitterRoutes(v1 *gin.RouterGroup, app *wire.Application) {
 		register := petsitter.Group("/register")
 		{
 			// STEP 0: Create signup session
-			register.POST("/", app.Controllers.PetSitterController.PetSitterController.CreateSignupSession)
+			register.POST("/", app.Controllers.PetSitterControllers.PetSitterController.CreateSignupSession)
 
 
 			// STEP 1: Personal info
-			register.PUT("/personal", app.Controllers.PetSitterController.PetSitterController.SubmitPersonalInfo)
-			register.GET("/personal", app.Controllers.PetSitterController.PetSitterController.GetPersonalInfo)
+			register.PUT("/personal", app.Controllers.PetSitterControllers.PetSitterController.SubmitPersonalInfo)
+			register.GET("/personal", app.Controllers.PetSitterControllers.PetSitterController.GetPersonalInfo)
 
 
 			// STEP 2: Upload documents
-			register.PUT("/documents", app.Controllers.PetSitterController.PetSitterController.UploadDocuments)
-			register.GET("/documents", app.Controllers.PetSitterController.PetSitterController.GetDocuments)
+			register.PUT("/documents", app.Controllers.PetSitterControllers.PetSitterController.UploadDocuments)
+			register.GET("/documents", app.Controllers.PetSitterControllers.PetSitterController.GetDocuments)
 
 
 			// STEP 3: Skills + Bio
-			register.PUT("/skills", app.Controllers.PetSitterController.PetSitterController.SubmitSkills)
+			register.PUT("/skills", app.Controllers.PetSitterControllers.PetSitterController.SubmitSkills)
 			// register.GET("/skills", app.Controllers.PetSitterController.PetSitterController.GetSkills)
 
 
 			// Optional: Get current status
-			register.GET("/status", app.Controllers.PetSitterController.PetSitterController.GetPetsitterStatus)
+			register.GET("/status", app.Controllers.PetSitterControllers.PetSitterController.GetPetsitterStatus)
 		}
 		requests := petsitter.Group("/requests")
 		{
@@ -44,4 +44,5 @@ func SetUpPetSitterRoutes(v1 *gin.RouterGroup, app *wire.Application) {
 			requests.PUT("/respond", app.Controllers.PetSitterControllers.PetSitterRequestController.RespondToRequest)
 			// TODO: add View Requests Routes
 		}
+	}
 }

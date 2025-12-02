@@ -3,19 +3,11 @@ package enums
 type PetSitterStatus uint
 
 const (
-<<<<<<< HEAD
-	PSS_Draft    PetSitterStatus = iota + 1
-	PSS_InReview  
-	PSS_Active   
-	PSS_Rejected  
-	PSS_Suspended 
-=======
 	PSS_Draft PetSitterStatus = iota + 1
 	PSS_InReview
 	PSS_Active
 	PSS_Rejected
 	PSS_Suspended
->>>>>>> dev
 )
 
 func (petSitterStatus PetSitterStatus) String() string {
@@ -34,10 +26,6 @@ func (petSitterStatus PetSitterStatus) String() string {
 	return ""
 }
 
-<<<<<<< HEAD
-
-=======
->>>>>>> dev
 func GetAllPetSitterStatus() []PetSitterStatus {
 	return []PetSitterStatus{
 		PSS_Draft,

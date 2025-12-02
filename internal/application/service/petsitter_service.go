@@ -1,44 +1,39 @@
 package service
 
 import (
+	"errors"
+	"fmt"
 	"hona/backend/bootstrap"
+	"hona/backend/internal/application/dto/address"
 	calendarslot "hona/backend/internal/application/dto/calendar_slot"
+	"hona/backend/internal/application/dto/petsitter"
 	"hona/backend/internal/application/dto/servicedto"
 	"hona/backend/internal/application/usecase"
 	"hona/backend/internal/domain/entities"
 	"hona/backend/internal/domain/enums"
 	"hona/backend/internal/domain/exceptions"
 	"hona/backend/internal/domain/ports"
-	"log"
-	"errors"
-	"fmt"
-	"hona/backend/bootstrap"
-	"hona/backend/internal/application/dto/address"
-	"hona/backend/internal/application/dto/petsitter"
-	"hona/backend/internal/application/usecase"
-	"hona/backend/internal/domain/entities"
-	"hona/backend/internal/domain/enums"
-	"hona/backend/internal/domain/exceptions"
-	"hona/backend/internal/domain/ports"
 	domainstorage "hona/backend/internal/domain/storage"
+	"log"
+
 	"github.com/samber/lo"
 )
 
 type PetSitterService struct {
 	unitOfWork          ports.UnitOfWork
-	storage        domainstorage.Storage
-	userService    usecase.UserService
-	addressService usecase.AddressService
+	storage             domainstorage.Storage
+	userService         usecase.UserService
+	addressService      usecase.AddressService
 	serviceService      usecase.ServiceService
 	calendarSlotService usecase.CalendarSlotService
 }
 
-func NewPetSitterService(unitOfWork ports.UnitOfWork, ustorage domainstorage.Storage, userService usecase.UserService, addressService usecase.AddressService, serviceService usecase.ServiceService, calendarSlotService usecase.CalendarSlotService) *PetSitterService {
+func NewPetSitterService(unitOfWork ports.UnitOfWork, storage domainstorage.Storage, userService usecase.UserService, addressService usecase.AddressService, serviceService usecase.ServiceService, calendarSlotService usecase.CalendarSlotService) *PetSitterService {
 	return &PetSitterService{
 		unitOfWork:          unitOfWork,
-		storage:        storage,
-		userService:    userService,
-		addressService: addressService,
+		storage:             storage,
+		userService:         userService,
+		addressService:      addressService,
 		serviceService:      serviceService,
 		calendarSlotService: calendarSlotService,
 	}
@@ -194,7 +189,6 @@ func (ps *PetSitterService) makeSlot(calendarSlot *entities.CalendarSlot, accept
 	return slot
 }
 
-
 func (ps *PetSitterService) CreateSignupSession(PetsitterInfo petsitter.GetPetSitterRequest) (*petsitter.PetSitterStatusResponse, error) {
 	userRepo := ps.unitOfWork.Factory().UserRepository()
 	petSitterRepo := ps.unitOfWork.Factory().PetSitterRepository()
@@ -309,7 +303,7 @@ func (ps *PetSitterService) UploadDocuments(info petsitter.UploadDocumentsReques
 	foundPetSitter.OnboardingStep = enums.OBS_Documents
 	foundPetSitter.Status = enums.PSS_InReview
 	petSitterRepo := ps.unitOfWork.Factory().PetSitterRepository()
-	err = petSitterRepo.UpdatePetSitter(foundPetSitter)
+	err = petSitterRepo.EditPetSitter(foundPetSitter)
 	if err != nil {
 		return err
 	}
@@ -372,7 +366,7 @@ func (ps *PetSitterService) SubmitSkills(SkillsInfo petsitter.SubmitSkillsReques
 		return err
 	}
 
-	services := ps.GetServicesResponse(SkillsInfo.Services)
+	services := ps.GetPetsitterServicesResponse(SkillsInfo.Services)
 	if foundPetSitter.OnboardingStep != enums.OBS_Documents {
 		return errors.New("invalid onboarding step: cannot submit skills now")
 	}
@@ -383,7 +377,7 @@ func (ps *PetSitterService) SubmitSkills(SkillsInfo petsitter.SubmitSkillsReques
 	}
 	foundPetSitter.OnboardingStep = enums.OBS_Done
 
-	err = petSitterRepo.UpdatePetSitter(foundPetSitter)
+	err = petSitterRepo.EditPetSitter(foundPetSitter)
 	if err != nil {
 		return err
 	}
@@ -423,7 +417,7 @@ func (ps *PetSitterService) FindPetSitterByID(id uint) (*entities.PetSitter, err
 	return foundPetSitter, nil
 }
 
-func (ps *PetSitterService) GetServicesResponse(Services []enums.ServiceType) []entities.Service {
+func (ps *PetSitterService) GetPetsitterServicesResponse(Services []enums.ServiceType) []entities.Service {
 	r := make([]entities.Service, 0)
 	for _, service := range Services {
 		r = append(r, entities.Service{
@@ -576,7 +570,7 @@ func (ps *PetSitterService) SubmitPersonalInfo(petSitterInfo petsitter.SubmitPer
 		foundUser.Phone = &petSitterInfo.Phone
 		foundUser.PetSitter.Status = enums.PSS_Draft
 		foundUser.PetSitter.OnboardingStep = enums.OBS_Profile
-		err = userRepo.UpdateUser(foundUser)
+		err = userRepo.SaveUser(foundUser)
 		if err != nil {
 			return err
 		}

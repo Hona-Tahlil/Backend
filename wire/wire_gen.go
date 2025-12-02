@@ -7,36 +7,26 @@
 package wire
 
 import (
-	"github.com/google/wire"
 	"hona/backend/bootstrap"
 	"hona/backend/internal/application/service"
 	"hona/backend/internal/application/usecase"
-	"hona/backend/internal/domain/jwt"
+	domainjwt "hona/backend/internal/domain/jwt"
 	"hona/backend/internal/domain/ports"
-<<<<<<< HEAD
-=======
-	"hona/backend/internal/domain/ports/redis"
->>>>>>> dev
-	"hona/backend/internal/domain/storage"
+	domainredis "hona/backend/internal/domain/ports/redis"
+	domainstorage "hona/backend/internal/domain/storage"
 	"hona/backend/internal/infrastructure/jwt"
 	"hona/backend/internal/infrastructure/mail"
 	"hona/backend/internal/infrastructure/persistence"
-<<<<<<< HEAD
-	"hona/backend/internal/infrastructure/persistence/seeder"
-	"hona/backend/internal/infrastructure/storage"
-	"hona/backend/internal/presentation/controllers/v1/admin"
-	"hona/backend/internal/presentation/controllers/v1/general"
-	"hona/backend/internal/presentation/controllers/v1/petsitter"
-=======
 	"hona/backend/internal/infrastructure/persistence/repository/redis"
 	"hona/backend/internal/infrastructure/seeder"
 	"hona/backend/internal/infrastructure/storage"
 	"hona/backend/internal/presentation/controllers/v1/admin"
 	"hona/backend/internal/presentation/controllers/v1/general"
-	"hona/backend/internal/presentation/controllers/v1/pet_sitter"
+	petsitter "hona/backend/internal/presentation/controllers/v1/pet_sitter"
 	"hona/backend/internal/presentation/controllers/v1/user"
->>>>>>> dev
 	"hona/backend/internal/presentation/middleware"
+
+	"github.com/google/wire"
 )
 
 // Injectors from wire.go:
@@ -66,25 +56,13 @@ func InitializeApplication(container *bootstrap.Config) (*Application, error) {
 	adminControllers := &AdminControllers{
 		AdminRBACController: adminRBACController,
 	}
-<<<<<<< HEAD
-	s3Storage := storage.NewS3Storage()
-	provinceService := service.NewProvinceService(unitOfWork)
-	addressService := service.NewAddressService(unitOfWork, provinceService)
-	petSitterService := service.NewPetSitterService(unitOfWork, s3Storage, userService, addressService)
-	petSitterController := petsitter.NewPetsitterController(petSitterService)
-	wirePetSitterController := &PetSitterController{
-		PetSitterController: petSitterController,
-	}
-	controllers := &Controllers{
-		GeneralControllers:  generalControllers,
-		AdminControllers:    adminControllers,
-		PetSitterController: wirePetSitterController,
-=======
 	userPetController := user.NewUserPetController(petService)
 	addressService := service.NewAddressService(unitOfWork, provinceService, userService)
 	serviceService := service.NewServiceService(unitOfWork)
 	calendarSlotService := service.NewCalendarSlotService()
-	petSitterService := service.NewPetSitterService(unitOfWork, userService, serviceService, calendarSlotService)
+	petSitterService := service.NewPetSitterService(unitOfWork, s3Storage, userService, addressService, serviceService, calendarSlotService)
+	petSitterController := petsitter.NewPetsitterController(petSitterService)
+	petSitterRequestController := petsitter.NewPetSitterRequestController(requestService)
 	requestServiceDeps := service.RequestServiceDeps{
 		UserService:         userService,
 		ProvinceService:     provinceService,
@@ -102,30 +80,26 @@ func InitializeApplication(container *bootstrap.Config) (*Application, error) {
 		UserPetController:     userPetController,
 		UserRequestController: userRequestController,
 	}
-	petSitterControllers := &PetSitterControllers{}
+	petSitterControllers := &PetSitterControllers{
+		PetSitterController:        petSitterController,
+		PetSitterRequestController: petSitterRequestController,
+	}
 	controllers := &Controllers{
 		GeneralControllers:   generalControllers,
 		AdminControllers:     adminControllers,
 		UserControllers:      userControllers,
 		PetSitterControllers: petSitterControllers,
->>>>>>> dev
 	}
 	localizationMiddleware := middleware.NewLocalizationMiddleware()
 	recoveryMiddleware := middleware.NewRecoveryMiddleware()
 	authMiddleware := middleware.NewAuthMiddleware(jwtService)
-<<<<<<< HEAD
-=======
 	rbacMiddleware := middleware.NewRBACMiddleware(unitOfWork)
->>>>>>> dev
 	corsMiddleware := middleware.NewCORSMiddleware()
 	middlewares := &Middlewares{
 		LocalizationMiddleware: localizationMiddleware,
 		RecoveryMiddleware:     recoveryMiddleware,
 		AuthMiddleware:         authMiddleware,
-<<<<<<< HEAD
-=======
 		RBACMiddleware:         rbacMiddleware,
->>>>>>> dev
 		CORSMiddleware:         corsMiddleware,
 	}
 	databaseSeeder := seeder.NewDatabaseSeeder(db)
@@ -142,15 +116,8 @@ func InitializeApplication(container *bootstrap.Config) (*Application, error) {
 // wire.go:
 
 var StorageProviderSet = wire.NewSet(storage.NewS3Storage, wire.Bind(new(domainstorage.Storage), new(*storage.S3Storage)), wire.Struct(new(Storage), "*"))
-<<<<<<< HEAD
-
-var RepositoryProviderSet = wire.NewSet(persistence.NewRepositoryFactory, persistence.NewUnitOfWork, persistence.NewPostgresDatabase, wire.Bind(new(ports.RepositoryFactory), new(*persistence.RepositoryFactory)), wire.Bind(new(ports.UnitOfWork), new(*persistence.UnitOfWork)))
-
-var ServiceProviderSet = wire.NewSet(service.NewUserService, jwt.NewJWTService, jwt.NewJWTKeyManager, service.NewRBACService, service.NewProvinceService, service.NewAddressService, service.NewPetSitterService, wire.Bind(new(domainjwt.JWTService), new(*jwt.JWTService)), wire.Bind(new(domainjwt.JWTKeyManager), new(*jwt.JWTKeyManager)), wire.Bind(new(usecase.RBACService), new(*service.RBACService)), wire.Bind(new(usecase.UserService), new(*service.UserService)), wire.Bind(new(usecase.ProvinceService), new(*service.ProvinceService)), wire.Bind(new(usecase.AddressService), new(*service.AddressService)), wire.Bind(new(usecase.PetSitterService), new(*service.PetSitterService)))
-=======
 
 var RepositoryProviderSet = wire.NewSet(persistence.NewRepositoryFactory, persistence.NewUnitOfWork, persistence.NewPostgresDatabase, persistence.NewRedisDatabase, redis.NewUserCacheRepository, wire.Bind(new(persistence.Cache), new(*persistence.RedisDatabase)), wire.Bind(new(domainredis.UserCacheRepository), new(*redis.UserCacheRepository)), wire.Bind(new(ports.RepositoryFactory), new(*persistence.RepositoryFactory)), wire.Bind(new(ports.UnitOfWork), new(*persistence.UnitOfWork)))
->>>>>>> dev
 
 var ServiceProviderSet = wire.NewSet(wire.Struct(new(service.RequestServiceDeps), "*"), service.NewUserService, jwt.NewJWTService, jwt.NewJWTKeyManager, mail.NewEmailService, service.NewRBACService, service.NewPetService, service.NewRequestService, service.NewProvinceService, service.NewAddressService, service.NewCalendarSlotService, service.NewPetSitterService, service.NewServiceService, wire.Bind(new(domainjwt.JWTService), new(*jwt.JWTService)), wire.Bind(new(domainjwt.JWTKeyManager), new(*jwt.JWTKeyManager)), wire.Bind(new(usecase.RBACService), new(*service.RBACService)), wire.Bind(new(usecase.UserService), new(*service.UserService)), wire.Bind(new(usecase.PetService), new(*service.PetService)), wire.Bind(new(usecase.RequestService), new(*service.RequestService)), wire.Bind(new(usecase.ProvinceService), new(*service.ProvinceService)), wire.Bind(new(usecase.AddressService), new(*service.AddressService)), wire.Bind(new(usecase.CalendarSlotService), new(*service.CalendarSlotService)), wire.Bind(new(usecase.PetSitterService), new(*service.PetSitterService)), wire.Bind(new(usecase.ServiceService), new(*service.ServiceService)))
 
@@ -158,13 +125,6 @@ var GeneralControllersProviderSet = wire.NewSet(general.NewGeneralUserController
 
 var AdminControllersProviderSet = wire.NewSet(admin.NewAdminRBACController, wire.Struct(new(AdminControllers), "*"))
 
-<<<<<<< HEAD
-var PetSitterControllersProviderSet = wire.NewSet(petsitter.NewPetsitterController, wire.Struct(new(PetSitterController), "*"))
-
-var ControllersProviderSet = wire.NewSet(wire.Struct(new(Controllers), "*"))
-
-var MiddlewaresProviderSet = wire.NewSet(middleware.NewLocalizationMiddleware, middleware.NewRecoveryMiddleware, middleware.NewAuthMiddleware, middleware.NewCORSMiddleware, wire.Struct(new(Middlewares), "*"))
-=======
 var UserControllersProviderSet = wire.NewSet(user.NewUserPetController, user.NewUserRequestController, wire.Struct(new(UserControllers), "*"))
 
 var PetSitterControllersProviderSet = wire.NewSet(petsitter.NewPetSitterRequestController, wire.Struct(new(PetSitterControllers)))
@@ -172,7 +132,6 @@ var PetSitterControllersProviderSet = wire.NewSet(petsitter.NewPetSitterRequestC
 var ControllersProviderSet = wire.NewSet(wire.Struct(new(Controllers), "*"))
 
 var MiddlewaresProviderSet = wire.NewSet(middleware.NewLocalizationMiddleware, middleware.NewRecoveryMiddleware, middleware.NewRBACMiddleware, middleware.NewAuthMiddleware, middleware.NewCORSMiddleware, wire.Struct(new(Middlewares), "*"))
->>>>>>> dev
 
 var SeederProviderSet = wire.NewSet(seeder.NewDatabaseSeeder, wire.Struct(new(Seeder), "*"))
 
@@ -187,10 +146,6 @@ var ProviderSet = wire.NewSet(
 	RepositoryProviderSet,
 	SeederProviderSet,
 	StorageProviderSet,
-<<<<<<< HEAD
-	PetSitterControllersProviderSet,
-=======
->>>>>>> dev
 )
 
 type GeneralControllers struct {
@@ -203,22 +158,13 @@ type AdminControllers struct {
 	AdminRBACController *admin.AdminRBACController
 }
 
-<<<<<<< HEAD
-type PetSitterController struct {
-	PetSitterController *petsitter.PetSitterController
-}
-
-type Controllers struct {
-	GeneralControllers  *GeneralControllers
-	AdminControllers    *AdminControllers
-	PetSitterController *PetSitterController
-=======
 type UserControllers struct {
 	UserPetController     *user.UserPetController
 	UserRequestController *user.UserRequestController
 }
 
 type PetSitterControllers struct {
+	PetSitterController        *petsitter.PetSitterController
 	PetSitterRequestController *petsitter.PetSitterRequestController
 }
 
@@ -227,17 +173,13 @@ type Controllers struct {
 	AdminControllers     *AdminControllers
 	UserControllers      *UserControllers
 	PetSitterControllers *PetSitterControllers
->>>>>>> dev
 }
 
 type Middlewares struct {
 	LocalizationMiddleware *middleware.LocalizationMiddleware
 	RecoveryMiddleware     *middleware.RecoveryMiddleware
 	AuthMiddleware         *middleware.AuthMiddleware
-<<<<<<< HEAD
-=======
 	RBACMiddleware         *middleware.RBACMiddleware
->>>>>>> dev
 	CORSMiddleware         *middleware.CORSMiddleware
 }
 

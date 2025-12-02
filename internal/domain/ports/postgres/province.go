@@ -7,10 +7,7 @@ import (
 
 type ProvinceRepository interface {
 	FindProvinceByName(name enums.Province) (*entities.Province, error)
-<<<<<<< HEAD
-}
-=======
 	CreateProvince(province *entities.Province) error
 	GetAllProvinces() ([]entities.Province, error)
 }
->>>>>>> dev
+
