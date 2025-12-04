@@ -30,6 +30,8 @@ services:
 
   app:
     build: .
+    image: ghcr.io/hona-tahlil/backend
+    container_name: backend
     depends_on:
       - db
       - rdb
@@ -41,7 +43,6 @@ services:
       DB_PORT: ${DB_PORT}
     ports:
       - "${SERVER_PORT}:8080"
-
 
 volumes:
   pgdata:
