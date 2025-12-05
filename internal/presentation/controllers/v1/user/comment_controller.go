@@ -2,17 +2,17 @@ package user
 
 import (
 	"hona/backend/internal/application/dto/comment"
-	"hona/backend/internal/application/service"
+	"hona/backend/internal/application/usecase"
 	"hona/backend/internal/presentation/controllers"
 
 	"github.com/gin-gonic/gin"
 )
 
 type UserCommentController struct {
-	commentService *service.CommentService
+	commentService usecase.CommentService
 }
 
-func NewUserCommentController(commentService *service.CommentService) *UserCommentController {
+func NewUserCommentController(commentService usecase.CommentService) *UserCommentController {
 	return &UserCommentController{
 		commentService: commentService,
 	}

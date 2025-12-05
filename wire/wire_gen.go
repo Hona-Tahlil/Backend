@@ -73,9 +73,12 @@ func InitializeApplication(container *bootstrap.Config) (*Application, error) {
 	}
 	requestService := service.NewRequestService(requestServiceDeps)
 	userRequestController := user.NewUserRequestController(requestService)
+	commentService := service.NewCommentService(unitOfWork, userService, requestService)
+	userCommentController := user.NewUserCommentController(commentService)
 	userControllers := &UserControllers{
 		UserPetController:     userPetController,
 		UserRequestController: userRequestController,
+		UserCommentController: userCommentController,
 	}
 	petSitterControllers := &PetSitterControllers{}
 	controllers := &Controllers{
@@ -113,13 +116,13 @@ var StorageProviderSet = wire.NewSet(storage.NewS3Storage, wire.Bind(new(domains
 
 var RepositoryProviderSet = wire.NewSet(persistence.NewRepositoryFactory, persistence.NewUnitOfWork, persistence.NewPostgresDatabase, persistence.NewRedisDatabase, redis.NewUserCacheRepository, wire.Bind(new(persistence.Cache), new(*persistence.RedisDatabase)), wire.Bind(new(domainredis.UserCacheRepository), new(*redis.UserCacheRepository)), wire.Bind(new(ports.RepositoryFactory), new(*persistence.RepositoryFactory)), wire.Bind(new(ports.UnitOfWork), new(*persistence.UnitOfWork)))
 
-var ServiceProviderSet = wire.NewSet(wire.Struct(new(service.RequestServiceDeps), "*"), service.NewUserService, jwt.NewJWTService, jwt.NewJWTKeyManager, mail.NewEmailService, service.NewRBACService, service.NewPetService, service.NewRequestService, service.NewProvinceService, service.NewAddressService, service.NewCalendarSlotService, service.NewPetSitterService, service.NewServiceService, wire.Bind(new(domainjwt.JWTService), new(*jwt.JWTService)), wire.Bind(new(domainjwt.JWTKeyManager), new(*jwt.JWTKeyManager)), wire.Bind(new(usecase.RBACService), new(*service.RBACService)), wire.Bind(new(usecase.UserService), new(*service.UserService)), wire.Bind(new(usecase.PetService), new(*service.PetService)), wire.Bind(new(usecase.RequestService), new(*service.RequestService)), wire.Bind(new(usecase.ProvinceService), new(*service.ProvinceService)), wire.Bind(new(usecase.AddressService), new(*service.AddressService)), wire.Bind(new(usecase.CalendarSlotService), new(*service.CalendarSlotService)), wire.Bind(new(usecase.PetSitterService), new(*service.PetSitterService)), wire.Bind(new(usecase.ServiceService), new(*service.ServiceService)))
+var ServiceProviderSet = wire.NewSet(wire.Struct(new(service.RequestServiceDeps), "*"), service.NewUserService, jwt.NewJWTService, jwt.NewJWTKeyManager, mail.NewEmailService, service.NewRBACService, service.NewPetService, service.NewRequestService, service.NewProvinceService, service.NewAddressService, service.NewCalendarSlotService, service.NewPetSitterService, service.NewServiceService, service.NewCommentService, wire.Bind(new(domainjwt.JWTService), new(*jwt.JWTService)), wire.Bind(new(domainjwt.JWTKeyManager), new(*jwt.JWTKeyManager)), wire.Bind(new(usecase.RBACService), new(*service.RBACService)), wire.Bind(new(usecase.UserService), new(*service.UserService)), wire.Bind(new(usecase.PetService), new(*service.PetService)), wire.Bind(new(usecase.RequestService), new(*service.RequestService)), wire.Bind(new(usecase.ProvinceService), new(*service.ProvinceService)), wire.Bind(new(usecase.AddressService), new(*service.AddressService)), wire.Bind(new(usecase.CalendarSlotService), new(*service.CalendarSlotService)), wire.Bind(new(usecase.PetSitterService), new(*service.PetSitterService)), wire.Bind(new(usecase.ServiceService), new(*service.ServiceService)), wire.Bind(new(usecase.CommentService), new(*service.CommentService)))
 
 var GeneralControllersProviderSet = wire.NewSet(general.NewGeneralUserController, general.NewGeneralPetController, general.NewGeneralProvinceController, wire.Struct(new(GeneralControllers), "*"))
 
 var AdminControllersProviderSet = wire.NewSet(admin.NewAdminRBACController, wire.Struct(new(AdminControllers), "*"))
 
-var UserControllersProviderSet = wire.NewSet(user.NewUserPetController, user.NewUserRequestController, wire.Struct(new(UserControllers), "*"))
+var UserControllersProviderSet = wire.NewSet(user.NewUserPetController, user.NewUserRequestController, user.NewUserCommentController, wire.Struct(new(UserControllers), "*"))
 
 var PetSitterControllersProviderSet = wire.NewSet(petsitter.NewPetSitterRequestController, wire.Struct(new(PetSitterControllers)))
 
@@ -155,6 +158,7 @@ type AdminControllers struct {
 type UserControllers struct {
 	UserPetController     *user.UserPetController
 	UserRequestController *user.UserRequestController
+	UserCommentController *user.UserCommentController
 }
 
 type PetSitterControllers struct {

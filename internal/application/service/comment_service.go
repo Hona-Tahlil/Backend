@@ -5,7 +5,6 @@ import (
 	"hona/backend/internal/application/dto/comment"
 	"hona/backend/internal/application/usecase"
 	"hona/backend/internal/domain/entities"
-	"hona/backend/internal/domain/enums"
 	"hona/backend/internal/domain/exceptions"
 	"hona/backend/internal/domain/ports"
 )
@@ -30,8 +29,14 @@ func (cs *CommentService) CreateComment(info comment.CreateCommentRequest) error
 		return err
 	}
 
-	if foundRequest.Status != enums.Finished {
-		return exceptions.NewAccessDeniedError("can't comment on unfinished requests")
+	err = cs.requestService.EnsureRequestIsFinished(foundRequest)
+	if err != nil {
+		return err
+	}
+	if foundRequest.Comment != nil {
+		var ce exceptions.ConflictErrors
+		ce.Add(bootstrap.Run().Constants.ErrorFields.Comment, bootstrap.Run().Constants.ErrorTags.AlreadyExist)
+		return &ce
 	}
 
 	newComment := &entities.Comment{
@@ -51,13 +56,9 @@ func (cs *CommentService) CreateComment(info comment.CreateCommentRequest) error
 }
 
 func (cs *CommentService) EditComment(info comment.EditCommentRequest) error {
-	foundComment, err := cs.FindCommentByID(info.CommentID)
+	foundComment, err := cs.FindUserCommentByID(info.CommentID, info.UserID)
 	if err != nil {
 		return err
-	}
-
-	if foundComment.UserID != info.UserID {
-		return exceptions.NewAccessDeniedError("you can't edit this comment")
 	}
 
 	foundComment.Text = info.Text
@@ -85,13 +86,9 @@ func (cs *CommentService) FindCommentByID(id uint) (*entities.Comment, error) {
 }
 
 func (cs *CommentService) DeleteComment(info comment.DeleteCommentRequest) error {
-	foundComment, err := cs.FindCommentByID(info.CommentID)
+	foundComment, err := cs.FindUserCommentByID(info.CommentID, info.UserID)
 	if err != nil {
 		return err
-	}
-
-	if foundComment.UserID != info.UserID {
-		return exceptions.NewAccessDeniedError("you can't edit this comment")
 	}
 
 	commentRepo := cs.unitOfWork.Factory().CommentRepository()
@@ -116,13 +113,14 @@ func (cs *CommentService) GetAllPetSitterComments(info comment.GetAllPetSitterCo
 		if err != nil {
 			return nil, err
 		}
-		name := user.FirstName + " " + user.LastName
 		averageRating += float32(c.Rating)
 		r = append(r, comment.CommentResponse{
-			UserName:  name,
-			Text:      c.Text,
-			Rating:    c.Rating,
-			UpdatedAt: c.UpdatedAt,
+			UserID:        user.ID,
+			UserFirstName: user.FirstName,
+			UserLastName:  user.LastName,
+			Text:          c.Text,
+			Rating:        c.Rating,
+			UpdatedAt:     c.UpdatedAt,
 		})
 	}
 	averageRating /= float32(len(r))
@@ -131,4 +129,16 @@ func (cs *CommentService) GetAllPetSitterComments(info comment.GetAllPetSitterCo
 		AverageRating: averageRating,
 		Comments:      r,
 	}, nil
+}
+
+func (cs *CommentService) FindUserCommentByID(commentID, userID uint) (*entities.Comment, error) {
+	foundComment, err := cs.FindCommentByID(commentID)
+	if err != nil {
+		return nil, err
+	}
+
+	if foundComment.UserID != userID {
+		return nil, exceptions.NewNotFoundError(bootstrap.Run().Constants.ErrorFields.Comment)
+	}
+	return foundComment, nil
 }

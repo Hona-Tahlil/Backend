@@ -9,8 +9,10 @@ type AllCommentsResponse struct {
 }
 
 type CommentResponse struct {
-	UserName  string    `json:"userName"`
-	UpdatedAt time.Time `json:"updatedAt"`
-	Text      *string   `json:"text"`
-	Rating    uint      `json:"rating"`
+	UserID        uint      `json:"userID"`
+	UserFirstName string    `json:"userFirstName"`
+	UserLastName  string    `json:"userLastName"`
+	UpdatedAt     time.Time `json:"updatedAt"`
+	Text          *string   `json:"text"`
+	Rating        uint      `json:"rating"`
 }

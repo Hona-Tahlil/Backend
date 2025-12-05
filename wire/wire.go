@@ -58,6 +58,7 @@ var ServiceProviderSet = wire.NewSet(
 	service.NewCalendarSlotService,
 	service.NewPetSitterService,
 	service.NewServiceService,
+	service.NewCommentService,
 	wire.Bind(new(domainjwt.JWTService), new(*jwt.JWTService)),
 	wire.Bind(new(domainjwt.JWTKeyManager), new(*jwt.JWTKeyManager)),
 	wire.Bind(new(usecase.RBACService), new(*service.RBACService)),
@@ -69,6 +70,7 @@ var ServiceProviderSet = wire.NewSet(
 	wire.Bind(new(usecase.CalendarSlotService), new(*service.CalendarSlotService)),
 	wire.Bind(new(usecase.PetSitterService), new(*service.PetSitterService)),
 	wire.Bind(new(usecase.ServiceService), new(*service.ServiceService)),
+	wire.Bind(new(usecase.CommentService), new(*service.CommentService)),
 )
 
 var GeneralControllersProviderSet = wire.NewSet(
@@ -86,6 +88,7 @@ var AdminControllersProviderSet = wire.NewSet(
 var UserControllersProviderSet = wire.NewSet(
 	user.NewUserPetController,
 	user.NewUserRequestController,
+	user.NewUserCommentController,
 	wire.Struct(new(UserControllers), "*"),
 )
 
@@ -138,6 +141,7 @@ type AdminControllers struct {
 type UserControllers struct {
 	UserPetController     *user.UserPetController
 	UserRequestController *user.UserRequestController
+	UserCommentController *user.UserCommentController
 }
 
 type PetSitterControllers struct {
