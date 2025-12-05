@@ -1,6 +1,7 @@
 package general
 
 import (
+	"fmt"
 	"hona/backend/bootstrap"
 	"hona/backend/internal/application/dto/rbac"
 	"hona/backend/internal/application/dto/user"
@@ -36,17 +37,23 @@ func (gc *GeneralUserController) Login(ctx *gin.Context) {
 		Password:   params.Password,
 		RememberMe: params.RememberMe,
 	}
+	fmt.Println("✅ 1")
 
 	res, refreshToken, expireTime, err := gc.userService.Login(loginInfo)
 	if err != nil {
 		panic(err)
 	}
+	fmt.Println("✅ 2")
 
 	controllers.SetRefreshTokenCookie(ctx, refreshToken, expireTime)
+	fmt.Println("✅ 3")
 
 	msg := controllers.Message{
 		Text: successMessages.Login,
 	}
+	fmt.Printf("LOGIN RES TYPE: %T\n", res)
+	fmt.Printf("LOGIN RES VALUE: %#v\n", *res)
+
 	controllers.Respond(ctx, 200, msg, *res)
 }
 
@@ -121,7 +128,8 @@ func (gc *GeneralUserController) ForgotPassword(ctx *gin.Context) {
 	if err := gc.userService.ForgotPassword(forgotPasswordInfo); err != nil {
 		panic(err)
 	}
-
+	msg := controllers.Message{}
+	controllers.Respond(ctx, 200, msg, nil)
 }
 
 func (gc *GeneralUserController) ResetPassword(ctx *gin.Context) {
@@ -139,6 +147,8 @@ func (gc *GeneralUserController) ResetPassword(ctx *gin.Context) {
 	if err := gc.userService.ResetPassword(resetPasswordInfo); err != nil {
 		panic(err)
 	}
+	msg := controllers.Message{}
+	controllers.Respond(ctx, 200, msg, nil)
 }
 
 func (gc *GeneralUserController) RefreshTokens(ctx *gin.Context) {

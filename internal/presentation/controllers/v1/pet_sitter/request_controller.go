@@ -2,7 +2,7 @@ package petsitter
 
 import (
 	"hona/backend/internal/application/dto/request"
-	"hona/backend/internal/application/service"
+	"hona/backend/internal/application/usecase"
 	"hona/backend/internal/presentation/controllers"
 	"time"
 
@@ -10,10 +10,10 @@ import (
 )
 
 type PetSitterRequestController struct {
-	requestService *service.RequestService
+	requestService usecase.RequestService
 }
 
-func NewPetSitterRequestController(requestService *service.RequestService) *PetSitterRequestController {
+func NewPetSitterRequestController(requestService usecase.RequestService) *PetSitterRequestController {
 	return &PetSitterRequestController{
 		requestService: requestService,
 	}

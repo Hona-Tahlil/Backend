@@ -5,7 +5,6 @@ package wire
 
 import (
 	"hona/backend/bootstrap"
-
 	"hona/backend/internal/application/service"
 	"hona/backend/internal/application/usecase"
 	domainjwt "hona/backend/internal/domain/jwt"
@@ -23,7 +22,6 @@ import (
 	petsitter "hona/backend/internal/presentation/controllers/v1/pet_sitter"
 	"hona/backend/internal/presentation/controllers/v1/user"
 	"hona/backend/internal/presentation/middleware"
-
 	"github.com/google/wire"
 )
 
@@ -69,6 +67,7 @@ var ServiceProviderSet = wire.NewSet(
 	wire.Bind(new(usecase.CalendarSlotService), new(*service.CalendarSlotService)),
 	wire.Bind(new(usecase.PetSitterService), new(*service.PetSitterService)),
 	wire.Bind(new(usecase.ServiceService), new(*service.ServiceService)),
+
 )
 
 var GeneralControllersProviderSet = wire.NewSet(
@@ -90,8 +89,9 @@ var UserControllersProviderSet = wire.NewSet(
 )
 
 var PetSitterControllersProviderSet = wire.NewSet(
+	petsitter.NewPetSitterRegisterController,
 	petsitter.NewPetSitterRequestController,
-	wire.Struct(new(PetSitterControllers)),
+	wire.Struct(new(PetSitterControllers), "*"),
 )
 
 var ControllersProviderSet = wire.NewSet(
@@ -141,6 +141,7 @@ type UserControllers struct {
 }
 
 type PetSitterControllers struct {
+	PetSitterRegisterController *petsitter.PetSitterRegisterController
 	PetSitterRequestController *petsitter.PetSitterRequestController
 }
 

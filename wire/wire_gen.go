@@ -59,7 +59,7 @@ func InitializeApplication(container *bootstrap.Config) (*Application, error) {
 	addressService := service.NewAddressService(unitOfWork, provinceService, userService)
 	serviceService := service.NewServiceService(unitOfWork)
 	calendarSlotService := service.NewCalendarSlotService()
-	petSitterService := service.NewPetSitterService(unitOfWork, userService, serviceService, calendarSlotService)
+	petSitterService := service.NewPetSitterService(unitOfWork, s3Storage, userService, addressService, serviceService, calendarSlotService)
 	requestServiceDeps := service.RequestServiceDeps{
 		UserService:         userService,
 		ProvinceService:     provinceService,
@@ -77,7 +77,12 @@ func InitializeApplication(container *bootstrap.Config) (*Application, error) {
 		UserPetController:     userPetController,
 		UserRequestController: userRequestController,
 	}
-	petSitterControllers := &PetSitterControllers{}
+	petSitterRegisterController := petsitter.NewPetSitterRegisterController(petSitterService)
+	petSitterRequestController := petsitter.NewPetSitterRequestController(requestService)
+	petSitterControllers := &PetSitterControllers{
+		PetSitterRegisterController: petSitterRegisterController,
+		PetSitterRequestController:  petSitterRequestController,
+	}
 	controllers := &Controllers{
 		GeneralControllers:   generalControllers,
 		AdminControllers:     adminControllers,
@@ -121,7 +126,7 @@ var AdminControllersProviderSet = wire.NewSet(admin.NewAdminRBACController, wire
 
 var UserControllersProviderSet = wire.NewSet(user.NewUserPetController, user.NewUserRequestController, wire.Struct(new(UserControllers), "*"))
 
-var PetSitterControllersProviderSet = wire.NewSet(petsitter.NewPetSitterRequestController, wire.Struct(new(PetSitterControllers)))
+var PetSitterControllersProviderSet = wire.NewSet(petsitter.NewPetSitterRegisterController, petsitter.NewPetSitterRequestController, wire.Struct(new(PetSitterControllers), "*"))
 
 var ControllersProviderSet = wire.NewSet(wire.Struct(new(Controllers), "*"))
 
@@ -158,7 +163,8 @@ type UserControllers struct {
 }
 
 type PetSitterControllers struct {
-	PetSitterRequestController *petsitter.PetSitterRequestController
+	PetSitterRegisterController *petsitter.PetSitterRegisterController
+	PetSitterRequestController  *petsitter.PetSitterRequestController
 }
 
 type Controllers struct {

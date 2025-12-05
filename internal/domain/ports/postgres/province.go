@@ -10,3 +10,4 @@ type ProvinceRepository interface {
 	CreateProvince(province *entities.Province) error
 	GetAllProvinces() ([]entities.Province, error)
 }
+

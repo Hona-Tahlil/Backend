@@ -1,9 +1,10 @@
 package service
 
 import (
+
 	"context"
 	"crypto/rand"
-	"encoding/base64"
+	"encoding/base64"	
 	"hona/backend/bootstrap"
 	"hona/backend/internal/application/dto/rbac"
 	"hona/backend/internal/application/dto/user"
@@ -67,13 +68,17 @@ func (us *UserService) GetRolesResponse(user *entities.User) []rbac.RoleResponse
 
 func (us *UserService) Login(loginInfo user.LoginRequest) (*user.LoginResponse, string, int, error) {
 	foundUser, err := us.FindUserByEmail(loginInfo.Email)
+
 	if err != nil {
 		if _, ok := err.(*exceptions.NotFoundError); !ok {
 			return nil, "", 0, err
 		}
+
+
 		invalidCredentialsErr := exceptions.NewInvalidCredentialsError("password is wrong")
 		return nil, "", 0, invalidCredentialsErr
 	}
+
 
 	err = us.PreloadFields(foundUser, []string{"Roles.Permissions"})
 	if err != nil {
@@ -84,14 +89,13 @@ func (us *UserService) Login(loginInfo user.LoginRequest) (*user.LoginResponse, 
 		invalidCredentialsErr := exceptions.NewInvalidCredentialsError("password is wrong")
 		return nil, "", 0, invalidCredentialsErr
 	}
-
 	accessToken, refreshToken, expireTime := us.jwtService.GenerateTokens(foundUser.ID, loginInfo.RememberMe)
 
 	roles := us.GetRolesResponse(foundUser)
 
 	return &user.LoginResponse{
 		AccessToken: accessToken,
-		Roles:       roles,
+		Roles:      roles,
 	}, refreshToken, expireTime, nil
 }
 
