@@ -347,6 +347,16 @@ func (rs *RequestService) GetRequestFullData(info request.GetRequestFullDataRequ
 		return nil, err
 	}
 
+	petSitterUser, err := rs.userService.FindUserByID(petSitter.UserID)
+	if err != nil {
+		return nil, err
+	}
+
+	requestUser, err := rs.userService.FindUserByID(foundRequest.UserID)
+	if err != nil {
+		return nil, err
+	}
+
 	err = rs.petSitterService.PreloadFields(petSitter, []string{"Schedule"})
 	if err != nil {
 		return nil, err
@@ -363,17 +373,21 @@ func (rs *RequestService) GetRequestFullData(info request.GetRequestFullDataRequ
 	}
 
 	return &request.RequestFullDataResponse{
-		RequestID:       foundRequest.ID,
-		PetSitterUserID: petSitter.UserID,
-		Service:         rs.serviceService.GetServiceResponse(&foundRequest.Service),
-		Pets:            petsData,
-		Address:         rs.addressService.GetUserAddressInfo(&foundRequest.Address),
-		Notes:           foundRequest.Notes,
-		TotalPrice:      foundRequest.TotalPrice,
-		Status:          foundRequest.Status.String(),
-		TransferID:      foundRequest.TransferID,
-		CalendarSlots:   rs.calendarSlotService.GetCalendarSlotsResponse(foundRequest.CalendarSlots),
-		UpdatedAt:       foundRequest.UpdatedAt,
+		RequestID:          foundRequest.ID,
+		PetSitterUserID:    petSitter.UserID,
+		PetSitterFirstName: petSitterUser.FirstName,
+		PetSitterLastName:  petSitterUser.LastName,
+		UserFirstName:      requestUser.FirstName,
+		UserLastName:       requestUser.LastName,
+		Service:            rs.serviceService.GetServiceResponse(&foundRequest.Service),
+		Pets:               petsData,
+		Address:            rs.addressService.GetUserAddressInfo(&foundRequest.Address),
+		Notes:              foundRequest.Notes,
+		TotalPrice:         foundRequest.TotalPrice,
+		Status:             foundRequest.Status.String(),
+		TransferID:         foundRequest.TransferID,
+		CalendarSlots:      rs.calendarSlotService.GetCalendarSlotsResponse(foundRequest.CalendarSlots),
+		UpdatedAt:          foundRequest.UpdatedAt,
 	}, nil
 }
 
