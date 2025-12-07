@@ -22,6 +22,7 @@ import (
 	petsitter "hona/backend/internal/presentation/controllers/v1/pet_sitter"
 	"hona/backend/internal/presentation/controllers/v1/user"
 	"hona/backend/internal/presentation/middleware"
+
 	"github.com/google/wire"
 )
 
@@ -67,7 +68,6 @@ var ServiceProviderSet = wire.NewSet(
 	wire.Bind(new(usecase.CalendarSlotService), new(*service.CalendarSlotService)),
 	wire.Bind(new(usecase.PetSitterService), new(*service.PetSitterService)),
 	wire.Bind(new(usecase.ServiceService), new(*service.ServiceService)),
-
 )
 
 var GeneralControllersProviderSet = wire.NewSet(
@@ -79,6 +79,7 @@ var GeneralControllersProviderSet = wire.NewSet(
 
 var AdminControllersProviderSet = wire.NewSet(
 	admin.NewAdminRBACController,
+	admin.NewAdminPetSitterController,
 	wire.Struct(new(AdminControllers), "*"),
 )
 
@@ -132,7 +133,8 @@ type GeneralControllers struct {
 }
 
 type AdminControllers struct {
-	AdminRBACController *admin.AdminRBACController
+	AdminRBACController      *admin.AdminRBACController
+	AdminPetSitterController *admin.AdminPetSitterController
 }
 
 type UserControllers struct {
@@ -142,7 +144,7 @@ type UserControllers struct {
 
 type PetSitterControllers struct {
 	PetSitterRegisterController *petsitter.PetSitterRegisterController
-	PetSitterRequestController *petsitter.PetSitterRequestController
+	PetSitterRequestController  *petsitter.PetSitterRequestController
 }
 
 type Controllers struct {
