@@ -65,7 +65,7 @@ type ErrorFields struct {
 	Request      string
 	CalendarSlot string
 	Service      string
-	Comment    string
+	Comment      string
 }
 
 type ErrorTags struct {
@@ -158,7 +158,7 @@ func NewConstants() *Constants {
 			IsAdult:      "isAdult",
 			Pet:          "pet",
 			Species:      "species",
-			Comment:    "comment",
+			Comment:      "comment",
 			PetSitter:    "petSitter",
 			Request:      "request",
 			CalendarSlot: "calendarSlot",
@@ -166,11 +166,11 @@ func NewConstants() *Constants {
 		},
 		ErrorTags: ErrorTags{
 			AlreadyRegistered:      "errors.alreadyRegistered",
-			MinimumLength:          "errors.minimumLength",
-			ContainsLowercase:      "errors.containsLowercase",
-			ContainsUppercase:      "errors.containsUppercase",
-			ContainsNumber:         "errors.containsNumber",
-			ContainsSpecialChar:    "errors.containsSpecialChar",
+			MinimumLength:          "minimumLength",
+			ContainsLowercase:      "containsLowercase",
+			ContainsUppercase:      "containsUppercase",
+			ContainsNumber:         "containsNumber",
+			ContainsSpecialChar:    "containsSpecialChar",
 			Expired:                "errors.Expired",
 			Invalid:                "errors.invalid",
 			NotRegistered:          "errors.notRegistered",
