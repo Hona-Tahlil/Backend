@@ -22,6 +22,10 @@ func NewPetSitterSeeder(db *gorm.DB) *PetSitterSeeder {
 }
 
 func (s *PetSitterSeeder) Seed(count int) error {
+	if s.db.First(&entities.PetSitter{}).Error == nil {
+		log.Println("✓ Pet sitters already seeded, skipping...")
+		return nil
+	}
 	petSitters := make([]entities.PetSitter, 0, count)
 	var users []entities.User
 	if err := s.db.Limit(100).Find(&users).Error; err != nil {

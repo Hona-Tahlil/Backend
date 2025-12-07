@@ -17,6 +17,10 @@ func ServiceSeeder(db *gorm.DB) error {
 		"Pet grooming service",
 		"Pet training session",
 	}
+	if db.First(&entities.Service{}).Error == nil {
+		log.Println("✓ Services already seeded, skipping...")
+		return nil
+	}
 
 	for i := 0; i < 50; i++ {
 		description := descriptions[rand.Intn(len(descriptions))]

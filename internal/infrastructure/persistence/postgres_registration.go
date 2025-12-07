@@ -34,7 +34,6 @@ func NewPostgresDatabase() *gorm.DB {
 		dbInstance = db
 
 		seeder := seeder.NewDatabaseSeeder(db)
-		seeder.ClearAll()
 
 		db.AutoMigrate(
 			&entities.User{},
