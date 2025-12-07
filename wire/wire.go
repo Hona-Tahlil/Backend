@@ -54,7 +54,6 @@ var ServiceProviderSet = wire.NewSet(
 	service.NewRequestService,
 	service.NewAddressService,
 	service.NewPetSitterService,
-	service.NewServiceService,
 	service.NewCommentService,
 	wire.Bind(new(domainjwt.JWTService), new(*jwt.JWTService)),
 	wire.Bind(new(domainjwt.JWTKeyManager), new(*jwt.JWTKeyManager)),
@@ -64,7 +63,6 @@ var ServiceProviderSet = wire.NewSet(
 	wire.Bind(new(usecase.RequestService), new(*service.RequestService)),
 	wire.Bind(new(usecase.AddressService), new(*service.AddressService)),
 	wire.Bind(new(usecase.PetSitterService), new(*service.PetSitterService)),
-	wire.Bind(new(usecase.ServiceService), new(*service.ServiceService)),
 	wire.Bind(new(usecase.CommentService), new(*service.CommentService)),
 )
 

@@ -56,13 +56,11 @@ func InitializeApplication(container *bootstrap.Config) (*Application, error) {
 		AdminRBACController: adminRBACController,
 	}
 	userPetController := user.NewUserPetController(petService)
-	serviceService := service.NewServiceService(unitOfWork)
-	petSitterService := service.NewPetSitterService(unitOfWork, s3Storage, userService, addressService, serviceService)
+	petSitterService := service.NewPetSitterService(unitOfWork, s3Storage, userService, addressService)
 	requestServiceDeps := service.RequestServiceDeps{
 		UserService:      userService,
 		AddressService:   addressService,
 		PetService:       petService,
-		ServiceService:   serviceService,
 		PetSitterService: petSitterService,
 		UnitOfWork:       unitOfWork,
 		EmailService:     emailService,
@@ -117,7 +115,7 @@ var StorageProviderSet = wire.NewSet(storage.NewS3Storage, wire.Bind(new(domains
 
 var RepositoryProviderSet = wire.NewSet(persistence.NewRepositoryFactory, persistence.NewUnitOfWork, persistence.NewPostgresDatabase, persistence.NewRedisDatabase, redis.NewUserCacheRepository, wire.Bind(new(persistence.Cache), new(*persistence.RedisDatabase)), wire.Bind(new(domainredis.UserCacheRepository), new(*redis.UserCacheRepository)), wire.Bind(new(ports.RepositoryFactory), new(*persistence.RepositoryFactory)), wire.Bind(new(ports.UnitOfWork), new(*persistence.UnitOfWork)))
 
-var ServiceProviderSet = wire.NewSet(wire.Struct(new(service.RequestServiceDeps), "*"), service.NewUserService, jwt.NewJWTService, jwt.NewJWTKeyManager, mail.NewEmailService, service.NewRBACService, service.NewPetService, service.NewRequestService, service.NewAddressService, service.NewPetSitterService, service.NewServiceService, service.NewCommentService, wire.Bind(new(domainjwt.JWTService), new(*jwt.JWTService)), wire.Bind(new(domainjwt.JWTKeyManager), new(*jwt.JWTKeyManager)), wire.Bind(new(usecase.RBACService), new(*service.RBACService)), wire.Bind(new(usecase.UserService), new(*service.UserService)), wire.Bind(new(usecase.PetService), new(*service.PetService)), wire.Bind(new(usecase.RequestService), new(*service.RequestService)), wire.Bind(new(usecase.AddressService), new(*service.AddressService)), wire.Bind(new(usecase.PetSitterService), new(*service.PetSitterService)), wire.Bind(new(usecase.ServiceService), new(*service.ServiceService)), wire.Bind(new(usecase.CommentService), new(*service.CommentService)))
+var ServiceProviderSet = wire.NewSet(wire.Struct(new(service.RequestServiceDeps), "*"), service.NewUserService, jwt.NewJWTService, jwt.NewJWTKeyManager, mail.NewEmailService, service.NewRBACService, service.NewPetService, service.NewRequestService, service.NewAddressService, service.NewPetSitterService, service.NewCommentService, wire.Bind(new(domainjwt.JWTService), new(*jwt.JWTService)), wire.Bind(new(domainjwt.JWTKeyManager), new(*jwt.JWTKeyManager)), wire.Bind(new(usecase.RBACService), new(*service.RBACService)), wire.Bind(new(usecase.UserService), new(*service.UserService)), wire.Bind(new(usecase.PetService), new(*service.PetService)), wire.Bind(new(usecase.RequestService), new(*service.RequestService)), wire.Bind(new(usecase.AddressService), new(*service.AddressService)), wire.Bind(new(usecase.PetSitterService), new(*service.PetSitterService)), wire.Bind(new(usecase.CommentService), new(*service.CommentService)))
 
 var GeneralControllersProviderSet = wire.NewSet(general.NewGeneralUserController, general.NewGeneralPetController, general.NewGeneralProvinceController, wire.Struct(new(GeneralControllers), "*"))
 

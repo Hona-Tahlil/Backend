@@ -32,4 +32,6 @@ type PetSitterService interface {
 	SubmitPersonalInfo(petSitterInfo petsitter.SubmitPersonalInfoRequest) error
 	GetCalendarSlotsResponse(calendarSlots []entities.CalendarSlot) []calendarslot.CalendarSlotInfoResponse
 	GetFreeMap(calendarSlots []entities.CalendarSlot) map[string]map[interface{}]bool
+	FindServiceByID(id uint) (*entities.Service, error)
+	GetServiceResponse(serviceEntity *entities.Service) servicedto.ServiceInfoResponse
 }

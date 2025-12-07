@@ -24,16 +24,14 @@ type PetSitterService struct {
 	storage        domainstorage.Storage
 	userService    usecase.UserService
 	addressService usecase.AddressService
-	serviceService usecase.ServiceService
 }
 
-func NewPetSitterService(unitOfWork ports.UnitOfWork, storage domainstorage.Storage, userService usecase.UserService, addressService usecase.AddressService, serviceService usecase.ServiceService) *PetSitterService {
+func NewPetSitterService(unitOfWork ports.UnitOfWork, storage domainstorage.Storage, userService usecase.UserService, addressService usecase.AddressService) *PetSitterService {
 	return &PetSitterService{
 		unitOfWork:     unitOfWork,
 		storage:        storage,
 		userService:    userService,
 		addressService: addressService,
-		serviceService: serviceService,
 	}
 }
 
@@ -59,7 +57,7 @@ func (ps *PetSitterService) GetServicesResponse(petSitter *entities.PetSitter) (
 		return r, nil
 	}
 	for _, service := range petSitter.Services {
-		r = append(r, ps.serviceService.GetServiceResponse(&service))
+		r = append(r, ps.GetServiceResponse(&service))
 	}
 	return r, nil
 }
@@ -71,7 +69,7 @@ func (ps *PetSitterService) GetAvailableServicesResponse(petSitter *entities.Pet
 	}
 	for _, service := range petSitter.Services {
 		if service.Price != 0 {
-			r = append(r, ps.serviceService.GetServiceResponse(&service))
+			r = append(r, ps.GetServiceResponse(&service))
 		}
 	}
 	return r, nil
@@ -607,4 +605,26 @@ func (ps *PetSitterService) GetFreeMap(calendarSlots []entities.CalendarSlot) ma
 	}
 
 	return availableSlots
+}
+
+func (ps *PetSitterService) FindServiceByID(id uint) (*entities.Service, error) {
+	petSitterRepo := ps.unitOfWork.Factory().PetSitterRepository()
+	service, err := petSitterRepo.FindServiceByID(id)
+	if err != nil {
+		return nil, err
+	}
+	if service == nil {
+		return nil, exceptions.NewNotFoundError(bootstrap.Run().Constants.ErrorFields.Service)
+	}
+
+	return service, nil
+}
+
+func (ps *PetSitterService) GetServiceResponse(serviceEntity *entities.Service) servicedto.ServiceInfoResponse {
+	return servicedto.ServiceInfoResponse{
+		ID:          serviceEntity.ID,
+		Type:        serviceEntity.Type.String(),
+		Description: serviceEntity.Description,
+		Price:       serviceEntity.Price,
+	}
 }

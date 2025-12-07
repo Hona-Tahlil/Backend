@@ -18,7 +18,6 @@ type RequestService struct {
 	userService      usecase.UserService
 	addressService   usecase.AddressService
 	petService       usecase.PetService
-	serviceService   usecase.ServiceService
 	petSitterService usecase.PetSitterService
 	unitOfWork       ports.UnitOfWork
 	emailService     *mail.EmailService
@@ -28,7 +27,6 @@ type RequestServiceDeps struct {
 	UserService      usecase.UserService
 	AddressService   usecase.AddressService
 	PetService       usecase.PetService
-	ServiceService   usecase.ServiceService
 	PetSitterService usecase.PetSitterService
 	UnitOfWork       ports.UnitOfWork
 	EmailService     *mail.EmailService
@@ -39,7 +37,6 @@ func NewRequestService(deps RequestServiceDeps) *RequestService {
 		userService:      deps.UserService,
 		unitOfWork:       deps.UnitOfWork,
 		addressService:   deps.AddressService,
-		serviceService:   deps.ServiceService,
 		petService:       deps.PetService,
 		petSitterService: deps.PetSitterService,
 		emailService:     deps.EmailService,
@@ -68,7 +65,7 @@ func (rs *RequestService) CreateRequest(info request.CreateRequestRequest) error
 		return err
 	}
 
-	err = rs.userService.PreloadFields(user, []string{"Pets"})
+	user.Pets, err = rs.petService.FindUserPetsByID(user.ID)
 	if err != nil {
 		return err
 	}
@@ -140,12 +137,12 @@ func (rs *RequestService) GetCreateRequestInfo(info request.GetCreateRequestInfo
 		return nil, err
 	}
 
-	err = rs.userService.PreloadFields(foundUser, []string{"Pets"})
+	pets, err := rs.petService.FindUserPetsByID(foundUser.ID)
 	if err != nil {
 		return nil, err
 	}
 
-	petsData, err := rs.petService.GetPetsBasicDataResponse(foundUser.Pets)
+	petsData, err := rs.petService.GetPetsBasicDataResponse(pets)
 	if err != nil {
 		return nil, err
 	}
@@ -373,7 +370,7 @@ func (rs *RequestService) GetRequestFullData(info request.GetRequestFullDataRequ
 		PetSitterLastName:  petSitterUser.LastName,
 		UserFirstName:      requestUser.FirstName,
 		UserLastName:       requestUser.LastName,
-		Service:            rs.serviceService.GetServiceResponse(&foundRequest.Service),
+		Service:            rs.petSitterService.GetServiceResponse(&foundRequest.Service),
 		Pets:               petsData,
 		Address:            rs.addressService.GetUserAddressInfo(&foundRequest.Address),
 		Notes:              foundRequest.Notes,

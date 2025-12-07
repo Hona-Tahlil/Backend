@@ -77,3 +77,14 @@ func (pr *PetSitterRepository) GetPetSittersCount() (int64, error) {
 	return count, err
 }
 
+func (pr *PetSitterRepository) FindServiceByID(id uint) (*entities.Service, error) {
+	var foundService entities.Service
+
+	if result := pr.db.First(&foundService, id); result.Error != nil {
+		if result.Error == gorm.ErrRecordNotFound {
+			return nil, nil
+		}
+		return nil, result.Error
+	}
+	return &foundService, nil
+}

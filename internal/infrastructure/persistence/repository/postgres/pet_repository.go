@@ -55,3 +55,12 @@ func (pr *PetRepository) RemovePet(pet *entities.Pet) error {
 func (pr *PetRepository) PreloadUserPets(user *entities.User) error {
 	return pr.db.Preload("Pets").First(user, user.ID).Error
 }
+
+func (pr *PetRepository) FindUserPetsByID(userID uint) ([]entities.Pet, error) {
+	var pets []entities.Pet
+	err := pr.db.Where("userID = ? AND type = ?", userID, "regular").Find(&pets).Error
+	if err != nil {
+		return nil, err
+	}
+	return pets, nil
+}
