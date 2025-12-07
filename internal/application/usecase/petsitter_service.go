@@ -30,4 +30,6 @@ type PetSitterService interface {
 	CheckPetSitterStatus(pss enums.PetSitterStatus) error
 	CheckPetSitterStep(currentStep enums.OnboardingStep, requiredStep enums.OnboardingStep) error
 	SubmitPersonalInfo(petSitterInfo petsitter.SubmitPersonalInfoRequest) error
+	GetPetSitterDetails(info petsitter.GetPetSitterDetailsRequest) (*petsitter.PetSitterDetailsResponse, error)
+	ChangePetSitterStatus(info petsitter.ChangePetSitterStatusRequest) error
 }
