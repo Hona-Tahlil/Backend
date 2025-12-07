@@ -63,3 +63,17 @@ func (ar *AddressRepository) FindUserRequestAddressesByID(id uint) ([]entities.A
 
 	return addresses, nil
 }
+
+func (ar *AddressRepository) FindRequestAddressByID(requestID uint) (*entities.Address, error) {
+	var address entities.Address
+
+	err := ar.db.Where("refer = ? AND type = ?", requestID, "Request").First(&address).Error
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	return &address, nil
+}

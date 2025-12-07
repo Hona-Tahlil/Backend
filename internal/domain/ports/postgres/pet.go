@@ -10,4 +10,5 @@ type PetRepository interface {
 	RemovePet(pet *entities.Pet) error
 	PreloadUserPets(user *entities.User) error
 	FindUserPetsByID(userID uint) ([]entities.Pet, error)
+	FindRequestPetsByID(requestID uint) ([]entities.Pet, error)
 }

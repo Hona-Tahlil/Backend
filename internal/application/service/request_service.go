@@ -323,12 +323,22 @@ func (rs *RequestService) GetRequestFullData(info request.GetRequestFullDataRequ
 		return nil, err
 	}
 
-	err = rs.PreloadFields(foundRequest, []string{"Pets", "CalendarSlots", "Service", "Address"})
+	err = rs.PreloadFields(foundRequest, []string{"CalendarSlots", "Service"})
 	if err != nil {
 		return nil, err
 	}
 
-	petsData, err := rs.petService.GetPetsBasicDataResponse(foundRequest.Pets)
+	pets, err := rs.petService.FindRequestPetsByID(foundRequest.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	address, err := rs.addressService.FindRequestAddressByID(foundRequest.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	petsData, err := rs.petService.GetPetsBasicDataResponse(pets)
 	if err != nil {
 		return nil, err
 	}
@@ -372,7 +382,7 @@ func (rs *RequestService) GetRequestFullData(info request.GetRequestFullDataRequ
 		UserLastName:       requestUser.LastName,
 		Service:            rs.petSitterService.GetServiceResponse(&foundRequest.Service),
 		Pets:               petsData,
-		Address:            rs.addressService.GetUserAddressInfo(&foundRequest.Address),
+		Address:            rs.addressService.GetUserAddressInfo(address),
 		Notes:              foundRequest.Notes,
 		TotalPrice:         foundRequest.TotalPrice,
 		Status:             foundRequest.Status.String(),

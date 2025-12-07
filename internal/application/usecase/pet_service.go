@@ -18,4 +18,5 @@ type PetService interface {
 	GetPetsInUser(userPets []entities.Pet, petIDs []uint) ([]entities.Pet, error)
 	GetPetNames(pets []entities.Pet) []string
 	FindUserPetsByID(userID uint) ([]entities.Pet, error)
+	FindRequestPetsByID(requestID uint) ([]entities.Pet, error)
 }

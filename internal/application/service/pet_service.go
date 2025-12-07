@@ -365,3 +365,8 @@ func (ps *PetService) FindUserPetsByID(userID uint) ([]entities.Pet, error) {
 	petRepo := ps.unitOfWork.Factory().PetRepository()
 	return petRepo.FindUserPetsByID(userID)
 }
+
+func (ps *PetService) FindRequestPetsByID(requestID uint) ([]entities.Pet, error) {
+	petRepo := ps.unitOfWork.Factory().PetRepository()
+	return petRepo.FindRequestPetsByID(requestID)
+}

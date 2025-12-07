@@ -129,3 +129,16 @@ func (as *AddressService) GetCitiesByProvinceName(info provincecity.GetProvinceC
 
 	return cityResponses, nil
 }
+
+func (as *AddressService) FindRequestAddressByID(requestID uint) (*entities.Address, error) {
+	addressRepo := as.unitOfWork.Factory().AddressRepository()
+	address, err := addressRepo.FindRequestAddressByID(requestID)
+	if err != nil {
+		return nil, err
+	}
+	if address == nil {
+		return nil, exceptions.NewNotFoundError(bootstrap.Run().Constants.ErrorFields.Address)
+	}
+
+	return address, nil
+}

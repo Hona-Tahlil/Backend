@@ -15,4 +15,5 @@ type AddressService interface {
 	CreateAddressEntity(addressInfo address.AddressInfo) (*entities.Address, error)
 	GetAllProvincesResponse() ([]provincecity.ProvinceResponse, error)
 	GetCitiesByProvinceName(info provincecity.GetProvinceCitiesRequest) ([]provincecity.CityResponse, error)
+	FindRequestAddressByID(requestID uint) (*entities.Address, error)
 }

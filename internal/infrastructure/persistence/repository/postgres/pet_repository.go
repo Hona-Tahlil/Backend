@@ -64,3 +64,12 @@ func (pr *PetRepository) FindUserPetsByID(userID uint) ([]entities.Pet, error) {
 	}
 	return pets, nil
 }
+
+func (pr *PetRepository) FindRequestPetsByID(requestID uint) ([]entities.Pet, error) {
+	var pets []entities.Pet
+	err := pr.db.Where("requestID = ? AND type = ?", requestID, "request").Find(&pets).Error
+	if err != nil {
+		return nil, err
+	}
+	return pets, nil
+}
