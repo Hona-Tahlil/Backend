@@ -20,22 +20,18 @@ import (
 )
 
 type PetSitterService struct {
-	unitOfWork          ports.UnitOfWork
-	storage             domainstorage.Storage
-	userService         usecase.UserService
-	addressService      usecase.AddressService
-	serviceService      usecase.ServiceService
-	calendarSlotService usecase.CalendarSlotService
+	unitOfWork     ports.UnitOfWork
+	storage        domainstorage.Storage
+	userService    usecase.UserService
+	addressService usecase.AddressService
 }
 
-func NewPetSitterService(unitOfWork ports.UnitOfWork, storage domainstorage.Storage, userService usecase.UserService, addressService usecase.AddressService, serviceService usecase.ServiceService, calendarSlotService usecase.CalendarSlotService) *PetSitterService {
+func NewPetSitterService(unitOfWork ports.UnitOfWork, storage domainstorage.Storage, userService usecase.UserService, addressService usecase.AddressService) *PetSitterService {
 	return &PetSitterService{
-		unitOfWork:          unitOfWork,
-		storage:             storage,
-		userService:         userService,
-		addressService:      addressService,
-		serviceService:      serviceService,
-		calendarSlotService: calendarSlotService,
+		unitOfWork:     unitOfWork,
+		storage:        storage,
+		userService:    userService,
+		addressService: addressService,
 	}
 }
 
@@ -52,7 +48,7 @@ func (ps *PetSitterService) GetPetSitterFreeSlotsResponse(petSitter *entities.Pe
 		freeSlots = append(freeSlots, slot)
 	}
 
-	return ps.calendarSlotService.GetCalendarSlotsResponse(freeSlots), nil
+	return ps.GetCalendarSlotsResponse(freeSlots), nil
 }
 
 func (ps *PetSitterService) GetServicesResponse(petSitter *entities.PetSitter) ([]servicedto.ServiceInfoResponse, error) {
@@ -61,7 +57,7 @@ func (ps *PetSitterService) GetServicesResponse(petSitter *entities.PetSitter) (
 		return r, nil
 	}
 	for _, service := range petSitter.Services {
-		r = append(r, ps.serviceService.GetServiceResponse(&service))
+		r = append(r, ps.GetServiceResponse(&service))
 	}
 	return r, nil
 }
@@ -73,7 +69,7 @@ func (ps *PetSitterService) GetAvailableServicesResponse(petSitter *entities.Pet
 	}
 	for _, service := range petSitter.Services {
 		if service.Price != 0 {
-			r = append(r, ps.serviceService.GetServiceResponse(&service))
+			r = append(r, ps.GetServiceResponse(&service))
 		}
 	}
 	return r, nil
@@ -250,8 +246,8 @@ func (ps *PetSitterService) GetPersonalInfo(userID uint) (*petsitter.PersonalInf
 		Email:          foundUser.Email,
 		PhoneNumber:    *foundUser.Phone,
 		Gender:         foundUser.Gender,
-		Province:       foundUser.Address.Province.Name,
-		City:           foundUser.Address.City.Name,
+		Province:       foundUser.Address.Province,
+		City:           foundUser.Address.City,
 		Address:        foundUser.Address.StreetAddress,
 		HouseNumber:    foundUser.Address.HouseNumber,
 		Unit:           foundUser.Address.Unit,
@@ -372,9 +368,7 @@ func (ps *PetSitterService) SubmitSkills(SkillsInfo petsitter.SubmitSkillsReques
 	}
 	foundPetSitter.Bio = &SkillsInfo.Bio
 	foundPetSitter.Services = services
-	for _, petkind := range foundPetSitter.PetKinds {
-		foundPetSitter.PetKinds = append(foundPetSitter.PetKinds, petkind)
-	}
+	foundPetSitter.PetKinds = append(foundPetSitter.PetKinds, SkillsInfo.PetKinds...)
 	foundPetSitter.OnboardingStep = enums.OBS_Done
 
 	err = petSitterRepo.EditPetSitter(foundPetSitter)
@@ -527,24 +521,24 @@ func (ps *PetSitterService) SubmitPersonalInfo(petSitterInfo petsitter.SubmitPer
 		if err != nil {
 			return err
 		}
-		addresInfo := address.AddressInfo{
+		addressInfo := address.AddressInfo{
 			ProvinceName:  petSitterInfo.Province,
 			CityName:      petSitterInfo.City,
 			StreetAddress: petSitterInfo.Address,
 			HouseNumber:   petSitterInfo.HouseNumber,
 			Unit:          petSitterInfo.Unit,
 		}
-		createdAddress, err := ps.addressService.CreateAddress(addresInfo)
+		createdAddress, err := ps.addressService.CreateAddressEntity(addressInfo)
 		if err != nil {
 			return err
 		}
 		if foundUser.Address != nil {
-			foundAddress, err := addressRepo.FinduserAddressByUserID(foundUser.ID)
+			foundAddress, err := addressRepo.FindUserAddressByUserID(foundUser.ID)
 			if err != nil {
 				return err
 			}
-			foundAddress.ProvinceID = createdAddress.ProvinceID
-			foundAddress.CityID = createdAddress.CityID
+			foundAddress.Province = createdAddress.Province
+			foundAddress.City = createdAddress.City
 			foundAddress.StreetAddress = createdAddress.StreetAddress
 			foundAddress.HouseNumber = createdAddress.HouseNumber
 			foundAddress.Unit = createdAddress.Unit
@@ -577,4 +571,60 @@ func (ps *PetSitterService) SubmitPersonalInfo(petSitterInfo petsitter.SubmitPer
 		return nil
 	})
 	return err
+}
+
+func (ps *PetSitterService) GetCalendarSlotsResponse(calendarSlots []entities.CalendarSlot) []calendarslot.CalendarSlotInfoResponse {
+	r := make([]calendarslot.CalendarSlotInfoResponse, 0)
+
+	for _, slot := range calendarSlots {
+		r = append(r, calendarslot.CalendarSlotInfoResponse{
+			ID:    slot.ID,
+			Date:  slot.Date,
+			Slots: slot.Slots,
+		})
+	}
+
+	return r
+}
+
+func (ps *PetSitterService) GetFreeMap(calendarSlots []entities.CalendarSlot) map[string]map[interface{}]bool {
+	availableSlots := make(map[string]map[interface{}]bool)
+
+	for _, psSlot := range calendarSlots {
+		if psSlot.Status == enums.Free {
+			dateKey := psSlot.Date.Format("2006-01-02")
+
+			if _, exists := availableSlots[dateKey]; !exists {
+				availableSlots[dateKey] = make(map[interface{}]bool)
+			}
+
+			for _, slot := range psSlot.Slots {
+				availableSlots[dateKey][slot] = true
+			}
+		}
+	}
+
+	return availableSlots
+}
+
+func (ps *PetSitterService) FindServiceByID(id uint) (*entities.Service, error) {
+	petSitterRepo := ps.unitOfWork.Factory().PetSitterRepository()
+	service, err := petSitterRepo.FindServiceByID(id)
+	if err != nil {
+		return nil, err
+	}
+	if service == nil {
+		return nil, exceptions.NewNotFoundError(bootstrap.Run().Constants.ErrorFields.Service)
+	}
+
+	return service, nil
+}
+
+func (ps *PetSitterService) GetServiceResponse(serviceEntity *entities.Service) servicedto.ServiceInfoResponse {
+	return servicedto.ServiceInfoResponse{
+		ID:          serviceEntity.ID,
+		Type:        serviceEntity.Type.String(),
+		Description: serviceEntity.Description,
+		Price:       serviceEntity.Price,
+	}
 }

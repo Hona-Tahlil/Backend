@@ -154,8 +154,12 @@ func (ps *PetService) GetPetsBasicData(info pet.GetPetsBasicDataRequest) ([]pet.
 	if err != nil {
 		return nil, err
 	}
-	ps.userService.PreloadFields(user, []string{"Pets"})
-	return ps.GetPetsBasicDataResponse(user.Pets)
+	petRepo := ps.unitOfWork.Factory().PetRepository()
+	pets, err := petRepo.FindUserPetsByID(user.ID)
+	if err != nil {
+		return nil, err
+	}
+	return ps.GetPetsBasicDataResponse(pets)
 }
 
 func (ps *PetService) GetPetFullData(info pet.GetPetFullDataRequest) (*pet.PetFullDataResponse, error) {
@@ -355,4 +359,14 @@ func (ps *PetService) GetPetNames(pets []entities.Pet) []string {
 	}
 
 	return names
+}
+
+func (ps *PetService) FindUserPetsByID(userID uint) ([]entities.Pet, error) {
+	petRepo := ps.unitOfWork.Factory().PetRepository()
+	return petRepo.FindUserPetsByID(userID)
+}
+
+func (ps *PetService) FindRequestPetsByID(requestID uint) ([]entities.Pet, error) {
+	petRepo := ps.unitOfWork.Factory().PetRepository()
+	return petRepo.FindRequestPetsByID(requestID)
 }

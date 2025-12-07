@@ -1,10 +1,9 @@
 package service
 
 import (
-
 	"context"
 	"crypto/rand"
-	"encoding/base64"	
+	"encoding/base64"
 	"hona/backend/bootstrap"
 	"hona/backend/internal/application/dto/rbac"
 	"hona/backend/internal/application/dto/user"
@@ -13,7 +12,7 @@ import (
 	domainjwt "hona/backend/internal/domain/jwt"
 	"hona/backend/internal/domain/ports"
 	domainredis "hona/backend/internal/domain/ports/redis"
-	"hona/backend/internal/infrastructure/mail"
+	"hona/backend/internal/infrastructure/communication/mail"
 	"regexp"
 	"time"
 
@@ -74,11 +73,9 @@ func (us *UserService) Login(loginInfo user.LoginRequest) (*user.LoginResponse, 
 			return nil, "", 0, err
 		}
 
-
 		invalidCredentialsErr := exceptions.NewInvalidCredentialsError("password is wrong")
 		return nil, "", 0, invalidCredentialsErr
 	}
-
 
 	err = us.PreloadFields(foundUser, []string{"Roles.Permissions"})
 	if err != nil {
@@ -95,7 +92,7 @@ func (us *UserService) Login(loginInfo user.LoginRequest) (*user.LoginResponse, 
 
 	return &user.LoginResponse{
 		AccessToken: accessToken,
-		Roles:      roles,
+		Roles:       roles,
 	}, refreshToken, expireTime, nil
 }
 

@@ -11,8 +11,8 @@ import (
 	"hona/backend/internal/domain/ports"
 	domainredis "hona/backend/internal/domain/ports/redis"
 	domainstorage "hona/backend/internal/domain/storage"
+	"hona/backend/internal/infrastructure/communication/mail"
 	"hona/backend/internal/infrastructure/jwt"
-	"hona/backend/internal/infrastructure/mail"
 	"hona/backend/internal/infrastructure/persistence"
 	"hona/backend/internal/infrastructure/persistence/repository/redis"
 	"hona/backend/internal/infrastructure/seeder"
@@ -52,11 +52,8 @@ var ServiceProviderSet = wire.NewSet(
 	service.NewRBACService,
 	service.NewPetService,
 	service.NewRequestService,
-	service.NewProvinceService,
 	service.NewAddressService,
-	service.NewCalendarSlotService,
 	service.NewPetSitterService,
-	service.NewServiceService,
 	service.NewCommentService,
 	wire.Bind(new(domainjwt.JWTService), new(*jwt.JWTService)),
 	wire.Bind(new(domainjwt.JWTKeyManager), new(*jwt.JWTKeyManager)),
@@ -64,11 +61,8 @@ var ServiceProviderSet = wire.NewSet(
 	wire.Bind(new(usecase.UserService), new(*service.UserService)),
 	wire.Bind(new(usecase.PetService), new(*service.PetService)),
 	wire.Bind(new(usecase.RequestService), new(*service.RequestService)),
-	wire.Bind(new(usecase.ProvinceService), new(*service.ProvinceService)),
 	wire.Bind(new(usecase.AddressService), new(*service.AddressService)),
-	wire.Bind(new(usecase.CalendarSlotService), new(*service.CalendarSlotService)),
 	wire.Bind(new(usecase.PetSitterService), new(*service.PetSitterService)),
-	wire.Bind(new(usecase.ServiceService), new(*service.ServiceService)),
 	wire.Bind(new(usecase.CommentService), new(*service.CommentService)),
 )
 
