@@ -8,7 +8,7 @@ import (
 
 type AddressInfo struct {
 	Province    enums.Province
-	City        enums.City	
+	City        enums.City
 	Address     string
 	HouseNumber uint
 	Unit        uint
@@ -44,6 +44,6 @@ type UploadDocumentsRequest struct {
 type SubmitSkillsRequest struct {
 	UserID   uint
 	Bio      string
-	Petkind  []enums.PetKind
+	PetKinds []enums.PetKind
 	Services []enums.ServiceType
 }

@@ -250,8 +250,8 @@ func (ps *PetSitterService) GetPersonalInfo(userID uint) (*petsitter.PersonalInf
 		Email:          foundUser.Email,
 		PhoneNumber:    *foundUser.Phone,
 		Gender:         foundUser.Gender,
-		Province:       foundUser.Address.Province.Name,
-		City:           foundUser.Address.City.Name,
+		Province:       foundUser.Address.Province,
+		City:           foundUser.Address.City,
 		Address:        foundUser.Address.StreetAddress,
 		HouseNumber:    foundUser.Address.HouseNumber,
 		Unit:           foundUser.Address.Unit,
@@ -372,9 +372,7 @@ func (ps *PetSitterService) SubmitSkills(SkillsInfo petsitter.SubmitSkillsReques
 	}
 	foundPetSitter.Bio = &SkillsInfo.Bio
 	foundPetSitter.Services = services
-	for _, petkind := range foundPetSitter.PetKinds {
-		foundPetSitter.PetKinds = append(foundPetSitter.PetKinds, petkind)
-	}
+	foundPetSitter.PetKinds = append(foundPetSitter.PetKinds, SkillsInfo.PetKinds...)
 	foundPetSitter.OnboardingStep = enums.OBS_Done
 
 	err = petSitterRepo.EditPetSitter(foundPetSitter)
@@ -527,24 +525,24 @@ func (ps *PetSitterService) SubmitPersonalInfo(petSitterInfo petsitter.SubmitPer
 		if err != nil {
 			return err
 		}
-		addresInfo := address.AddressInfo{
+		addressInfo := address.AddressInfo{
 			ProvinceName:  petSitterInfo.Province,
 			CityName:      petSitterInfo.City,
 			StreetAddress: petSitterInfo.Address,
 			HouseNumber:   petSitterInfo.HouseNumber,
 			Unit:          petSitterInfo.Unit,
 		}
-		createdAddress, err := ps.addressService.CreateAddress(addresInfo)
+		createdAddress, err := ps.addressService.CreateAddress(addressInfo)
 		if err != nil {
 			return err
 		}
 		if foundUser.Address != nil {
-			foundAddress, err := addressRepo.FinduserAddressByUserID(foundUser.ID)
+			foundAddress, err := addressRepo.FindUserAddressByUserID(foundUser.ID)
 			if err != nil {
 				return err
 			}
-			foundAddress.ProvinceID = createdAddress.ProvinceID
-			foundAddress.CityID = createdAddress.CityID
+			foundAddress.Province = createdAddress.Province
+			foundAddress.City = createdAddress.City
 			foundAddress.StreetAddress = createdAddress.StreetAddress
 			foundAddress.HouseNumber = createdAddress.HouseNumber
 			foundAddress.Unit = createdAddress.Unit

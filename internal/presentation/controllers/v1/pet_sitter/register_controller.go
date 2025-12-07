@@ -106,7 +106,7 @@ func (pc *PetSitterRegisterController) UploadDocuments(ctx *gin.Context) {
 	Files := form.File["files"]
 	UploadDocumentsInfo := petsitter.UploadDocumentsRequest{
 		UserID:           UserID,
-		CertificateFiles: CertificateFiles, 
+		CertificateFiles: CertificateFiles,
 		Files:            Files,
 	}
 	err = pc.petSitterService.UploadDocuments(UploadDocumentsInfo)
@@ -140,7 +140,7 @@ func (pc *PetSitterRegisterController) SubmitSkills(ctx *gin.Context) {
 	dto := petsitter.SubmitSkillsRequest{
 		UserID:   userID,
 		Bio:      params.Bio,
-		Petkind:  params.PetKinds,
+		PetKinds: params.PetKinds,
 		Services: params.Services,
 	}
 

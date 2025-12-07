@@ -2,7 +2,6 @@ package seeder
 
 import (
 	"hona/backend/internal/domain/entities"
-	"hona/backend/internal/infrastructure/persistence"
 	"log"
 
 	"gorm.io/gorm"
@@ -29,10 +28,6 @@ func (s *DatabaseSeeder) SeedAll() error {
 	}
 
 	if err := s.SeedPetSitters(20); err != nil {
-		return err
-	}
-
-	if err := s.SeedProvincesAndCities(); err != nil {
 		return err
 	}
 
@@ -64,13 +59,6 @@ func (s *DatabaseSeeder) SeedPets(count int) error {
 func (s *DatabaseSeeder) SeedPetSitters(count int) error {
 	seeder := NewPetSitterSeeder(s.db)
 	return seeder.Seed(count)
-}
-
-func (s *DatabaseSeeder) SeedProvincesAndCities() error {
-	unitOfWork := persistence.NewUnitOfWork(s.db)
-	seeder := NewAddressSeeder(unitOfWork, s.db)
-	seeder.SeedProvincesAndCities()
-	return nil
 }
 
 // SeedServices seeds service data
@@ -127,8 +115,6 @@ func (s *DatabaseSeeder) ClearAll() {
 		&entities.Chat{},
 		&entities.Comment{},
 		&entities.Address{},
-		&entities.Province{},
-		&entities.City{},
 		&entities.TextMessage{},
 		&entities.Transaction{},
 		&entities.Transfer{},

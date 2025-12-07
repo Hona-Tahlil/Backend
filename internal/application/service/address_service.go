@@ -5,6 +5,7 @@ import (
 	"hona/backend/internal/application/dto/address"
 	"hona/backend/internal/application/usecase"
 	"hona/backend/internal/domain/entities"
+	"hona/backend/internal/domain/enums"
 	"hona/backend/internal/domain/exceptions"
 	"hona/backend/internal/domain/ports"
 )
@@ -20,7 +21,6 @@ func NewAddressService(unitOfWork ports.UnitOfWork, provinceService usecase.Prov
 		unitOfWork:      unitOfWork,
 		provinceService: provinceService,
 		userService:     userService,
-
 	}
 }
 
@@ -42,7 +42,7 @@ func (as *AddressService) GetUserAddressesInfo(id uint) ([]address.AddressInfoRe
 	if err != nil {
 		return nil, err
 	}
-	err = as.userService.PreloadFields(user, []string{"Requests.Address.Province.Cities", "Requests.Address.City", "Address.Province.Cities", "Address.City"})
+	err = as.userService.PreloadFields(user, []string{"Address"})
 	if err != nil {
 		return nil, err
 	}
@@ -55,7 +55,7 @@ func (as *AddressService) GetUserAddressesInfo(id uint) ([]address.AddressInfoRe
 	if user.Requests != nil {
 		for _, request := range user.Requests {
 			addresses = append(addresses, request.Address)
-			if mainAddress != nil && request.Address.City == mainAddress.City && request.Address.Province.Name == mainAddress.Province.Name && request.Address.StreetAddress == mainAddress.StreetAddress {
+			if mainAddress != nil && request.Address.City == mainAddress.City && request.Address.Province == mainAddress.Province && request.Address.StreetAddress == mainAddress.StreetAddress {
 				flag = true
 			}
 		}
@@ -76,8 +76,8 @@ func (as *AddressService) GetUserAddressesInfo(id uint) ([]address.AddressInfoRe
 func (as *AddressService) GetUserAddressInfo(addressEntity *entities.Address) address.AddressInfoResponse {
 	return address.AddressInfoResponse{
 		ID:            addressEntity.ID,
-		ProvinceName:  addressEntity.Province.Name.String(),
-		CityName:      addressEntity.City.Name.String(),
+		ProvinceName:  addressEntity.Province.String(),
+		CityName:      addressEntity.City.String(),
 		StreetAddress: addressEntity.StreetAddress,
 		HouseNumber:   addressEntity.HouseNumber,
 		Unit:          addressEntity.Unit,
@@ -86,25 +86,21 @@ func (as *AddressService) GetUserAddressInfo(addressEntity *entities.Address) ad
 }
 
 func (as *AddressService) CreateAddress(addressInfo address.AddressInfo) (*entities.Address, error) {
-
-	province, err := as.provinceService.FindProvinceByName(addressInfo.ProvinceName)
-	if err != nil {
-		return nil, err
-	}
-	var foundCity *entities.City
-	for _, city := range province.Cities {
-		if city.Name == addressInfo.CityName {
-			foundCity = &city
+	cities := enums.ProvinceWithCities[addressInfo.ProvinceName]
+	var foundCity enums.City
+	for _, city := range cities {
+		if city == addressInfo.CityName {
+			foundCity = city
 			break
 		}
 	}
-	if foundCity == nil {
+	if foundCity == 0 {
 		return nil, exceptions.NewNotFoundError(bootstrap.Run().Constants.ErrorFields.City)
 	}
 
 	address := &entities.Address{
-		ProvinceID:    province.ID,
-		CityID:        foundCity.ID,
+		Province:      addressInfo.ProvinceName,
+		City:          foundCity,
 		StreetAddress: addressInfo.StreetAddress,
 		HouseNumber:   addressInfo.HouseNumber,
 		Unit:          addressInfo.Unit,

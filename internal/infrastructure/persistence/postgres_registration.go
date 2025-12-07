@@ -46,8 +46,6 @@ func NewPostgresDatabase() *gorm.DB {
 			&entities.Chat{},
 			&entities.Comment{},
 			&entities.Address{},
-			&entities.Province{},
-			&entities.City{},
 			&entities.TextMessage{},
 			&entities.Transaction{},
 			&entities.Transfer{},
