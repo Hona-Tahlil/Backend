@@ -649,3 +649,10 @@ func (rs *RequestService) sendDeclineRequestEmail(id uint) {
 		log.Println(err)
 	}
 }
+
+func (rs *RequestService) EnsureRequestIsFinished(request *entities.Request) error {
+	if request.Status != enums.Finished {
+		return exceptions.NewAccessDeniedError(bootstrap.Run().Constants.ErrorTags.ForbiddenStatus)
+	}
+	return nil
+}

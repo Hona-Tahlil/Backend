@@ -7,7 +7,6 @@ type Comment struct {
 	UserID      uint `gorm:"index;not null"`
 	PetSitterID uint `gorm:"index;not null"`
 	RequestID   uint `gorm:"index;not null"`
-	Title       string
-	Description string
+	Text        *string
 	Rating      uint `gorm:"index;not null"`
 }

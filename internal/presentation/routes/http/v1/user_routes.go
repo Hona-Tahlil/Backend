@@ -32,4 +32,14 @@ func SetUpUserRoutes(v1 *gin.RouterGroup, app *wire.Application) {
 		requests.GET("/:requestID", app.Controllers.UserControllers.UserRequestController.GetRequestFullData)
 		// TODO: add View Requests Routes
 	}
+
+	comments := v1.Group("/comments")
+	comments.Use(app.Middlewares.AuthMiddleware.AuthRequired)
+	{
+		// TODO: test these
+		comments.POST("/", app.Controllers.UserControllers.UserCommentController.CreateComment)
+		comments.PUT("/", app.Controllers.UserControllers.UserCommentController.EditComment)
+		comments.DELETE("/:id", app.Controllers.UserControllers.UserCommentController.DeleteComment)
+		comments.GET("/petsitters/:petSitterID", app.Controllers.UserControllers.UserCommentController.GetAllPetSitterComments)
+	}
 }

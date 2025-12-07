@@ -3,6 +3,7 @@ package request
 import (
 	"hona/backend/internal/application/dto/address"
 	calendarslot "hona/backend/internal/application/dto/calendar_slot"
+	"hona/backend/internal/application/dto/comment"
 	"hona/backend/internal/application/dto/pet"
 	"hona/backend/internal/application/dto/servicedto"
 	"time"
@@ -23,9 +24,9 @@ type RequestFullDataResponse struct {
 	CalendarSlots   []calendarslot.CalendarSlotInfoResponse `json:"calendarSlots"`
 	Notes           *string                                 `json:"notes"`
 	TotalPrice      uint                                    `json:"totalPrice"`
-	// TODO: comment
-	Address    address.AddressInfoResponse `json:"address"`
-	Status     string                      `json:"status"`
-	TransferID *uint                       `json:"transferID"`
-	UpdatedAt  time.Time                   `json:"updatedAt"`
+	Comment         comment.CommentResponse                 `json:"comment"`
+	Address         address.AddressInfoResponse             `json:"address"`
+	Status          string                                  `json:"status"`
+	TransferID      *uint                                   `json:"transferID"`
+	UpdatedAt       time.Time                               `json:"updatedAt"`
 }
