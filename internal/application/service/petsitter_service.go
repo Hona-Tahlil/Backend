@@ -20,22 +20,20 @@ import (
 )
 
 type PetSitterService struct {
-	unitOfWork          ports.UnitOfWork
-	storage             domainstorage.Storage
-	userService         usecase.UserService
-	addressService      usecase.AddressService
-	serviceService      usecase.ServiceService
-	calendarSlotService usecase.CalendarSlotService
+	unitOfWork     ports.UnitOfWork
+	storage        domainstorage.Storage
+	userService    usecase.UserService
+	addressService usecase.AddressService
+	serviceService usecase.ServiceService
 }
 
-func NewPetSitterService(unitOfWork ports.UnitOfWork, storage domainstorage.Storage, userService usecase.UserService, addressService usecase.AddressService, serviceService usecase.ServiceService, calendarSlotService usecase.CalendarSlotService) *PetSitterService {
+func NewPetSitterService(unitOfWork ports.UnitOfWork, storage domainstorage.Storage, userService usecase.UserService, addressService usecase.AddressService, serviceService usecase.ServiceService) *PetSitterService {
 	return &PetSitterService{
-		unitOfWork:          unitOfWork,
-		storage:             storage,
-		userService:         userService,
-		addressService:      addressService,
-		serviceService:      serviceService,
-		calendarSlotService: calendarSlotService,
+		unitOfWork:     unitOfWork,
+		storage:        storage,
+		userService:    userService,
+		addressService: addressService,
+		serviceService: serviceService,
 	}
 }
 
@@ -52,7 +50,7 @@ func (ps *PetSitterService) GetPetSitterFreeSlotsResponse(petSitter *entities.Pe
 		freeSlots = append(freeSlots, slot)
 	}
 
-	return ps.calendarSlotService.GetCalendarSlotsResponse(freeSlots), nil
+	return ps.GetCalendarSlotsResponse(freeSlots), nil
 }
 
 func (ps *PetSitterService) GetServicesResponse(petSitter *entities.PetSitter) ([]servicedto.ServiceInfoResponse, error) {
@@ -532,7 +530,7 @@ func (ps *PetSitterService) SubmitPersonalInfo(petSitterInfo petsitter.SubmitPer
 			HouseNumber:   petSitterInfo.HouseNumber,
 			Unit:          petSitterInfo.Unit,
 		}
-		createdAddress, err := ps.addressService.CreateAddress(addressInfo)
+		createdAddress, err := ps.addressService.CreateAddressEntity(addressInfo)
 		if err != nil {
 			return err
 		}
@@ -575,4 +573,38 @@ func (ps *PetSitterService) SubmitPersonalInfo(petSitterInfo petsitter.SubmitPer
 		return nil
 	})
 	return err
+}
+
+func (ps *PetSitterService) GetCalendarSlotsResponse(calendarSlots []entities.CalendarSlot) []calendarslot.CalendarSlotInfoResponse {
+	r := make([]calendarslot.CalendarSlotInfoResponse, 0)
+
+	for _, slot := range calendarSlots {
+		r = append(r, calendarslot.CalendarSlotInfoResponse{
+			ID:    slot.ID,
+			Date:  slot.Date,
+			Slots: slot.Slots,
+		})
+	}
+
+	return r
+}
+
+func (ps *PetSitterService) GetFreeMap(calendarSlots []entities.CalendarSlot) map[string]map[interface{}]bool {
+	availableSlots := make(map[string]map[interface{}]bool)
+
+	for _, psSlot := range calendarSlots {
+		if psSlot.Status == enums.Free {
+			dateKey := psSlot.Date.Format("2006-01-02")
+
+			if _, exists := availableSlots[dateKey]; !exists {
+				availableSlots[dateKey] = make(map[interface{}]bool)
+			}
+
+			for _, slot := range psSlot.Slots {
+				availableSlots[dateKey][slot] = true
+			}
+		}
+	}
+
+	return availableSlots
 }

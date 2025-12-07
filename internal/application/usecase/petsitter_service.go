@@ -30,4 +30,6 @@ type PetSitterService interface {
 	CheckPetSitterStatus(pss enums.PetSitterStatus) error
 	CheckPetSitterStep(currentStep enums.OnboardingStep, requiredStep enums.OnboardingStep) error
 	SubmitPersonalInfo(petSitterInfo petsitter.SubmitPersonalInfoRequest) error
+	GetCalendarSlotsResponse(calendarSlots []entities.CalendarSlot) []calendarslot.CalendarSlotInfoResponse
+	GetFreeMap(calendarSlots []entities.CalendarSlot) map[string]map[interface{}]bool
 }

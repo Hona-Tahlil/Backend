@@ -8,47 +8,41 @@ import (
 	"hona/backend/internal/domain/enums"
 	"hona/backend/internal/domain/exceptions"
 	"hona/backend/internal/domain/ports"
-	"hona/backend/internal/infrastructure/mail"
+	"hona/backend/internal/infrastructure/communication/mail"
 	"log"
 	"sort"
 	"time"
 )
 
 type RequestService struct {
-	userService         usecase.UserService
-	provinceService     usecase.ProvinceService
-	addressService      usecase.AddressService
-	petService          usecase.PetService
-	serviceService      usecase.ServiceService
-	petSitterService    usecase.PetSitterService
-	calendarSlotService usecase.CalendarSlotService
-	unitOfWork          ports.UnitOfWork
-	emailService        *mail.EmailService
+	userService      usecase.UserService
+	addressService   usecase.AddressService
+	petService       usecase.PetService
+	serviceService   usecase.ServiceService
+	petSitterService usecase.PetSitterService
+	unitOfWork       ports.UnitOfWork
+	emailService     *mail.EmailService
 }
 
 type RequestServiceDeps struct {
-	UserService         usecase.UserService
-	ProvinceService     usecase.ProvinceService
-	AddressService      usecase.AddressService
-	PetService          usecase.PetService
-	ServiceService      usecase.ServiceService
-	PetSitterService    usecase.PetSitterService
-	CalendarSlotService usecase.CalendarSlotService
-	UnitOfWork          ports.UnitOfWork
-	EmailService        *mail.EmailService
+	UserService      usecase.UserService
+	AddressService   usecase.AddressService
+	PetService       usecase.PetService
+	ServiceService   usecase.ServiceService
+	PetSitterService usecase.PetSitterService
+	UnitOfWork       ports.UnitOfWork
+	EmailService     *mail.EmailService
 }
 
 func NewRequestService(deps RequestServiceDeps) *RequestService {
 	return &RequestService{
-		userService:         deps.UserService,
-		unitOfWork:          deps.UnitOfWork,
-		provinceService:     deps.ProvinceService,
-		addressService:      deps.AddressService,
-		serviceService:      deps.ServiceService,
-		petService:          deps.PetService,
-		calendarSlotService: deps.CalendarSlotService,
-		petSitterService:    deps.PetSitterService,
-		emailService:        deps.EmailService,
+		userService:      deps.UserService,
+		unitOfWork:       deps.UnitOfWork,
+		addressService:   deps.AddressService,
+		serviceService:   deps.ServiceService,
+		petService:       deps.PetService,
+		petSitterService: deps.PetSitterService,
+		emailService:     deps.EmailService,
 	}
 }
 
@@ -86,7 +80,7 @@ func (rs *RequestService) CreateRequest(info request.CreateRequestRequest) error
 
 	var address *entities.Address
 	if info.AddressInfo != nil {
-		madeAddress, err := rs.addressService.CreateAddress(*info.AddressInfo)
+		madeAddress, err := rs.addressService.CreateAddressEntity(*info.AddressInfo)
 		if err != nil {
 			return err
 		}
@@ -229,7 +223,7 @@ func (rs *RequestService) EditRequest(info request.EditRequestRequest) error {
 
 	var address *entities.Address
 	if info.AddressInfo != nil {
-		madeAddress, err := rs.addressService.CreateAddress(*info.AddressInfo)
+		madeAddress, err := rs.addressService.CreateAddressEntity(*info.AddressInfo)
 		if err != nil {
 			return err
 		}
@@ -386,7 +380,7 @@ func (rs *RequestService) GetRequestFullData(info request.GetRequestFullDataRequ
 		TotalPrice:         foundRequest.TotalPrice,
 		Status:             foundRequest.Status.String(),
 		TransferID:         foundRequest.TransferID,
-		CalendarSlots:      rs.calendarSlotService.GetCalendarSlotsResponse(foundRequest.CalendarSlots),
+		CalendarSlots:      rs.petSitterService.GetCalendarSlotsResponse(foundRequest.CalendarSlots),
 		UpdatedAt:          foundRequest.UpdatedAt,
 	}, nil
 }
@@ -445,7 +439,7 @@ func (rs *RequestService) RespondToRequest(info request.RespondToRequestRequest)
 }
 
 func (rs *RequestService) validateCalendarSlots(petSitterSlots []entities.CalendarSlot, requestSlots []entities.CalendarSlot) error {
-	availableSlots := rs.calendarSlotService.GetFreeMap(petSitterSlots)
+	availableSlots := rs.petSitterService.GetFreeMap(petSitterSlots)
 
 	for _, req := range requestSlots {
 		dateKey := req.Date.Format("2006-01-02")

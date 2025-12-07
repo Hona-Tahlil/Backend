@@ -3,6 +3,7 @@ package service
 import (
 	"hona/backend/bootstrap"
 	"hona/backend/internal/application/dto/address"
+	"hona/backend/internal/application/dto/provincecity"
 	"hona/backend/internal/application/usecase"
 	"hona/backend/internal/domain/entities"
 	"hona/backend/internal/domain/enums"
@@ -11,16 +12,14 @@ import (
 )
 
 type AddressService struct {
-	unitOfWork      ports.UnitOfWork
-	userService     usecase.UserService
-	provinceService usecase.ProvinceService
+	unitOfWork  ports.UnitOfWork
+	userService usecase.UserService
 }
 
-func NewAddressService(unitOfWork ports.UnitOfWork, provinceService usecase.ProvinceService, userService usecase.UserService) *AddressService {
+func NewAddressService(unitOfWork ports.UnitOfWork, userService usecase.UserService) *AddressService {
 	return &AddressService{
-		unitOfWork:      unitOfWork,
-		provinceService: provinceService,
-		userService:     userService,
+		unitOfWork:  unitOfWork,
+		userService: userService,
 	}
 }
 
@@ -38,26 +37,20 @@ func (as *AddressService) FindAddressByID(id uint) (*entities.Address, error) {
 }
 
 func (as *AddressService) GetUserAddressesInfo(id uint) ([]address.AddressInfoResponse, error) {
-	user, err := as.userService.FindUserByID(id)
+	addressRepo := as.unitOfWork.Factory().AddressRepository()
+	mainAddress, err := addressRepo.FindUserAddressByUserID(id)
 	if err != nil {
 		return nil, err
 	}
-	err = as.userService.PreloadFields(user, []string{"Address"})
+	addresses, err := addressRepo.FindUserRequestAddressesByID(id)
 	if err != nil {
 		return nil, err
 	}
-	var mainAddress *entities.Address
-	if user.Address != nil {
-		mainAddress = user.Address
-	}
-	addresses := make([]entities.Address, 0)
+
 	flag := false
-	if user.Requests != nil {
-		for _, request := range user.Requests {
-			addresses = append(addresses, request.Address)
-			if mainAddress != nil && request.Address.City == mainAddress.City && request.Address.Province == mainAddress.Province && request.Address.StreetAddress == mainAddress.StreetAddress {
-				flag = true
-			}
+	for _, address := range addresses {
+		if mainAddress != nil && address.City == mainAddress.City && address.Province == mainAddress.Province && address.StreetAddress == mainAddress.StreetAddress {
+			flag = true
 		}
 	}
 
@@ -85,7 +78,7 @@ func (as *AddressService) GetUserAddressInfo(addressEntity *entities.Address) ad
 	}
 }
 
-func (as *AddressService) CreateAddress(addressInfo address.AddressInfo) (*entities.Address, error) {
+func (as *AddressService) CreateAddressEntity(addressInfo address.AddressInfo) (*entities.Address, error) {
 	cities := enums.ProvinceWithCities[addressInfo.ProvinceName]
 	var foundCity enums.City
 	for _, city := range cities {
@@ -108,4 +101,31 @@ func (as *AddressService) CreateAddress(addressInfo address.AddressInfo) (*entit
 	}
 
 	return address, nil
+}
+
+func (as *AddressService) GetAllProvincesResponse() ([]provincecity.ProvinceResponse, error) {
+	provinces := enums.GetAllProvinces()
+
+	provinceResponses := make([]provincecity.ProvinceResponse, 0)
+	for _, province := range provinces {
+		provinceResponses = append(provinceResponses, provincecity.ProvinceResponse{
+			Num:  province,
+			Name: province.String(),
+		})
+	}
+
+	return provinceResponses, nil
+}
+
+func (as *AddressService) GetCitiesByProvinceName(info provincecity.GetProvinceCitiesRequest) ([]provincecity.CityResponse, error) {
+	cities := enums.ProvinceWithCities[info.ProvinceNum]
+	cityResponses := make([]provincecity.CityResponse, 0)
+	for _, city := range cities {
+		cityResponses = append(cityResponses, provincecity.CityResponse{
+			Num:  city,
+			Name: city.String(),
+		})
+	}
+
+	return cityResponses, nil
 }

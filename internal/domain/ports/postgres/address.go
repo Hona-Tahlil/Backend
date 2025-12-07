@@ -7,4 +7,5 @@ type AddressRepository interface {
 	FindUserAddressByUserID(id uint) (*entities.Address, error)
 	Create(address *entities.Address) error
 	Update(address *entities.Address) error
+	FindUserRequestAddressesByID(id uint) ([]entities.Address, error)
 }

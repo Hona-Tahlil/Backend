@@ -52,3 +52,14 @@ func (ar *AddressRepository) Update(address *entities.Address) error {
 	}
 	return nil
 }
+
+func (ar *AddressRepository) FindUserRequestAddressesByID(id uint) ([]entities.Address, error) {
+	var addresses []entities.Address
+
+	err := ar.db.Where("refer = ? AND type = ?", id, "Request").Find(&addresses).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return addresses, nil
+}
