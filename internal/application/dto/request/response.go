@@ -17,16 +17,20 @@ type CreateRequestInfoResponse struct {
 }
 
 type RequestFullDataResponse struct {
-	RequestID       uint                                    `json:"requestID"`
-	PetSitterUserID uint                                    `json:"petSitterUserID"`
-	Service         servicedto.ServiceInfoResponse          `json:"service"`
-	Pets            []pet.PetBasicDataResponse              `json:"pets"`
-	CalendarSlots   []calendarslot.CalendarSlotInfoResponse `json:"calendarSlots"`
-	Notes           *string                                 `json:"notes"`
-	TotalPrice      uint                                    `json:"totalPrice"`
-	Comment         comment.CommentResponse                 `json:"comment"`
-	Address         address.AddressInfoResponse             `json:"address"`
-	Status          string                                  `json:"status"`
-	TransferID      *uint                                   `json:"transferID"`
-	UpdatedAt       time.Time                               `json:"updatedAt"`
+	RequestID          uint                                    `json:"requestID"`
+	PetSitterUserID    uint                                    `json:"petSitterUserID"`
+	PetSitterFirstName string                                  `json:"petSitterFirstName"`
+	PetSitterLastName  string                                  `json:"petSitterLastName"`
+	UserFirstName      string                                  `json:"userFirstName"`
+	UserLastName       string                                  `json:"userLastName"`
+	Service            servicedto.ServiceInfoResponse          `json:"service"`
+	Pets               []pet.PetBasicDataResponse              `json:"pets"`
+	CalendarSlots      []calendarslot.CalendarSlotInfoResponse `json:"calendarSlots"`
+	Notes              *string                                 `json:"notes"`
+	TotalPrice         uint                                    `json:"totalPrice"`
+	Comment            comment.CommentResponse                 `json:"comment"`
+	Address            address.AddressInfoResponse             `json:"address"`
+	Status             string                                  `json:"status"`
+	TransferID         *uint                                   `json:"transferID"`
+	UpdatedAt          time.Time                               `json:"updatedAt"`
 }
