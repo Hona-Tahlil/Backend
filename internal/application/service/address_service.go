@@ -3,7 +3,6 @@ package service
 import (
 	"hona/backend/bootstrap"
 	"hona/backend/internal/application/dto/address"
-	"hona/backend/internal/application/dto/request"
 	"hona/backend/internal/application/usecase"
 	"hona/backend/internal/domain/entities"
 	"hona/backend/internal/domain/exceptions"
@@ -21,6 +20,7 @@ func NewAddressService(unitOfWork ports.UnitOfWork, provinceService usecase.Prov
 		unitOfWork:      unitOfWork,
 		provinceService: provinceService,
 		userService:     userService,
+
 	}
 }
 
@@ -31,7 +31,6 @@ func (as *AddressService) FindAddressByID(id uint) (*entities.Address, error) {
 		return nil, err
 	}
 	if address == nil {
-
 		return nil, exceptions.NewNotFoundError(bootstrap.Run().Constants.ErrorFields.Address)
 	}
 
@@ -86,7 +85,8 @@ func (as *AddressService) GetUserAddressInfo(addressEntity *entities.Address) ad
 	}
 }
 
-func (as *AddressService) CreateAddress(addressInfo request.AddressInfoRequest) (*entities.Address, error) {
+func (as *AddressService) CreateAddress(addressInfo address.AddressInfo) (*entities.Address, error) {
+
 	province, err := as.provinceService.FindProvinceByName(addressInfo.ProvinceName)
 	if err != nil {
 		return nil, err
@@ -103,8 +103,8 @@ func (as *AddressService) CreateAddress(addressInfo request.AddressInfoRequest) 
 	}
 
 	address := &entities.Address{
-		Province:      *province,
-		City:          *foundCity,
+		ProvinceID:    province.ID,
+		CityID:        foundCity.ID,
 		StreetAddress: addressInfo.StreetAddress,
 		HouseNumber:   addressInfo.HouseNumber,
 		Unit:          addressInfo.Unit,

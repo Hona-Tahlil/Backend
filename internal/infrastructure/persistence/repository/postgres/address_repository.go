@@ -85,3 +85,35 @@ func (ar *AddressRepository) FindAddressesByUserID(id uint) ([]entities.Address,
 
 	return addresses, nil
 }
+
+func (ar *AddressRepository) FinduserAddressByUserID(id uint) (*entities.Address, error) {
+	var foundAddress entities.Address
+
+	err := ar.db.First(&foundAddress, "refer = ? AND type = ?", id, "User").Error
+	if err != nil {
+		return nil, err
+	}
+
+	err = ar.db.Preload("Province.Cities").First(&foundAddress, foundAddress.ID).Error
+	if err != nil {
+		return nil, err
+	}
+	err = ar.db.Preload("City").First(&foundAddress, foundAddress.ID).Error
+	if err != nil {
+		return nil, err
+	}
+	return &foundAddress, nil
+}
+
+func (ar *AddressRepository) Create(address *entities.Address) error {
+	if err := ar.db.Create(address).Error; err != nil {
+		return err
+	}	
+	return nil
+}
+func (ar *AddressRepository) Update(address *entities.Address) error {
+	if err := ar.db.Save(address).Error; err != nil {
+		return err
+	}	
+	return nil
+}	

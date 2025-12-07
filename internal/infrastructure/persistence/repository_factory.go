@@ -56,3 +56,4 @@ func (f *RepositoryFactory) RequestRepository() domainpostgres.RequestRepository
 func (f *RepositoryFactory) PetSitterRepository() domainpostgres.PetSitterRepository {
 	return postgres.NewPetSitterRepository(f.db)
 }
+

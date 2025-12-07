@@ -22,7 +22,7 @@ func ServiceSeeder(db *gorm.DB) error {
 		service := entities.Service{
 			PetSitterID: uint(rand.Intn(20) + 1),             // Assuming 20 pet sitters exist
 			Type:        enums.ServiceType(rand.Intn(2) + 1), // Assuming 5 service types
-			Price:       uint(rand.Intn(90)+10) * 1000,       // Price between 10k-100k
+			// Price:       uint(rand.Intn(90)+10) * 1000,       // Price between 10k-100k
 			Description: &description,
 		}
 

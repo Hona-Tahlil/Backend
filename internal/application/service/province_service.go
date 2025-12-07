@@ -27,6 +27,7 @@ func (ps *ProvinceService) FindProvinceByName(name enums.Province) (*entities.Pr
 		return nil, err
 	}
 	log.Printf("[DEBUG] province: %v", province)
+
 	if province == nil {
 		var ve exceptions.ValidationErrors
 		ve.AddError(bootstrap.Run().Constants.ErrorFields.Province, bootstrap.Run().Constants.ErrorTags.NotFound)
@@ -35,7 +36,6 @@ func (ps *ProvinceService) FindProvinceByName(name enums.Province) (*entities.Pr
 
 	return province, nil
 }
-
 func (ps *ProvinceService) GetAllProvincesResponse() ([]provincecity.ProvinceResponse, error) {
 	provinceRepo := ps.unitOfWork.Factory().ProvinceRepository()
 	provinces, err := provinceRepo.GetAllProvinces()

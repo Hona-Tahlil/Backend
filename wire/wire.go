@@ -5,7 +5,6 @@ package wire
 
 import (
 	"hona/backend/bootstrap"
-
 	"hona/backend/internal/application/service"
 	"hona/backend/internal/application/usecase"
 	domainjwt "hona/backend/internal/domain/jwt"
@@ -93,8 +92,9 @@ var UserControllersProviderSet = wire.NewSet(
 )
 
 var PetSitterControllersProviderSet = wire.NewSet(
+	petsitter.NewPetSitterRegisterController,
 	petsitter.NewPetSitterRequestController,
-	wire.Struct(new(PetSitterControllers)),
+	wire.Struct(new(PetSitterControllers), "*"),
 )
 
 var ControllersProviderSet = wire.NewSet(
@@ -145,7 +145,8 @@ type UserControllers struct {
 }
 
 type PetSitterControllers struct {
-	PetSitterRequestController *petsitter.PetSitterRequestController
+	PetSitterRegisterController *petsitter.PetSitterRegisterController
+	PetSitterRequestController  *petsitter.PetSitterRequestController
 }
 
 type Controllers struct {

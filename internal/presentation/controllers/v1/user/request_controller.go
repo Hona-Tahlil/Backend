@@ -1,6 +1,7 @@
 package user
 
 import (
+	"hona/backend/internal/application/dto/address"
 	"hona/backend/internal/application/dto/request"
 	"hona/backend/internal/application/usecase"
 	"hona/backend/internal/domain/enums"
@@ -79,7 +80,7 @@ func (rc *UserRequestController) CreateRequest(ctx *gin.Context) {
 		CalenderSlots:   slots,
 		PetIDs:          params.PetIDs,
 		Notes:           params.Notes,
-		AddressInfo:     (*request.AddressInfoRequest)(params.AddressInfo),
+		AddressInfo:     (*address.AddressInfo)(params.AddressInfo),
 		AddressID:       params.AddressID,
 		ServiceID:       params.ServiceID,
 	}
@@ -127,7 +128,7 @@ func (rc *UserRequestController) EditRequest(ctx *gin.Context) {
 		CalenderSlots: slots,
 		PetIDs:        params.PetIDs,
 		Notes:         params.Notes,
-		AddressInfo:   (*request.AddressInfoRequest)(params.AddressInfo),
+		AddressInfo:   (*address.AddressInfo)(params.AddressInfo),
 		AddressID:     params.AddressID,
 		ServiceID:     params.ServiceID,
 	}
