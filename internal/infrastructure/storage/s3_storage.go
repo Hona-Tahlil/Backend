@@ -36,7 +36,7 @@ func (s3Storage *S3Storage) setS3Client(bucketType enums.BucketType) error {
 	if s3Storage.client != nil {
 		return nil
 	}
-	cfg, err := config.LoadDefaultConfig(context.TODO(), config.WithRegion("us-west-2"))
+	cfg, err := config.LoadDefaultConfig(context.TODO(), config.WithRegion("default"))
 	if err != nil {
 		return err
 	}
@@ -58,7 +58,12 @@ func (s3Storage *S3Storage) UploadFile(bucketType enums.BucketType, key string, 
 	if err != nil {
 		return err
 	}
-	defer fileReader.Close()
+	defer func(fileReader multipart.File) {
+		err := fileReader.Close()
+		if err != nil {
+
+		}
+	}(fileReader)
 
 	_, err = s3Storage.client.PutObject(context.TODO(), &s3.PutObjectInput{
 		Bucket: aws.String(bucket),

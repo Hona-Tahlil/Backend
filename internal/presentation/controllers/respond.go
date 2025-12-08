@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"fmt"
 	"hona/backend/bootstrap"
 	"net/http"
 
@@ -55,7 +54,6 @@ func Respond[T Message | []Message](ctx *gin.Context, statusCode int, messages T
 			translatedTag, _ := translator.T(ms.Text, translatedFieldValue)
 			mms.Messages[ms.Params[0]] = translatedTag
 		}
-		fmt.Println("111")
 		ctx.JSON(statusCode, mms)
 	}
 }

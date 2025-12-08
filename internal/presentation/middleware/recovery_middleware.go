@@ -5,6 +5,7 @@ import (
 	"hona/backend/internal/domain/exceptions"
 	"hona/backend/internal/presentation/controllers"
 	"log"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -58,10 +59,16 @@ func handleBindingError(bindingErr *exceptions.BindingError) ([]controllers.Mess
 }
 
 func handleValidationErrors(validationErrs *exceptions.ValidationErrors) ([]controllers.Message, int) {
-	msgs := []controllers.Message{}
+	var msgs []controllers.Message
 	for _, fieldErr := range validationErrs.FieldErrors {
+		var txt string
+		if strings.HasPrefix(fieldErr.Tag, "errors.") {
+			txt = fieldErr.Tag
+		} else {
+			txt = "errors." + fieldErr.Tag
+		}
 		msgs = append(msgs, controllers.Message{
-			Text:   "errors." + fieldErr.Tag,
+			Text:   txt,
 			Params: []string{fieldErr.Field},
 		})
 
@@ -85,7 +92,7 @@ func handleNotFoundError(notFoundErr *exceptions.NotFoundError) ([]controllers.M
 }
 
 func handleConflictErrors(conflictErrs *exceptions.ConflictErrors) ([]controllers.Message, int) {
-	msgs := []controllers.Message{}
+	var msgs []controllers.Message
 	for _, fieldErr := range conflictErrs.Errors {
 		msgs = append(msgs, controllers.Message{
 			Text:   fieldErr.Tag,

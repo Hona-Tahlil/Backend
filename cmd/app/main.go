@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"hona/backend/bootstrap"
 	"hona/backend/internal/presentation/routes"
 	"hona/backend/wire"
@@ -36,7 +37,7 @@ func main() {
 
 	go func() {
 		log.Println("Server Running ...")
-		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			log.Fatalf("listen: %s\n", err)
 		}
 	}()

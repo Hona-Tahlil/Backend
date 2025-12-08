@@ -39,14 +39,6 @@ func (ps *PetService) AddPet(info pet.AddPetRequest) error {
 	}
 
 	info.IsAdult = isAdult
-	var profileKey *string
-	if info.ProfilePic != nil {
-		profileKeyValue := ps.getStorageKey(info.Name, info.UserID)
-		profileKey = &profileKeyValue
-		if err := ps.storage.UploadFile(enums.PetProfilePic, *profileKey, info.ProfilePic); err != nil {
-			return err
-		}
-	}
 
 	_, err = ps.findPet(info.Name, info.UserID)
 	if err == nil {
@@ -55,6 +47,16 @@ func (ps *PetService) AddPet(info pet.AddPetRequest) error {
 		return &ce
 	} else if _, ok := err.(*exceptions.NotFoundError); !ok {
 		return err
+	}
+
+	var profileKey *string
+	if info.ProfilePic != nil {
+		log.Println()
+		profileKeyValue := ps.getStorageKey(info.Name, info.UserID)
+		profileKey = &profileKeyValue
+		if err := ps.storage.UploadFile(enums.PetProfilePic, *profileKey, info.ProfilePic); err != nil {
+			return err
+		}
 	}
 
 	pet := &entities.Pet{
@@ -82,6 +84,10 @@ func (ps *PetService) UpdatePet(info pet.UpdatePetRequest) error {
 	foundPet, err := ps.FindPetByID(info.ID)
 	if err != nil {
 		return err
+	}
+
+	if foundPet.UserID != info.UserID {
+		return exceptions.NewAccessDeniedError("can't update other's pets")
 	}
 
 	err = ps.validateSpecies(info.Species, info.Kind)
@@ -136,6 +142,9 @@ func (ps *PetService) RemovePet(info pet.RemovePetRequest) error {
 	foundPet, err := ps.FindPetByID(info.ID)
 	if err != nil {
 		return err
+	}
+	if foundPet.UserID != info.UserID {
+		return exceptions.NewAccessDeniedError("can't delete other's pets!")
 	}
 	profileKeyValue := ps.getStorageKey(foundPet.Name, foundPet.UserID)
 	if err = ps.storage.DeleteObject(enums.PetProfilePic, profileKeyValue); err != nil {
