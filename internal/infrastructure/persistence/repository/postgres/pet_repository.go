@@ -58,7 +58,7 @@ func (pr *PetRepository) PreloadUserPets(user *entities.User) error {
 
 func (pr *PetRepository) FindUserPetsByID(userID uint) ([]entities.Pet, error) {
 	var pets []entities.Pet
-	err := pr.db.Where("userID = ? AND type = ?", userID, "regular").Find(&pets).Error
+	err := pr.db.Where("user_id = ? AND type = ?", userID, "regular").Find(&pets).Error
 	if err != nil {
 		return nil, err
 	}
@@ -67,7 +67,7 @@ func (pr *PetRepository) FindUserPetsByID(userID uint) ([]entities.Pet, error) {
 
 func (pr *PetRepository) FindRequestPetsByID(requestID uint) ([]entities.Pet, error) {
 	var pets []entities.Pet
-	err := pr.db.Where("requestID = ? AND type = ?", requestID, "request").Find(&pets).Error
+	err := pr.db.Where("request_id = ? AND type = ?", requestID, "request").Find(&pets).Error
 	if err != nil {
 		return nil, err
 	}

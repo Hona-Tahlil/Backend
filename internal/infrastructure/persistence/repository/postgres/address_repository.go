@@ -34,6 +34,9 @@ func (ar *AddressRepository) FindUserAddressByUserID(id uint) (*entities.Address
 
 	err := ar.db.First(&foundAddress, "refer = ? AND type = ?", id, "User").Error
 	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, nil
+		}
 		return nil, err
 	}
 

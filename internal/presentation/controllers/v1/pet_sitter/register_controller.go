@@ -1,7 +1,6 @@
 package petsitter
 
 import (
-	"fmt"
 	"hona/backend/internal/application/dto/petsitter"
 	"hona/backend/internal/application/usecase"
 	"hona/backend/internal/domain/enums"
@@ -22,9 +21,7 @@ func NewPetSitterRegisterController(petSitterService usecase.PetSitterService) *
 }
 
 func (pc *PetSitterRegisterController) CreateSignupSession(ctx *gin.Context) {
-	fmt.Println("✅ PETSITTER REGISTER CONTROLLER")
 	UserID := controllers.GetID(ctx)
-	fmt.Println("✅ PETSITTER REGISTER CONTROLLER")
 
 	petSitterInfo := petsitter.GetPetSitterRequest{
 		UserID: UserID,
@@ -39,7 +36,6 @@ func (pc *PetSitterRegisterController) CreateSignupSession(ctx *gin.Context) {
 
 func (pc *PetSitterRegisterController) SubmitPersonalInfo(ctx *gin.Context) {
 	UserID := controllers.GetID(ctx)
-	fmt.Println("✅ 1655400")
 
 	type FirstSubmitParams struct {
 		FirstName   string         `json:"first_name"`
@@ -69,13 +65,11 @@ func (pc *PetSitterRegisterController) SubmitPersonalInfo(ctx *gin.Context) {
 		HouseNumber: params.HouseNumber,
 		Unit:        params.Unit,
 	}
-	fmt.Println("✅ 00msbjansltngn")
 
 	err := pc.petSitterService.SubmitPersonalInfo(FirstSubmitInfo)
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println("✅ 00msbjansltngn")
 
 	msg := controllers.Message{}
 	controllers.Respond(ctx, 200, msg, nil)
@@ -83,13 +77,10 @@ func (pc *PetSitterRegisterController) SubmitPersonalInfo(ctx *gin.Context) {
 
 func (pc *PetSitterRegisterController) GetPersonalInfo(ctx *gin.Context) {
 	UserID := controllers.GetID(ctx)
-	fmt.Println("✅ 00131546")
 	res, err := pc.petSitterService.GetPersonalInfo(UserID)
-	fmt.Println("✅ 00131547")
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println("✅ 00msbjansltngn")
 
 	msg := controllers.Message{}
 	controllers.Respond(ctx, 200, msg, *res)

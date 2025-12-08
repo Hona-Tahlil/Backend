@@ -266,7 +266,7 @@ func (rs *RequestService) EditRequest(info request.EditRequestRequest) error {
 func (rs *RequestService) CancelRequest(info request.CancelRequestRequest) error {
 	foundRequest, err := rs.FindRequestByID(info.RequestID)
 	if err != nil {
-		return nil
+		return err
 	}
 
 	err = rs.PreloadFields(foundRequest, []string{"CalendarSlots"})
@@ -479,9 +479,9 @@ func (rs *RequestService) validateRequestPets(user *entities.User, petSitter *en
 }
 
 func (rs *RequestService) makeRequestPets(userPets []entities.Pet) ([]entities.Pet, error) {
-	pets := make([]entities.Pet, 0)
+	pets := make([]entities.Pet, len(userPets))
 
-	for _, pet := range userPets {
+	for i, pet := range userPets {
 		requestPet := &entities.Pet{
 			UserID:     pet.UserID,
 			Name:       pet.Name,
@@ -496,7 +496,7 @@ func (rs *RequestService) makeRequestPets(userPets []entities.Pet) ([]entities.P
 			Type:       bootstrap.Run().Constants.EntityConstants.Request,
 		}
 
-		pets = append(pets, *requestPet)
+		pets[i] = *requestPet
 	}
 
 	return pets, nil
@@ -517,15 +517,15 @@ func (rs *RequestService) calculateTotalPrice(servicesEntity *entities.Service, 
 }
 
 func (rs *RequestService) makeCalendarSlots(calendarSlots []request.RequestCalendarSlotRequest) []entities.CalendarSlot {
-	slots := make([]entities.CalendarSlot, 0)
+	slots := make([]entities.CalendarSlot, len(calendarSlots))
 
-	for _, slot := range calendarSlots {
+	for i, slot := range calendarSlots {
 		calendarSlot := &entities.CalendarSlot{
 			Date:   slot.Date,
 			Slots:  slot.Slots,
 			Status: enums.Booked,
 		}
-		slots = append(slots, *calendarSlot)
+		slots[i] = *calendarSlot
 	}
 
 	return slots

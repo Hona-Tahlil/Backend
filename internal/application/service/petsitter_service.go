@@ -14,7 +14,6 @@ import (
 	"hona/backend/internal/domain/exceptions"
 	"hona/backend/internal/domain/ports"
 	domainstorage "hona/backend/internal/domain/storage"
-	"log"
 
 	"github.com/samber/lo"
 )
@@ -40,36 +39,36 @@ func (ps *PetSitterService) GetPetSitterFreeSlotsResponse(petSitter *entities.Pe
 		return nil, nil
 	}
 	petSitterCalendarSlots := petSitter.Schedule
-	freeSlots := make([]entities.CalendarSlot, 0)
-	for _, slot := range petSitterCalendarSlots {
+	freeSlots := make([]entities.CalendarSlot, len(petSitterCalendarSlots))
+	for i, slot := range petSitterCalendarSlots {
 		if slot.Status != enums.Free {
 			continue
 		}
-		freeSlots = append(freeSlots, slot)
+		freeSlots[i] = slot
 	}
 
 	return ps.GetCalendarSlotsResponse(freeSlots), nil
 }
 
 func (ps *PetSitterService) GetServicesResponse(petSitter *entities.PetSitter) ([]servicedto.ServiceInfoResponse, error) {
-	r := make([]servicedto.ServiceInfoResponse, 0)
+	r := make([]servicedto.ServiceInfoResponse, len(petSitter.Services))
 	if petSitter.Services == nil {
 		return r, nil
 	}
-	for _, service := range petSitter.Services {
-		r = append(r, ps.GetServiceResponse(&service))
+	for i, service := range petSitter.Services {
+		r[i] = ps.GetServiceResponse(&service)
 	}
 	return r, nil
 }
 
 func (ps *PetSitterService) GetAvailableServicesResponse(petSitter *entities.PetSitter) ([]servicedto.ServiceInfoResponse, error) {
-	r := make([]servicedto.ServiceInfoResponse, 0)
+	r := make([]servicedto.ServiceInfoResponse, len(petSitter.Services))
 	if petSitter.Services == nil {
 		return r, nil
 	}
-	for _, service := range petSitter.Services {
+	for i, service := range petSitter.Services {
 		if service.Price != 0 {
-			r = append(r, ps.GetServiceResponse(&service))
+			r[i] = ps.GetServiceResponse(&service)
 		}
 	}
 	return r, nil
@@ -80,12 +79,14 @@ func (ps *PetSitterService) GetPetSitterByUserID(id uint) (*entities.PetSitter, 
 	if err != nil {
 		return nil, exceptions.NewNotFoundError(bootstrap.Run().Constants.ErrorFields.PetSitter)
 	}
-	ps.userService.PreloadFields(user, []string{"PetSitter"})
+	err = ps.userService.PreloadFields(user, []string{"PetSitter"})
+	if err != nil {
+		return nil, err
+	}
 	if user.PetSitter == nil {
 		return nil, exceptions.NewNotFoundError(bootstrap.Run().Constants.ErrorFields.PetSitter)
 	}
 	if user.PetSitter.Status != enums.PSS_Active {
-		log.Printf("[DEBUG] not active:")
 		return nil, exceptions.NewNotFoundError(bootstrap.Run().Constants.ErrorFields.PetSitter)
 	}
 	return user.PetSitter, nil
@@ -143,7 +144,7 @@ func (ps *PetSitterService) ValidateService(services []entities.Service, service
 	return nil, &ve
 }
 
-// can be accept or cancel
+// AutoUpdateSlots can be accept or cancel
 func (ps *PetSitterService) AutoUpdateSlots(petSitter *entities.PetSitter, calendarSlots []entities.CalendarSlot, accept bool) error {
 	newSlots := make([]entities.CalendarSlot, 0)
 	petSitterSlots := petSitter.Schedule
@@ -272,26 +273,26 @@ func (ps *PetSitterService) UploadDocuments(info petsitter.UploadDocumentsReques
 		return err
 	}
 	var fileKey *string
-	CertificateKeys := make([]string, 0)
+	CertificateKeys := make([]string, len(info.CertificateFiles))
 	if info.CertificateFiles != nil {
-		for _, file := range info.CertificateFiles {
+		for i, file := range info.CertificateFiles {
 			fileKeyValue := ps.getStorageKey(info.UserID)
 			fileKey = &fileKeyValue
 			if err := ps.storage.UploadFile(enums.PetSitterFile, *fileKey, file); err != nil {
 				return err
 			}
-			CertificateKeys = append(CertificateKeys, *fileKey)
+			CertificateKeys[i] = fileKeyValue
 		}
 	}
-	FileKeys := make([]string, 0)
+	FileKeys := make([]string, len(info.Files))
 	if info.Files != nil {
-		for _, file := range info.Files {
+		for i, file := range info.Files {
 			fileKeyValue := ps.getStorageKey(info.UserID)
 			fileKey = &fileKeyValue
 			if err := ps.storage.UploadFile(enums.PetSitterFile, *fileKey, file); err != nil {
 				return err
 			}
-			FileKeys = append(FileKeys, *fileKey)
+			FileKeys[i] = *fileKey
 		}
 	}
 	foundPetSitter.CertificateKeys = CertificateKeys
@@ -319,15 +320,15 @@ func (ps *PetSitterService) GetDocuments(userID uint) (*petsitter.DocumentRespon
 	if err != nil {
 		return nil, err
 	}
-	CertificateFiles := make([]string, 0)
-	for _, certKey := range foundPetSitter.CertificateKeys {
-		certurl, _ := ps.storage.GetPresignedURL(enums.PetSitterFile, certKey, 2)
-		CertificateFiles = append(CertificateFiles, certurl)
+	CertificateFiles := make([]string, len(foundPetSitter.CertificateKeys))
+	for i, certKey := range foundPetSitter.CertificateKeys {
+		certificateURL, _ := ps.storage.GetPresignedURL(enums.PetSitterFile, certKey, 2)
+		CertificateFiles[i] = certificateURL
 	}
-	Files := make([]string, 0)
-	for _, fileKey := range foundPetSitter.FileKeys {
-		fileurl, _ := ps.storage.GetPresignedURL(enums.PetSitterFile, fileKey, 2)
-		Files = append(Files, fileurl)
+	Files := make([]string, len(foundPetSitter.FileKeys))
+	for i, fileKey := range foundPetSitter.FileKeys {
+		fileURL, _ := ps.storage.GetPresignedURL(enums.PetSitterFile, fileKey, 2)
+		Files[i] = fileURL
 	}
 	return &petsitter.DocumentResponse{
 		CertificateFiles: CertificateFiles,
@@ -412,11 +413,11 @@ func (ps *PetSitterService) FindPetSitterByID(id uint) (*entities.PetSitter, err
 }
 
 func (ps *PetSitterService) GetPetsitterServicesResponse(Services []enums.ServiceType) []entities.Service {
-	r := make([]entities.Service, 0)
-	for _, service := range Services {
-		r = append(r, entities.Service{
+	r := make([]entities.Service, len(Services))
+	for i, service := range Services {
+		r[i] = entities.Service{
 			Type: service,
-		})
+		}
 	}
 	return r
 }
@@ -466,14 +467,14 @@ func (ps *PetSitterService) GetAllPetSitters(page, count int) (*petsitter.PetSit
 	}
 
 	userRepo := ps.unitOfWork.Factory().UserRepository()
-	items := make([]petsitter.PetSitterListItemResponse, 0, len(petSitters))
+	items := make([]petsitter.PetSitterListItemResponse, len(petSitters))
 
-	for _, ps := range petSitters {
+	for i, ps := range petSitters {
 		user, err := userRepo.FindUserByID(ps.UserID)
 		if err != nil {
 			continue
 		}
-		items = append(items, petsitter.PetSitterListItemResponse{
+		items[i] = petsitter.PetSitterListItemResponse{
 			ID:             ps.ID,
 			UserID:         ps.UserID,
 			FirstName:      user.FirstName,
@@ -483,7 +484,7 @@ func (ps *PetSitterService) GetAllPetSitters(page, count int) (*petsitter.PetSit
 			Status:         ps.Status,
 			OnboardingStep: ps.OnboardingStep,
 			CreatedAt:      ps.CreatedAt.Format("2006-01-02 15:04:05"),
-		})
+		}
 	}
 
 	return &petsitter.PetSittersListResponse{
@@ -574,14 +575,14 @@ func (ps *PetSitterService) SubmitPersonalInfo(petSitterInfo petsitter.SubmitPer
 }
 
 func (ps *PetSitterService) GetCalendarSlotsResponse(calendarSlots []entities.CalendarSlot) []calendarslot.CalendarSlotInfoResponse {
-	r := make([]calendarslot.CalendarSlotInfoResponse, 0)
+	r := make([]calendarslot.CalendarSlotInfoResponse, len(calendarSlots))
 
-	for _, slot := range calendarSlots {
-		r = append(r, calendarslot.CalendarSlotInfoResponse{
+	for i, slot := range calendarSlots {
+		r[i] = calendarslot.CalendarSlotInfoResponse{
 			ID:    slot.ID,
 			Date:  slot.Date,
 			Slots: slot.Slots,
-		})
+		}
 	}
 
 	return r

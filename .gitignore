@@ -15,3 +15,5 @@ tmp/**/*
 cmd/tmp/
 cmd/tmp/*
 cmd/tmp/**/*
+
+.idea/

@@ -2,7 +2,6 @@ package jwt
 
 import (
 	"errors"
-	"fmt"
 	"hona/backend/bootstrap"
 	"hona/backend/internal/domain/exceptions"
 	domainjwt "hona/backend/internal/domain/jwt"
@@ -23,22 +22,18 @@ func NewJWTService(keyManager domainjwt.JWTKeyManager) *JWTService {
 
 func (js *JWTService) GenerateTokens(userID uint, rememberMe bool) (accessTokenString string, refreshTokenString string, expireTime int) {
 	accessTokenClaims, refreshTokenClaims, expireTime := js.generateClaims(userID, rememberMe)
-	fmt.Println("✅ 17")
 
 	accessToken := jwt.NewWithClaims(jwt.SigningMethodRS256, accessTokenClaims)
 	refreshToken := jwt.NewWithClaims(jwt.SigningMethodRS256, refreshTokenClaims)
-	fmt.Println("✅ 18")
 	var err error
 	accessTokenString, err = accessToken.SignedString(js.keyManager.GetPrivateKey())
 	if err != nil {
 		panic(err)
-	}	
-	fmt.Println("✅ 19")
+	}
 	refreshTokenString, err = refreshToken.SignedString(js.keyManager.GetPrivateKey())
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println("✅ 20")
 	return
 }
 
