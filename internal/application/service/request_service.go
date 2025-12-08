@@ -266,7 +266,7 @@ func (rs *RequestService) EditRequest(info request.EditRequestRequest) error {
 func (rs *RequestService) CancelRequest(info request.CancelRequestRequest) error {
 	foundRequest, err := rs.FindRequestByID(info.RequestID)
 	if err != nil {
-		return nil
+		return err
 	}
 
 	err = rs.PreloadFields(foundRequest, []string{"CalendarSlots"})
