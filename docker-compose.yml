@@ -1,7 +1,7 @@
 services:
   db:
     image: postgres:17
-    restart: always
+    restart: unless-stopped
     environment:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
@@ -14,7 +14,7 @@ services:
   rdb:
     image: redis:latest
     container_name: rdb
-    restart: always
+    restart: unless-stopped
     ports:
       - ${RDB_PORT}:${RDB_PORT}
     volumes:
@@ -34,7 +34,7 @@ services:
       dockerfile: Dockerfile
     image: ghcr.io/hona-tahlil/backend
     container_name: backend
-    restart: always
+    restart: unless-stopped
     depends_on:
       - db
       - rdb

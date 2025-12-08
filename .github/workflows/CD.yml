@@ -64,7 +64,7 @@ jobs:
 
 
 
-            docker compose down -v
+            docker compose down
             sleep 10
             docker compose pull
             docker compose up -d
