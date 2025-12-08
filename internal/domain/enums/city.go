@@ -350,7 +350,7 @@ func (c City) String() string {
 func GetAllCities() []City {
 	cities := make([]City, 0, int(CityCount)-1)
 	for i := City(1); i < CityCount; i++ {
-		cities = append(cities, i)
+		cities[i-1] = i
 	}
 	return cities
 }

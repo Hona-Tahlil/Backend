@@ -106,22 +106,22 @@ func (cs *CommentService) GetAllPetSitterComments(info comment.GetAllPetSitterCo
 	if err != nil {
 		return nil, err
 	}
-	r := make([]comment.CommentResponse, 0)
+	r := make([]comment.CommentResponse, len(comments))
 	var averageRating float32 = 0
-	for _, c := range comments {
+	for i, c := range comments {
 		user, err := cs.userService.FindUserByID(c.UserID)
 		if err != nil {
 			return nil, err
 		}
 		averageRating += float32(c.Rating)
-		r = append(r, comment.CommentResponse{
+		r[i] = comment.CommentResponse{
 			UserID:        user.ID,
 			UserFirstName: user.FirstName,
 			UserLastName:  user.LastName,
 			Text:          c.Text,
 			Rating:        c.Rating,
 			UpdatedAt:     c.UpdatedAt,
-		})
+		}
 	}
 	averageRating /= float32(len(r))
 	return &comment.AllCommentsResponse{

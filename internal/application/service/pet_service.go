@@ -303,12 +303,12 @@ func (ps *PetService) validateSpecies(species enums.Species, kind enums.PetKind)
 
 func (ps *PetService) GetAllPetKinds() []pet.PetKindResponse {
 	kinds := enums.GetAllPetKinds()
-	res := make([]pet.PetKindResponse, 0)
-	for _, kind := range kinds {
-		res = append(res, pet.PetKindResponse{
+	res := make([]pet.PetKindResponse, len(kinds))
+	for i, kind := range kinds {
+		res[i] = pet.PetKindResponse{
 			Num:  kind,
 			Name: kind.String(),
-		})
+		}
 	}
 	return res
 }
@@ -316,25 +316,25 @@ func (ps *PetService) GetAllPetKinds() []pet.PetKindResponse {
 func (ps *PetService) GetPetKindSpecies(info pet.GetPetKindSpecies) []pet.PetSpeciesResponse {
 	species := enums.GetSpeciesByKind(info.Num)
 	species = append(species, enums.Other)
-	res := make([]pet.PetSpeciesResponse, 0)
-	for _, s := range species {
-		res = append(res, pet.PetSpeciesResponse{
+	res := make([]pet.PetSpeciesResponse, len(species))
+	for i, s := range species {
+		res[i] = pet.PetSpeciesResponse{
 			Num:  s,
 			Name: s.String(),
-		})
+		}
 	}
 	return res
 }
 
 func (ps *PetService) GetPetsBasicDataResponse(pets []entities.Pet) ([]pet.PetBasicDataResponse, error) {
-	r := make([]pet.PetBasicDataResponse, 0)
+	r := make([]pet.PetBasicDataResponse, len(pets))
 
-	for _, petEntity := range pets {
+	for i, petEntity := range pets {
 		res, err := ps.getPetBasicDataResponse(&petEntity)
 		if err != nil {
 			return nil, err
 		}
-		r = append(r, *res)
+		r[i] = *res
 	}
 
 	return r, nil
@@ -362,9 +362,9 @@ func (ps *PetService) GetPetsInUser(userPets []entities.Pet, petIDs []uint) ([]e
 }
 
 func (ps *PetService) GetPetNames(pets []entities.Pet) []string {
-	names := make([]string, 0)
-	for _, pet := range pets {
-		names = append(names, pet.Name)
+	names := make([]string, len(pets))
+	for i, pet := range pets {
+		names[i] = pet.Name
 	}
 
 	return names

@@ -54,5 +54,3 @@ func main() {
 	}
 	log.Println("Server exiting")
 }
-
-// TODO: use len and index instead of append everywhere!

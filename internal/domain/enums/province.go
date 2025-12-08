@@ -46,7 +46,7 @@ func (p Province) String() string {
 func GetAllProvinces() []Province {
 	provinces := make([]Province, 0, 31)
 	for i := Alborz; i < 32; i++ {
-		provinces = append(provinces, i)
+		provinces[i-1] = i
 	}
 	return provinces
 }

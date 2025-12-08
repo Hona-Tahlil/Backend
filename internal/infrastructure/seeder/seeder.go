@@ -72,7 +72,6 @@ func (s *DatabaseSeeder) SeedRequests(count int) error {
 // SeedWallets seeds wallet data
 func (s *DatabaseSeeder) SeedWallets(count int) error {
 	log.Printf("💰 Seeding %d wallets...", count)
-	// TODO: implement when needed
 	log.Println("⚠️  Wallet seeding not implemented yet")
 	return nil
 }
@@ -80,7 +79,6 @@ func (s *DatabaseSeeder) SeedWallets(count int) error {
 // SeedAddresses seeds address data
 func (s *DatabaseSeeder) SeedAddresses(count int) error {
 	log.Printf("📍 Seeding %d addresses...", count)
-	// TODO: implement when needed
 	log.Println("⚠️  Address seeding not implemented yet")
 	return nil
 }
@@ -88,7 +86,6 @@ func (s *DatabaseSeeder) SeedAddresses(count int) error {
 // SeedChats seeds chat data
 func (s *DatabaseSeeder) SeedChats(count int) error {
 	log.Printf("💬 Seeding %d chats...", count)
-	// TODO: implement when needed
 	log.Println("⚠️  Chat seeding not implemented yet")
 	return nil
 }

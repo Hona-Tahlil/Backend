@@ -54,13 +54,13 @@ func (as *AddressService) GetUserAddressesInfo(id uint) ([]address.AddressInfoRe
 		}
 	}
 
-	if !flag {
+	if !flag && mainAddress != nil {
 		addresses = append(addresses, *mainAddress)
 	}
 
-	r := make([]address.AddressInfoResponse, 0)
-	for _, address := range addresses {
-		r = append(r, as.GetUserAddressInfo(&address))
+	r := make([]address.AddressInfoResponse, len(addresses))
+	for i, address := range addresses {
+		r[i] = as.GetUserAddressInfo(&address)
 	}
 
 	return r, nil
@@ -106,12 +106,12 @@ func (as *AddressService) CreateAddressEntity(addressInfo address.AddressInfo) (
 func (as *AddressService) GetAllProvincesResponse() ([]provincecity.ProvinceResponse, error) {
 	provinces := enums.GetAllProvinces()
 
-	provinceResponses := make([]provincecity.ProvinceResponse, 0)
-	for _, province := range provinces {
-		provinceResponses = append(provinceResponses, provincecity.ProvinceResponse{
+	provinceResponses := make([]provincecity.ProvinceResponse, len(provinces))
+	for i, province := range provinces {
+		provinceResponses[i] = provincecity.ProvinceResponse{
 			Num:  province,
 			Name: province.String(),
-		})
+		}
 	}
 
 	return provinceResponses, nil
@@ -119,12 +119,12 @@ func (as *AddressService) GetAllProvincesResponse() ([]provincecity.ProvinceResp
 
 func (as *AddressService) GetCitiesByProvinceName(info provincecity.GetProvinceCitiesRequest) ([]provincecity.CityResponse, error) {
 	cities := enums.ProvinceWithCities[info.ProvinceNum]
-	cityResponses := make([]provincecity.CityResponse, 0)
-	for _, city := range cities {
-		cityResponses = append(cityResponses, provincecity.CityResponse{
+	cityResponses := make([]provincecity.CityResponse, len(cities))
+	for i, city := range cities {
+		cityResponses[i] = provincecity.CityResponse{
 			Num:  city,
 			Name: city.String(),
-		})
+		}
 	}
 
 	return cityResponses, nil

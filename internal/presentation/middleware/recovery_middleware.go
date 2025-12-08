@@ -59,18 +59,18 @@ func handleBindingError(bindingErr *exceptions.BindingError) ([]controllers.Mess
 }
 
 func handleValidationErrors(validationErrs *exceptions.ValidationErrors) ([]controllers.Message, int) {
-	var msgs []controllers.Message
-	for _, fieldErr := range validationErrs.FieldErrors {
+	msgs := make([]controllers.Message, len(validationErrs.FieldErrors))
+	for i, fieldErr := range validationErrs.FieldErrors {
 		var txt string
 		if strings.HasPrefix(fieldErr.Tag, "errors.") {
 			txt = fieldErr.Tag
 		} else {
 			txt = "errors." + fieldErr.Tag
 		}
-		msgs = append(msgs, controllers.Message{
+		msgs[i] = controllers.Message{
 			Text:   txt,
 			Params: []string{fieldErr.Field},
-		})
+		}
 
 	}
 	return msgs, 422
