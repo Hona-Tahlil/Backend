@@ -3,7 +3,7 @@ name: CD
 on:
   push:
     branches:
-      - tmp/deploy
+      - fix/deploy
   pull_request:
     branches:
       - dev
@@ -64,7 +64,7 @@ jobs:
 
 
 
-            docker compose down
+            docker compose down -v
             sleep 10
             docker compose pull
             docker compose up -d
