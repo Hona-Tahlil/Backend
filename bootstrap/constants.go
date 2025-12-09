@@ -3,15 +3,55 @@ package bootstrap
 import "fmt"
 
 type Constants struct {
-	Context         Context
-	JWTKeysPath     JWTKeysPath
-	ErrorFields     ErrorFields
-	ErrorTags       ErrorTags
-	JWTConstants    JWTConstants
-	SuccessMessages SuccessMessages
-	RedisKey        RedisKey
-	EntityConstants EntityConstants
-	TemplatesPath   TemplatesPath
+	Context           Context
+	JWTKeysPath       JWTKeysPath
+	ErrorFields       ErrorFields
+	ErrorTags         ErrorTags
+	JWTConstants      JWTConstants
+	SuccessMessages   SuccessMessages
+	RedisKey          RedisKey
+	EntityConstants   EntityConstants
+	TemplatesPath     TemplatesPath
+	RabbitMQConstants RabbitMQConstants
+}
+
+type RabbitMQConstants struct {
+	Exchanges Exchanges
+	Channels  Channels
+	Queues    Queues
+	Headers   Headers
+	Events    Events
+}
+
+type Exchanges struct {
+	General    string
+	DLX        string
+	TypeTopic  string
+	TypeFanout string
+}
+
+type Channels struct {
+	Notifications string
+	Emails        string
+	StorageUpload string
+	Chat          string
+	DLQ           string
+}
+type Queues struct {
+	DLQ string
+}
+
+type Headers struct {
+	RetryCount string
+	LastError  string
+	DeadLetter string
+}
+
+type Events struct {
+	SendEmail           string
+	SendNotification    string
+	FileUpload          string
+	MultipleFilesUpload string
 }
 
 type EntityConstants struct {
@@ -233,6 +273,35 @@ func NewConstants() *Constants {
 			RequestAccepted:        "request_accepted.html",
 			RequestDeclined:        "request_declined.html",
 			RequestEdited:          "request_edited.html",
+		},
+		RabbitMQConstants: RabbitMQConstants{
+			Exchanges: Exchanges{
+				General:    "general",
+				DLX:        "dlx",
+				TypeFanout: "fanout",
+				TypeTopic:  "topic",
+			},
+			Channels: Channels{
+				Notifications: "notifications",
+				Emails:        "emails",
+				StorageUpload: "storage_upload",
+				Chat:          "chat",
+				DLQ:           "dlq",
+			},
+			Queues: Queues{
+				DLQ: "dlq",
+			},
+			Headers: Headers{
+				RetryCount: "x-retry-count",
+				LastError:  "x-last-error",
+				DeadLetter: "x-dead-letter-exchange",
+			},
+			Events: Events{
+				SendEmail:           "send_email",
+				SendNotification:    "send_notification",
+				FileUpload:          "file_upload",
+				MultipleFilesUpload: "multiple_files_upload",
+			},
 		},
 	}
 }
