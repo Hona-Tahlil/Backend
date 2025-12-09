@@ -25,14 +25,14 @@ var successMessages = bootstrap.Run().Constants.SuccessMessages
 
 func (uc *UserPetController) AddPet(ctx *gin.Context) {
 	type AddPetParams struct {
-		Name      string          `form:"name" validate:"required,min=1,max=100"`
-		Kind      enums.PetKind   `form:"kind" validate:"required,min=1,max=18"`
-		Species   enums.Species   `form:"species" validate:"required,min=1,max=67"`
-		BirthDate *time.Time      `form:"birthDate"`
-		IsAdult   bool            `form:"isAdult" validate:"omitempty"`
-		Gender    enums.PetGender `form:"gender" validate:"omitempty,min=1,max=3"`
-		Weight    *float32        `form:"weight" validate:"omitempty,min=0.1,max=500"`
-		AboutPet  *string         `form:"aboutPet" validate:"omitempty,max=10000"`
+		Name      string     `form:"name" validate:"required,min=1,max=100"`
+		Kind      uint       `form:"kind" validate:"required,min=1,max=18"`
+		Species   uint       `form:"species" validate:"required,min=1,max=67"`
+		BirthDate *time.Time `form:"birthDate"`
+		IsAdult   bool       `form:"isAdult" validate:"omitempty"`
+		Gender    uint       `form:"gender" validate:"omitempty,min=1,max=3"`
+		Weight    *float32   `form:"weight" validate:"omitempty,min=0.1,max=500"`
+		AboutPet  *string    `form:"aboutPet" validate:"omitempty,max=10000"`
 	}
 	file, err := ctx.FormFile(bootstrap.Run().Env.Storage.Buckets.PetProfilePic)
 	if err != nil {
@@ -43,11 +43,11 @@ func (uc *UserPetController) AddPet(ctx *gin.Context) {
 	AddPetInfo := pet.AddPetRequest{
 		UserID:     UserID,
 		Name:       params.Name,
-		Kind:       params.Kind,
-		Species:    params.Species,
+		Kind:       enums.PetKind(params.Kind),
+		Species:    enums.Species(params.Species),
 		BirthDate:  params.BirthDate,
 		IsAdult:    params.IsAdult,
-		Gender:     params.Gender,
+		Gender:     enums.PetGender(params.Gender),
 		Weight:     params.Weight,
 		AboutPet:   params.AboutPet,
 		ProfilePic: file,
@@ -65,15 +65,15 @@ func (uc *UserPetController) AddPet(ctx *gin.Context) {
 
 func (uc *UserPetController) UpdatePet(ctx *gin.Context) {
 	type UpdatePetParams struct {
-		ID        uint            `form:"id" validate:"required"`
-		Name      string          `form:"name" validate:"required,min=1,max=100"`
-		Kind      enums.PetKind   `form:"kind" validate:"required,min=1,max=18"`
-		Species   enums.Species   `form:"species" validate:"required,min=1,max=67"`
-		BirthDate *time.Time      `form:"birthDate" validate:"omitempty,datetime"`
-		IsAdult   bool            `form:"isAdult" validate:"omitempty"`
-		Gender    enums.PetGender `form:"gender" validate:"omitempty,min=1,max=3"`
-		Weight    *float32        `form:"weight" validate:"omitempty,min=0.1,max=500"`
-		AboutPet  *string         `form:"aboutPet" validate:"omitempty,max=10000"`
+		ID        uint       `form:"id" validate:"required"`
+		Name      string     `form:"name" validate:"required,min=1,max=100"`
+		Kind      uint       `form:"kind" validate:"required,min=1,max=18"`
+		Species   uint       `form:"species" validate:"required,min=1,max=67"`
+		BirthDate *time.Time `form:"birthDate" validate:"omitempty,datetime"`
+		IsAdult   bool       `form:"isAdult" validate:"omitempty"`
+		Gender    uint       `form:"gender" validate:"omitempty,min=1,max=3"`
+		Weight    *float32   `form:"weight" validate:"omitempty,min=0.1,max=500"`
+		AboutPet  *string    `form:"aboutPet" validate:"omitempty,max=10000"`
 	}
 	file, err := ctx.FormFile(bootstrap.Run().Env.Storage.Buckets.PetProfilePic)
 	if err != nil {
@@ -85,11 +85,11 @@ func (uc *UserPetController) UpdatePet(ctx *gin.Context) {
 		UserID:     UserID,
 		ID:         params.ID,
 		Name:       params.Name,
-		Kind:       params.Kind,
-		Species:    params.Species,
+		Kind:       enums.PetKind(params.Kind),
+		Species:    enums.Species(params.Species),
 		BirthDate:  params.BirthDate,
 		IsAdult:    params.IsAdult,
-		Gender:     params.Gender,
+		Gender:     enums.PetGender(params.Gender),
 		Weight:     params.Weight,
 		AboutPet:   params.AboutPet,
 		ProfilePic: file,
