@@ -185,8 +185,8 @@ func (ps *PetService) GetPetFullData(info pet.GetPetFullDataRequest) (*pet.PetFu
 	return &pet.PetFullDataResponse{
 		ID:          foundPet.ID,
 		Name:        foundPet.Name,
-		Kind:        foundPet.Kind,
-		Species:     foundPet.Species,
+		Kind:        foundPet.Kind.String(),
+		Species:     foundPet.Species.String(),
 		Gender:      foundPet.Gender,
 		PictureLink: link,
 		BirthDate:   foundPet.BirthDate,
@@ -205,9 +205,9 @@ func (ps *PetService) getPetBasicDataResponse(petEntity *entities.Pet) (*pet.Pet
 	return &pet.PetBasicDataResponse{
 		ID:          petEntity.ID,
 		Name:        petEntity.Name,
-		Kind:        petEntity.Kind,
-		Species:     petEntity.Species,
-		Gender:      petEntity.Gender,
+		Kind:        petEntity.Kind.String(),
+		Species:     petEntity.Species.String(),
+		Gender:      petEntity.Gender.String(),
 		PictureLink: link,
 	}, nil
 
