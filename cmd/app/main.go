@@ -22,6 +22,7 @@ func main() {
 	gin.SetMode(gin.ReleaseMode)
 
 	ginEngine := gin.Default()
+	ginEngine.RedirectTrailingSlash = true
 
 	app, err := wire.InitializeApplication(bootstrap.Run())
 	if err != nil {
