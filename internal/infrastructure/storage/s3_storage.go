@@ -11,6 +11,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/credentials"
 
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 )
@@ -33,10 +34,19 @@ func (s3Storage *S3Storage) setS3Client(bucketType enums.BucketType) error {
 	if !slices.Contains(bucketTypes, bucketType) {
 		return fmt.Errorf("bucket not exist")
 	}
+
 	if s3Storage.client != nil {
 		return nil
 	}
-	cfg, err := config.LoadDefaultConfig(context.TODO(), config.WithRegion("default"))
+
+	cfg, err := config.LoadDefaultConfig(context.TODO(),
+		config.WithRegion("default"),
+		config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(
+			bootstrap.Run().Env.Storage.AccessKey,
+			bootstrap.Run().Env.Storage.SecretKey,
+			"",
+		)),
+	)
 	if err != nil {
 		return err
 	}
@@ -58,12 +68,7 @@ func (s3Storage *S3Storage) UploadFile(bucketType enums.BucketType, key string, 
 	if err != nil {
 		return err
 	}
-	defer func(fileReader multipart.File) {
-		err := fileReader.Close()
-		if err != nil {
-
-		}
-	}(fileReader)
+	defer fileReader.Close()
 
 	_, err = s3Storage.client.PutObject(context.TODO(), &s3.PutObjectInput{
 		Bucket: aws.String(bucket),
