@@ -31,73 +31,77 @@ func NewRabbitMQ() *RabbitMQ {
 	if err != nil {
 		panic(err)
 	}
-	channels := make(map[string]*amqp.Channel)
-	ch1, err := conn.Channel()
-	if err != nil {
-		err := conn.Close()
-		if err != nil {
-			panic(err)
-		}
-		panic(err)
-	}
-	channels[constants.Channels.Chat] = ch1
-	ch2, err := conn.Channel()
-	if err != nil {
-		err := conn.Close()
-		if err != nil {
-			panic(err)
-		}
-		panic(err)
-	}
-	channels[constants.Channels.Notifications] = ch2
-	ch3, err := conn.Channel()
-	if err != nil {
-		err := conn.Close()
-		if err != nil {
-			panic(err)
-		}
-		panic(err)
-	}
-	channels[constants.Channels.Emails] = ch3
-	ch4, err := conn.Channel()
-	if err != nil {
-		err := conn.Close()
-		if err != nil {
-			panic(err)
-		}
-		panic(err)
-	}
-	channels[constants.Channels.StorageUpload] = ch4
-
 	rmq := &RabbitMQ{
 		conn:        conn,
-		channels:    channels,
+		channels:    make(map[string]*amqp.Channel),
 		exchanges:   make(map[string]string),
 		queues:      make(map[string]bool),
 		bindings:    make(map[string][]string),
 		isConnected: true,
 		stopMonitor: make(chan struct{}),
 	}
+	channelNames := []string{constants.Channels.StorageUpload, constants.Channels.StorageUpload, constants.Channels.Notifications, constants.Channels.Emails}
+	rmq.MakeChannels(conn, channelNames...)
 
 	if err := rmq.declareExchange(constants.Exchanges.General, constants.Exchanges.TypeTopic); err != nil {
-		err := rmq.Close()
-		if err != nil {
-			panic(err)
+		err2 := rmq.Close()
+		if err2 != nil {
+			panic(err2)
 		}
 		log.Printf("error during declare exchange: %v", err)
 		panic(err)
 	}
 
 	if err := rmq.setupDeadLetterQueue(); err != nil {
-		err := rmq.Close()
-		if err != nil {
-			panic(err)
+		err2 := rmq.Close()
+		if err2 != nil {
+			panic(err2)
 		}
 		log.Printf("error during declare DLQ: %v", err)
 		panic(err)
 	}
 
-	return &RabbitMQ{}
+	rmq.MakeQueues(channelNames...)
+
+	go rmq.monitorConnection()
+
+	return rmq
+}
+
+func (rmq *RabbitMQ) MakeChannels(conn *amqp.Connection, channelNames ...string) {
+	for _, ch := range channelNames {
+		channel, err := conn.Channel()
+		if err != nil {
+			err2 := conn.Close()
+			if err2 != nil {
+				panic(err2)
+			}
+			panic(err)
+		}
+		rmq.channels[ch] = channel
+	}
+}
+
+func (rmq *RabbitMQ) MakeQueues(channelNames ...string) {
+	queues := []string{constants.Events.FileUpload, constants.Events.MultipleFilesUpload, constants.Events.SendNotification, constants.Events.SendEmail}
+	for i, queue := range queues {
+		if err := rmq.declareQueueWithDLX(queue, constants.Exchanges.DLX, channelNames[i]); err != nil {
+			err2 := rmq.Close()
+			if err2 != nil {
+				panic(err2)
+			}
+			log.Printf("error during declare Queue: %v", err)
+			panic(err)
+		}
+		if err := rmq.bindQueue(queue, constants.Exchanges.General, queue, channelNames[i]); err != nil {
+			err2 := rmq.Close()
+			if err2 != nil {
+				panic(err2)
+			}
+			log.Printf("error during bind Queue: %v", err)
+			panic(err)
+		}
+	}
 }
 
 func (rmq *RabbitMQ) declareExchange(name, exchangeType string) error {
@@ -160,30 +164,6 @@ func (rmq *RabbitMQ) Close() error {
 			return fmt.Errorf("failed to close connection: %w", err)
 		}
 	}
-
-	queues := []string{constants.Events.FileUpload, constants.Events.MultipleFilesUpload, constants.Events.SendNotification, constants.Events.SendEmail}
-	channels := []string{constants.Channels.StorageUpload, constants.Channels.StorageUpload, constants.Channels.Notifications, constants.Channels.Emails}
-
-	for i, queue := range queues {
-		if err := rmq.declareQueueWithDLX(queue, constants.Exchanges.DLX, channels[i]); err != nil {
-			err := rmq.Close()
-			if err != nil {
-				panic(err)
-			}
-			log.Printf("error during declare Queue: %v", err)
-			panic(err)
-		}
-		if err := rmq.bindQueue(queue, constants.Exchanges.General, queue, channels[i]); err != nil {
-			err := rmq.Close()
-			if err != nil {
-				panic(err)
-			}
-			log.Printf("error during bind Queue: %v", err)
-			panic(err)
-		}
-	}
-
-	go rmq.monitorConnection()
 
 	return nil
 }
