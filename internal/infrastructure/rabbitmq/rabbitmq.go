@@ -1,16 +1,20 @@
 package rabbitmq
 
 import (
+	"context"
+	"encoding/json"
 	"fmt"
 	"hona/backend/bootstrap"
 	"log"
 	"sync"
+	"time"
 
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
 var config = bootstrap.Run().Env.RabbitMQ
 var constants = bootstrap.Run().Constants.RabbitMQConstants
+var channelNames = []string{constants.Channels.StorageUpload, constants.Channels.StorageUpload, constants.Channels.Notifications, constants.Channels.Emails}
 
 type RabbitMQ struct {
 	conn        *amqp.Connection
@@ -40,7 +44,6 @@ func NewRabbitMQ() *RabbitMQ {
 		isConnected: true,
 		stopMonitor: make(chan struct{}),
 	}
-	channelNames := []string{constants.Channels.StorageUpload, constants.Channels.StorageUpload, constants.Channels.Notifications, constants.Channels.Emails}
 	rmq.MakeChannels(conn, channelNames...)
 
 	if err := rmq.declareExchange(constants.Exchanges.General, constants.Exchanges.TypeTopic); err != nil {
@@ -192,14 +195,14 @@ func (rmq *RabbitMQ) monitorConnection() {
 						break
 					}
 
-					//if err := rmq.reconnect(); err != nil {
-					//	log.Printf("Failed to reconnect to RabbitMQ: %v, retrying in %s", err, config.RetryDelay)
-					//	time.Sleep(config.RetryDelay)
-					//} else {
-					//	log.Println("Successfully reconnected to RabbitMQ")
-					//	connCloseChan = rmq.conn.NotifyClose(make(chan *amqp.Error))
-					//	break
-					//}
+					if err := rmq.reconnect(); err != nil {
+						log.Printf("Failed to reconnect to RabbitMQ: %v, retrying in %s", err, config.RetryDelay)
+						time.Sleep(config.RetryDelay)
+					} else {
+						log.Println("Successfully reconnected to RabbitMQ")
+						connCloseChan = rmq.conn.NotifyClose(make(chan *amqp.Error))
+						break
+					}
 				}
 			}
 		}
@@ -237,4 +240,82 @@ func (rmq *RabbitMQ) bindQueue(queue, exchange, routingKey, channel string) erro
 		rmq.bindings[queue] = append(rmq.bindings[queue], routingKey)
 	}
 	return err
+}
+
+func (rmq *RabbitMQ) reconnect() error {
+	if rmq.conn != nil {
+		rmq.conn.Close()
+	}
+
+	url := fmt.Sprintf("amqp://%s:%s@%s:%s/%s",
+		config.User, config.Password, config.Host, config.Port, config.VHost)
+
+	conn, err := amqp.Dial(url)
+	if err != nil {
+		return err
+	}
+
+	rmq.MakeChannels(conn, channelNames...)
+
+	rmq.mu.Lock()
+	defer rmq.mu.Unlock()
+
+	rmq.conn = conn
+	rmq.isConnected = true
+
+	if err := rmq.declareExchange(constants.Exchanges.General, constants.Exchanges.TypeTopic); err != nil {
+		err2 := rmq.Close()
+		if err2 != nil {
+			panic(err2)
+		}
+		log.Printf("error during declare exchange: %v", err)
+		panic(err)
+	}
+
+	if err := rmq.setupDeadLetterQueue(); err != nil {
+		err2 := rmq.Close()
+		if err2 != nil {
+			panic(err2)
+		}
+		log.Printf("error during declare DLQ: %v", err)
+		panic(err)
+	}
+
+	rmq.MakeQueues(channelNames...)
+
+	return nil
+}
+
+func (rmq *RabbitMQ) PublishMessage(queue string, message interface{}) error {
+	rmq.mu.RLock()
+	connected := rmq.isConnected
+	rmq.mu.RUnlock()
+
+	if !connected {
+		return fmt.Errorf("not connected to RabbitMQ")
+	}
+
+	body, err := json.Marshal(message)
+	if err != nil {
+		return fmt.Errorf("failed to marshal message: %w", err)
+	}
+
+	ctx := context.Background()
+	err = rmq.channels[queue].PublishWithContext(
+		ctx,
+		constants.Exchanges.General,
+		queue,
+		false,
+		false,
+		amqp.Publishing{
+			ContentType:  "application/json",
+			DeliveryMode: amqp.Persistent,
+			Timestamp:    time.Now(),
+			Body:         body,
+		})
+	if err != nil {
+		return fmt.Errorf("failed to publish a message: %w", err)
+	}
+
+	return nil
 }
