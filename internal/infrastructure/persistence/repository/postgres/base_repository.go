@@ -1,44 +1,49 @@
 package postgres
 
 import (
-	"fmt"
-	"hona/backend/internal/infrastructure/dsl"
 
 	"gorm.io/gorm"
 )
 
-func applyQueryOptions(query *gorm.DB, options *dsl.ParsedQuery) *gorm.DB {
-	if options == nil {
-		return query
+func applyModifiers(db *gorm.DB, modifiers ...QueryModifier) *gorm.DB {
+	for _, m := range modifiers {
+		db = m.Apply(db)
 	}
-
-	// ============== Filters ==============
-	if len(options.Filters.Items) > 0 {
-		for _, f := range options.Filters.Items {
-			if f.Op == "IN" {
-				query = query.Where(fmt.Sprintf("%s IN (?)", f.Field), f.Value)
-				continue
-			}
-
-			query = query.Where(fmt.Sprintf("%s %s ?", f.Field, f.Op), f.Value)
-		}
-	}
-
-	// ============== Sorting ==============
-	if options.Sorts.Items != nil {
-		for _, sort := range options.Sorts.Items {
-			query = query.Order(sort.Field + " " + sort.Dir)
-		}
-		return query
-	}
-
-	// ============== Pagination ==============
-	// if options.Pagination != nil {
-	// 	query = query.Offset(options.Pagination.Offset).Limit(options.Pagination.Limit)
-	// }
-
-	return query
+	return db
 }
+
+// func applyQueryOptions(query *gorm.DB, options *dsl.ParsedQuery) *gorm.DB {
+// 	if options == nil {
+// 		return query
+// 	}
+
+// 	// ============== Filters ==============
+// 	if len(options.Filters.Items) > 0 {
+// 		for _, f := range options.Filters.Items {
+// 			if f.Op == "IN" {
+// 				query = query.Where(fmt.Sprintf("%s IN (?)", f.Field), f.Value)
+// 				continue
+// 			}
+
+// 			query = query.Where(fmt.Sprintf("%s %s ?", f.Field, f.Op), f.Value)
+// 		}
+// 	}
+
+// 	// ============== Sorting ==============
+// 	if options.Sorts.Items != nil {
+// 		for _, sort := range options.Sorts.Items {
+// 			query = query.Order(sort.Field + " " + sort.Dir)
+// 		}
+// 		return query
+// 	}
+
+// 	// ============== Pagination ==============
+// 	// if options.Pagination != nil {
+// 	// 	query = query.Offset(options.Pagination.Offset).Limit(options.Pagination.Limit)
+// 	// }
+
+// 	return query
+// }
 
 // type BaseRepository struct {
 // 	db *gorm.DB

@@ -89,7 +89,7 @@ func (up *UserRepository) GetRoleUsersByID(roleID uint, queryoptins *dsl.ParsedQ
 		Joins("JOIN user_roles ur ON ur.user_id = users.id").
 		Where("ur.role_id = ?", roleID).
 		Preload("Roles")
-	dbQuery = applyQueryOptions(dbQuery, queryoptins)
+	dbQuery = applyModifiers(dbQuery, queryoptins)
 	err := dbQuery.Find(&users).Error
 	if err != nil {
 		return nil, err
