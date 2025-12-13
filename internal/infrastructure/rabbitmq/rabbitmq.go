@@ -255,10 +255,10 @@ func (rmq *RabbitMQ) reconnect() error {
 		return err
 	}
 
-	rmq.MakeChannels(conn, channelNames...)
-
 	rmq.mu.Lock()
 	defer rmq.mu.Unlock()
+
+	rmq.MakeChannels(conn, channelNames...)
 
 	rmq.conn = conn
 	rmq.isConnected = true
@@ -289,10 +289,15 @@ func (rmq *RabbitMQ) reconnect() error {
 func (rmq *RabbitMQ) PublishMessage(queue string, message interface{}) error {
 	rmq.mu.RLock()
 	connected := rmq.isConnected
+	channel, exists := rmq.channels[queue]
 	rmq.mu.RUnlock()
 
 	if !connected {
 		return fmt.Errorf("not connected to RabbitMQ")
+	}
+
+	if !exists || channel == nil {
+		return fmt.Errorf("channel %s does not exist", queue)
 	}
 
 	body, err := json.Marshal(message)
@@ -301,7 +306,7 @@ func (rmq *RabbitMQ) PublishMessage(queue string, message interface{}) error {
 	}
 
 	ctx := context.Background()
-	err = rmq.channels[queue].PublishWithContext(
+	err = channel.PublishWithContext(
 		ctx,
 		constants.Exchanges.General,
 		queue,
