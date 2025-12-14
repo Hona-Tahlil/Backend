@@ -8,47 +8,38 @@ import (
 	"hona/backend/internal/domain/enums"
 	"hona/backend/internal/domain/exceptions"
 	"hona/backend/internal/domain/ports"
-	"hona/backend/internal/infrastructure/mail"
+	"hona/backend/internal/infrastructure/communication/mail"
 	"log"
 	"sort"
 	"time"
 )
 
 type RequestService struct {
-	userService         usecase.UserService
-	provinceService     usecase.ProvinceService
-	addressService      usecase.AddressService
-	petService          usecase.PetService
-	serviceService      usecase.ServiceService
-	petSitterService    usecase.PetSitterService
-	calendarSlotService usecase.CalendarSlotService
-	unitOfWork          ports.UnitOfWork
-	emailService        *mail.EmailService
+	userService      usecase.UserService
+	addressService   usecase.AddressService
+	petService       usecase.PetService
+	petSitterService usecase.PetSitterService
+	unitOfWork       ports.UnitOfWork
+	emailService     *mail.EmailService
 }
 
 type RequestServiceDeps struct {
-	UserService         usecase.UserService
-	ProvinceService     usecase.ProvinceService
-	AddressService      usecase.AddressService
-	PetService          usecase.PetService
-	ServiceService      usecase.ServiceService
-	PetSitterService    usecase.PetSitterService
-	CalendarSlotService usecase.CalendarSlotService
-	UnitOfWork          ports.UnitOfWork
-	EmailService        *mail.EmailService
+	UserService      usecase.UserService
+	AddressService   usecase.AddressService
+	PetService       usecase.PetService
+	PetSitterService usecase.PetSitterService
+	UnitOfWork       ports.UnitOfWork
+	EmailService     *mail.EmailService
 }
 
 func NewRequestService(deps RequestServiceDeps) *RequestService {
 	return &RequestService{
-		userService:         deps.UserService,
-		unitOfWork:          deps.UnitOfWork,
-		provinceService:     deps.ProvinceService,
-		addressService:      deps.AddressService,
-		serviceService:      deps.ServiceService,
-		petService:          deps.PetService,
-		calendarSlotService: deps.CalendarSlotService,
-		petSitterService:    deps.PetSitterService,
-		emailService:        deps.EmailService,
+		userService:      deps.UserService,
+		unitOfWork:       deps.UnitOfWork,
+		addressService:   deps.AddressService,
+		petService:       deps.PetService,
+		petSitterService: deps.PetSitterService,
+		emailService:     deps.EmailService,
 	}
 }
 
@@ -74,7 +65,7 @@ func (rs *RequestService) CreateRequest(info request.CreateRequestRequest) error
 		return err
 	}
 
-	err = rs.userService.PreloadFields(user, []string{"Pets"})
+	user.Pets, err = rs.petService.FindUserPetsByID(user.ID)
 	if err != nil {
 		return err
 	}
@@ -86,7 +77,7 @@ func (rs *RequestService) CreateRequest(info request.CreateRequestRequest) error
 
 	var address *entities.Address
 	if info.AddressInfo != nil {
-		madeAddress, err := rs.addressService.CreateAddress(*info.AddressInfo)
+		madeAddress, err := rs.addressService.CreateAddressEntity(*info.AddressInfo)
 		if err != nil {
 			return err
 		}
@@ -146,12 +137,12 @@ func (rs *RequestService) GetCreateRequestInfo(info request.GetCreateRequestInfo
 		return nil, err
 	}
 
-	err = rs.userService.PreloadFields(foundUser, []string{"Pets"})
+	pets, err := rs.petService.FindUserPetsByID(foundUser.ID)
 	if err != nil {
 		return nil, err
 	}
 
-	petsData, err := rs.petService.GetPetsBasicDataResponse(foundUser.Pets)
+	petsData, err := rs.petService.GetPetsBasicDataResponse(pets)
 	if err != nil {
 		return nil, err
 	}
@@ -229,7 +220,7 @@ func (rs *RequestService) EditRequest(info request.EditRequestRequest) error {
 
 	var address *entities.Address
 	if info.AddressInfo != nil {
-		madeAddress, err := rs.addressService.CreateAddress(*info.AddressInfo)
+		madeAddress, err := rs.addressService.CreateAddressEntity(*info.AddressInfo)
 		if err != nil {
 			return err
 		}
@@ -275,7 +266,7 @@ func (rs *RequestService) EditRequest(info request.EditRequestRequest) error {
 func (rs *RequestService) CancelRequest(info request.CancelRequestRequest) error {
 	foundRequest, err := rs.FindRequestByID(info.RequestID)
 	if err != nil {
-		return nil
+		return err
 	}
 
 	err = rs.PreloadFields(foundRequest, []string{"CalendarSlots"})
@@ -332,17 +323,37 @@ func (rs *RequestService) GetRequestFullData(info request.GetRequestFullDataRequ
 		return nil, err
 	}
 
-	err = rs.PreloadFields(foundRequest, []string{"Pets", "CalendarSlots", "Service", "Address"})
+	err = rs.PreloadFields(foundRequest, []string{"CalendarSlots", "Service"})
 	if err != nil {
 		return nil, err
 	}
 
-	petsData, err := rs.petService.GetPetsBasicDataResponse(foundRequest.Pets)
+	pets, err := rs.petService.FindRequestPetsByID(foundRequest.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	address, err := rs.addressService.FindRequestAddressByID(foundRequest.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	petsData, err := rs.petService.GetPetsBasicDataResponse(pets)
 	if err != nil {
 		return nil, err
 	}
 
 	petSitter, err := rs.petSitterService.GetPetSitterByID(foundRequest.PetSitterID)
+	if err != nil {
+		return nil, err
+	}
+
+	petSitterUser, err := rs.userService.FindUserByID(petSitter.UserID)
+	if err != nil {
+		return nil, err
+	}
+
+	requestUser, err := rs.userService.FindUserByID(foundRequest.UserID)
 	if err != nil {
 		return nil, err
 	}
@@ -363,17 +374,21 @@ func (rs *RequestService) GetRequestFullData(info request.GetRequestFullDataRequ
 	}
 
 	return &request.RequestFullDataResponse{
-		RequestID:       foundRequest.ID,
-		PetSitterUserID: petSitter.UserID,
-		Service:         rs.serviceService.GetServiceResponse(&foundRequest.Service),
-		Pets:            petsData,
-		Address:         rs.addressService.GetUserAddressInfo(&foundRequest.Address),
-		Notes:           foundRequest.Notes,
-		TotalPrice:      foundRequest.TotalPrice,
-		Status:          foundRequest.Status.String(),
-		TransferID:      foundRequest.TransferID,
-		CalendarSlots:   rs.calendarSlotService.GetCalendarSlotsResponse(foundRequest.CalendarSlots),
-		UpdatedAt:       foundRequest.UpdatedAt,
+		RequestID:          foundRequest.ID,
+		PetSitterUserID:    petSitter.UserID,
+		PetSitterFirstName: petSitterUser.FirstName,
+		PetSitterLastName:  petSitterUser.LastName,
+		UserFirstName:      requestUser.FirstName,
+		UserLastName:       requestUser.LastName,
+		Service:            rs.petSitterService.GetServiceResponse(&foundRequest.Service),
+		Pets:               petsData,
+		Address:            rs.addressService.GetUserAddressInfo(address),
+		Notes:              foundRequest.Notes,
+		TotalPrice:         foundRequest.TotalPrice,
+		Status:             foundRequest.Status.String(),
+		TransferID:         foundRequest.TransferID,
+		CalendarSlots:      rs.petSitterService.GetCalendarSlotsResponse(foundRequest.CalendarSlots),
+		UpdatedAt:          foundRequest.UpdatedAt,
 	}, nil
 }
 
@@ -431,7 +446,7 @@ func (rs *RequestService) RespondToRequest(info request.RespondToRequestRequest)
 }
 
 func (rs *RequestService) validateCalendarSlots(petSitterSlots []entities.CalendarSlot, requestSlots []entities.CalendarSlot) error {
-	availableSlots := rs.calendarSlotService.GetFreeMap(petSitterSlots)
+	availableSlots := rs.petSitterService.GetFreeMap(petSitterSlots)
 
 	for _, req := range requestSlots {
 		dateKey := req.Date.Format("2006-01-02")
@@ -464,9 +479,9 @@ func (rs *RequestService) validateRequestPets(user *entities.User, petSitter *en
 }
 
 func (rs *RequestService) makeRequestPets(userPets []entities.Pet) ([]entities.Pet, error) {
-	pets := make([]entities.Pet, 0)
+	pets := make([]entities.Pet, len(userPets))
 
-	for _, pet := range userPets {
+	for i, pet := range userPets {
 		requestPet := &entities.Pet{
 			UserID:     pet.UserID,
 			Name:       pet.Name,
@@ -481,7 +496,7 @@ func (rs *RequestService) makeRequestPets(userPets []entities.Pet) ([]entities.P
 			Type:       bootstrap.Run().Constants.EntityConstants.Request,
 		}
 
-		pets = append(pets, *requestPet)
+		pets[i] = *requestPet
 	}
 
 	return pets, nil
@@ -502,15 +517,15 @@ func (rs *RequestService) calculateTotalPrice(servicesEntity *entities.Service, 
 }
 
 func (rs *RequestService) makeCalendarSlots(calendarSlots []request.RequestCalendarSlotRequest) []entities.CalendarSlot {
-	slots := make([]entities.CalendarSlot, 0)
+	slots := make([]entities.CalendarSlot, len(calendarSlots))
 
-	for _, slot := range calendarSlots {
+	for i, slot := range calendarSlots {
 		calendarSlot := &entities.CalendarSlot{
 			Date:   slot.Date,
 			Slots:  slot.Slots,
 			Status: enums.Booked,
 		}
-		slots = append(slots, *calendarSlot)
+		slots[i] = *calendarSlot
 	}
 
 	return slots
@@ -648,4 +663,11 @@ func (rs *RequestService) sendDeclineRequestEmail(id uint) {
 	if err != nil {
 		log.Println(err)
 	}
+}
+
+func (rs *RequestService) EnsureRequestIsFinished(request *entities.Request) error {
+	if request.Status != enums.Finished {
+		return exceptions.NewAccessDeniedError(bootstrap.Run().Constants.ErrorTags.ForbiddenStatus)
+	}
+	return nil
 }

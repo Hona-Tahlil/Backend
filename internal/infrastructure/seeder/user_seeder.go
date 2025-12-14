@@ -24,6 +24,11 @@ func NewUserSeeder(db *gorm.DB) *UserSeeder {
 func (s *UserSeeder) Seed(count int) error {
 	users := make([]entities.User, 0, count)
 
+	if s.db.First(&entities.User{}).Error == nil {
+		log.Println("✓ Users already seeded, skipping...")
+		return nil
+	}
+
 	for i := 0; i < count; i++ {
 		email := "test" + fmt.Sprintf("%d", i) + "@email.com"
 		firstName := faker.FirstName()

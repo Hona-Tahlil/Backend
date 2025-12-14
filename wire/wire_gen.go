@@ -15,8 +15,8 @@ import (
 	"hona/backend/internal/domain/ports"
 	"hona/backend/internal/domain/ports/redis"
 	"hona/backend/internal/domain/storage"
+	"hona/backend/internal/infrastructure/communication/mail"
 	"hona/backend/internal/infrastructure/jwt"
-	"hona/backend/internal/infrastructure/mail"
 	"hona/backend/internal/infrastructure/persistence"
 	"hona/backend/internal/infrastructure/persistence/repository/redis"
 	"hona/backend/internal/infrastructure/seeder"
@@ -43,8 +43,8 @@ func InitializeApplication(container *bootstrap.Config) (*Application, error) {
 	s3Storage := storage.NewS3Storage()
 	petService := service.NewPetService(unitOfWork, s3Storage, userService)
 	generalPetController := general.NewGeneralPetController(petService)
-	provinceService := service.NewProvinceService(unitOfWork)
-	generalProvinceController := general.NewGeneralProvinceController(provinceService)
+	addressService := service.NewAddressService(unitOfWork, userService)
+	generalProvinceController := general.NewGeneralProvinceController(addressService)
 	generalControllers := &GeneralControllers{
 		GeneralUserController:     generalUserController,
 		GeneralPetController:      generalPetController,
@@ -56,28 +56,30 @@ func InitializeApplication(container *bootstrap.Config) (*Application, error) {
 		AdminRBACController: adminRBACController,
 	}
 	userPetController := user.NewUserPetController(petService)
-	addressService := service.NewAddressService(unitOfWork, provinceService, userService)
-	serviceService := service.NewServiceService(unitOfWork)
-	calendarSlotService := service.NewCalendarSlotService()
-	petSitterService := service.NewPetSitterService(unitOfWork, userService, serviceService, calendarSlotService)
+	petSitterService := service.NewPetSitterService(unitOfWork, s3Storage, userService, addressService)
 	requestServiceDeps := service.RequestServiceDeps{
-		UserService:         userService,
-		ProvinceService:     provinceService,
-		AddressService:      addressService,
-		PetService:          petService,
-		ServiceService:      serviceService,
-		PetSitterService:    petSitterService,
-		CalendarSlotService: calendarSlotService,
-		UnitOfWork:          unitOfWork,
-		EmailService:        emailService,
+		UserService:      userService,
+		AddressService:   addressService,
+		PetService:       petService,
+		PetSitterService: petSitterService,
+		UnitOfWork:       unitOfWork,
+		EmailService:     emailService,
 	}
 	requestService := service.NewRequestService(requestServiceDeps)
 	userRequestController := user.NewUserRequestController(requestService)
+	commentService := service.NewCommentService(unitOfWork, userService, requestService)
+	userCommentController := user.NewUserCommentController(commentService)
 	userControllers := &UserControllers{
 		UserPetController:     userPetController,
 		UserRequestController: userRequestController,
+		UserCommentController: userCommentController,
 	}
-	petSitterControllers := &PetSitterControllers{}
+	petSitterRegisterController := petsitter.NewPetSitterRegisterController(petSitterService)
+	petSitterRequestController := petsitter.NewPetSitterRequestController(requestService)
+	petSitterControllers := &PetSitterControllers{
+		PetSitterRegisterController: petSitterRegisterController,
+		PetSitterRequestController:  petSitterRequestController,
+	}
 	controllers := &Controllers{
 		GeneralControllers:   generalControllers,
 		AdminControllers:     adminControllers,
@@ -113,15 +115,15 @@ var StorageProviderSet = wire.NewSet(storage.NewS3Storage, wire.Bind(new(domains
 
 var RepositoryProviderSet = wire.NewSet(persistence.NewRepositoryFactory, persistence.NewUnitOfWork, persistence.NewPostgresDatabase, persistence.NewRedisDatabase, redis.NewUserCacheRepository, wire.Bind(new(persistence.Cache), new(*persistence.RedisDatabase)), wire.Bind(new(domainredis.UserCacheRepository), new(*redis.UserCacheRepository)), wire.Bind(new(ports.RepositoryFactory), new(*persistence.RepositoryFactory)), wire.Bind(new(ports.UnitOfWork), new(*persistence.UnitOfWork)))
 
-var ServiceProviderSet = wire.NewSet(wire.Struct(new(service.RequestServiceDeps), "*"), service.NewUserService, jwt.NewJWTService, jwt.NewJWTKeyManager, mail.NewEmailService, service.NewRBACService, service.NewPetService, service.NewRequestService, service.NewProvinceService, service.NewAddressService, service.NewCalendarSlotService, service.NewPetSitterService, service.NewServiceService, wire.Bind(new(domainjwt.JWTService), new(*jwt.JWTService)), wire.Bind(new(domainjwt.JWTKeyManager), new(*jwt.JWTKeyManager)), wire.Bind(new(usecase.RBACService), new(*service.RBACService)), wire.Bind(new(usecase.UserService), new(*service.UserService)), wire.Bind(new(usecase.PetService), new(*service.PetService)), wire.Bind(new(usecase.RequestService), new(*service.RequestService)), wire.Bind(new(usecase.ProvinceService), new(*service.ProvinceService)), wire.Bind(new(usecase.AddressService), new(*service.AddressService)), wire.Bind(new(usecase.CalendarSlotService), new(*service.CalendarSlotService)), wire.Bind(new(usecase.PetSitterService), new(*service.PetSitterService)), wire.Bind(new(usecase.ServiceService), new(*service.ServiceService)))
+var ServiceProviderSet = wire.NewSet(wire.Struct(new(service.RequestServiceDeps), "*"), service.NewUserService, jwt.NewJWTService, jwt.NewJWTKeyManager, mail.NewEmailService, service.NewRBACService, service.NewPetService, service.NewRequestService, service.NewAddressService, service.NewPetSitterService, service.NewCommentService, wire.Bind(new(domainjwt.JWTService), new(*jwt.JWTService)), wire.Bind(new(domainjwt.JWTKeyManager), new(*jwt.JWTKeyManager)), wire.Bind(new(usecase.RBACService), new(*service.RBACService)), wire.Bind(new(usecase.UserService), new(*service.UserService)), wire.Bind(new(usecase.PetService), new(*service.PetService)), wire.Bind(new(usecase.RequestService), new(*service.RequestService)), wire.Bind(new(usecase.AddressService), new(*service.AddressService)), wire.Bind(new(usecase.PetSitterService), new(*service.PetSitterService)), wire.Bind(new(usecase.CommentService), new(*service.CommentService)))
 
 var GeneralControllersProviderSet = wire.NewSet(general.NewGeneralUserController, general.NewGeneralPetController, general.NewGeneralProvinceController, wire.Struct(new(GeneralControllers), "*"))
 
 var AdminControllersProviderSet = wire.NewSet(admin.NewAdminRBACController, wire.Struct(new(AdminControllers), "*"))
 
-var UserControllersProviderSet = wire.NewSet(user.NewUserPetController, user.NewUserRequestController, wire.Struct(new(UserControllers), "*"))
+var UserControllersProviderSet = wire.NewSet(user.NewUserPetController, user.NewUserRequestController, user.NewUserCommentController, wire.Struct(new(UserControllers), "*"))
 
-var PetSitterControllersProviderSet = wire.NewSet(petsitter.NewPetSitterRequestController, wire.Struct(new(PetSitterControllers)))
+var PetSitterControllersProviderSet = wire.NewSet(petsitter.NewPetSitterRegisterController, petsitter.NewPetSitterRequestController, wire.Struct(new(PetSitterControllers), "*"))
 
 var ControllersProviderSet = wire.NewSet(wire.Struct(new(Controllers), "*"))
 
@@ -155,10 +157,12 @@ type AdminControllers struct {
 type UserControllers struct {
 	UserPetController     *user.UserPetController
 	UserRequestController *user.UserRequestController
+	UserCommentController *user.UserCommentController
 }
 
 type PetSitterControllers struct {
-	PetSitterRequestController *petsitter.PetSitterRequestController
+	PetSitterRegisterController *petsitter.PetSitterRegisterController
+	PetSitterRequestController  *petsitter.PetSitterRequestController
 }
 
 type Controllers struct {

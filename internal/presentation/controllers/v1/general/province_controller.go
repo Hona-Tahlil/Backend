@@ -10,17 +10,17 @@ import (
 )
 
 type GeneralProvinceController struct {
-	provinceService usecase.ProvinceService
+	addressService usecase.AddressService
 }
 
-func NewGeneralProvinceController(provinceService usecase.ProvinceService) *GeneralProvinceController {
+func NewGeneralProvinceController(addressService usecase.AddressService) *GeneralProvinceController {
 	return &GeneralProvinceController{
-		provinceService: provinceService,
+		addressService: addressService,
 	}
 }
 
 func (gpc *GeneralProvinceController) GetAllProvinces(ctx *gin.Context) {
-	res, err := gpc.provinceService.GetAllProvincesResponse()
+	res, err := gpc.addressService.GetAllProvincesResponse()
 	if err != nil {
 		panic(err)
 	}
@@ -36,7 +36,7 @@ func (gpc *GeneralProvinceController) GetCitiesByProvinceName(ctx *gin.Context) 
 	info := provincecity.GetProvinceCitiesRequest{
 		ProvinceNum: params.ProvinceNum,
 	}
-	res, err := gpc.provinceService.GetCitiesByProvinceName(info)
+	res, err := gpc.addressService.GetCitiesByProvinceName(info)
 	if err != nil {
 		panic(err)
 	}

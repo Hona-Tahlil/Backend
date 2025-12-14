@@ -9,5 +9,7 @@ type UserRepository interface {
 	SaveUser(user *entities.User) error
 	FindUserByID(userID uint) (*entities.User, error)
 	GetRoleUsersByID(roleID uint, limit, offset int) ([]entities.User, error)
+	PreloadPetSitter(user *entities.User) error
 	PreloadFields(user *entities.User, fields []string) error
+	PreloadAddress(user *entities.User) error
 }

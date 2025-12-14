@@ -83,3 +83,12 @@ type ListRolesWithUsersRequest struct {
 	Page  int
 	Count int
 }
+
+
+type ListPetSittersRequest struct {
+    Page    int
+    Limit   int
+    Status  *string // optional
+    Search  *string // optional
+    Sort    string  // created_at_desc (default)
+}

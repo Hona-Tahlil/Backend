@@ -47,6 +47,7 @@ func (gc *GeneralUserController) Login(ctx *gin.Context) {
 	msg := controllers.Message{
 		Text: successMessages.Login,
 	}
+
 	controllers.Respond(ctx, 200, msg, *res)
 }
 
@@ -121,7 +122,8 @@ func (gc *GeneralUserController) ForgotPassword(ctx *gin.Context) {
 	if err := gc.userService.ForgotPassword(forgotPasswordInfo); err != nil {
 		panic(err)
 	}
-
+	msg := controllers.Message{}
+	controllers.Respond(ctx, 200, msg, nil)
 }
 
 func (gc *GeneralUserController) ResetPassword(ctx *gin.Context) {
@@ -139,6 +141,8 @@ func (gc *GeneralUserController) ResetPassword(ctx *gin.Context) {
 	if err := gc.userService.ResetPassword(resetPasswordInfo); err != nil {
 		panic(err)
 	}
+	msg := controllers.Message{}
+	controllers.Respond(ctx, 200, msg, nil)
 }
 
 func (gc *GeneralUserController) RefreshTokens(ctx *gin.Context) {

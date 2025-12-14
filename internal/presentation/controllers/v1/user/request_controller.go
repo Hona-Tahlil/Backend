@@ -1,6 +1,7 @@
 package user
 
 import (
+	"hona/backend/internal/application/dto/address"
 	"hona/backend/internal/application/dto/request"
 	"hona/backend/internal/application/usecase"
 	"hona/backend/internal/domain/enums"
@@ -20,8 +21,6 @@ func NewUserRequestController(requestService usecase.RequestService) *UserReques
 	}
 
 }
-
-// TODO: use encoder and decoder func for Calendar
 
 func (rc *UserRequestController) GetCreateRequestInfo(ctx *gin.Context) {
 	type Params struct {
@@ -79,7 +78,7 @@ func (rc *UserRequestController) CreateRequest(ctx *gin.Context) {
 		CalenderSlots:   slots,
 		PetIDs:          params.PetIDs,
 		Notes:           params.Notes,
-		AddressInfo:     (*request.AddressInfoRequest)(params.AddressInfo),
+		AddressInfo:     (*address.AddressInfo)(params.AddressInfo),
 		AddressID:       params.AddressID,
 		ServiceID:       params.ServiceID,
 	}
@@ -114,12 +113,12 @@ func (rc *UserRequestController) EditRequest(ctx *gin.Context) {
 	}
 	params := controllers.Receive[Params](ctx)
 	UserID := controllers.GetID(ctx)
-	slots := make([]request.RequestCalendarSlotRequest, 0)
-	for _, slot := range params.CalenderSlots {
-		slots = append(slots, request.RequestCalendarSlotRequest{
+	slots := make([]request.RequestCalendarSlotRequest, len(params.CalenderSlots))
+	for i, slot := range params.CalenderSlots {
+		slots[i] = request.RequestCalendarSlotRequest{
 			Date:  slot.Date,
 			Slots: slot.Slots,
-		})
+		}
 	}
 	info := request.EditRequestRequest{
 		RequestID:     params.RequestID,
@@ -127,7 +126,7 @@ func (rc *UserRequestController) EditRequest(ctx *gin.Context) {
 		CalenderSlots: slots,
 		PetIDs:        params.PetIDs,
 		Notes:         params.Notes,
-		AddressInfo:   (*request.AddressInfoRequest)(params.AddressInfo),
+		AddressInfo:   (*address.AddressInfo)(params.AddressInfo),
 		AddressID:     params.AddressID,
 		ServiceID:     params.ServiceID,
 	}
@@ -139,7 +138,6 @@ func (rc *UserRequestController) EditRequest(ctx *gin.Context) {
 	controllers.Respond(ctx, 200, msg, nil)
 }
 
-// TODO: Policy
 func (rc *UserRequestController) CancelRequest(ctx *gin.Context) {
 	type Params struct {
 		RequestID uint `json:"requestID" validate:"required"`

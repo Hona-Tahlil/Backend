@@ -11,6 +11,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/credentials"
 
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 )
@@ -33,10 +34,19 @@ func (s3Storage *S3Storage) setS3Client(bucketType enums.BucketType) error {
 	if !slices.Contains(bucketTypes, bucketType) {
 		return fmt.Errorf("bucket not exist")
 	}
+
 	if s3Storage.client != nil {
 		return nil
 	}
-	cfg, err := config.LoadDefaultConfig(context.TODO(), config.WithRegion("us-west-2"))
+
+	cfg, err := config.LoadDefaultConfig(context.TODO(),
+		config.WithRegion("default"),
+		config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(
+			bootstrap.Run().Env.Storage.AccessKey,
+			bootstrap.Run().Env.Storage.SecretKey,
+			"",
+		)),
+	)
 	if err != nil {
 		return err
 	}

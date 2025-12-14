@@ -11,3 +11,4 @@ type Storage interface {
 	DeleteObject(bucketType enums.BucketType, key string) error
 	GetPresignedURL(bucketType enums.BucketType, key string, expiration time.Duration) (string, error)
 }
+

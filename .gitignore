@@ -15,4 +15,8 @@ tmp/**/*
 cmd/tmp/
 cmd/tmp/*
 cmd/tmp/**/*
+
 .idea/
+
+2.env
+3.env

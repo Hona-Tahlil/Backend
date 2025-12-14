@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"hona/backend/bootstrap"
 	"hona/backend/internal/domain/entities"
+	"hona/backend/internal/infrastructure/seeder"
 	"sync"
 
 	"gorm.io/driver/postgres"
@@ -32,6 +33,8 @@ func NewPostgresDatabase() *gorm.DB {
 
 		dbInstance = db
 
+		seeder := seeder.NewDatabaseSeeder(db)
+
 		db.AutoMigrate(
 			&entities.User{},
 			&entities.User{},
@@ -46,12 +49,12 @@ func NewPostgresDatabase() *gorm.DB {
 			&entities.Chat{},
 			&entities.Comment{},
 			&entities.Address{},
-			&entities.Province{},
-			&entities.City{},
 			&entities.TextMessage{},
 			&entities.Transaction{},
 			&entities.Transfer{},
 		)
+
+		seeder.SeedAll()
 	})
 
 	return dbInstance
