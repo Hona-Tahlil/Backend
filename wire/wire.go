@@ -8,6 +8,7 @@ import (
 	"hona/backend/internal/application/service"
 	"hona/backend/internal/application/usecase"
 	domainjwt "hona/backend/internal/domain/jwt"
+	domainmail "hona/backend/internal/domain/mail"
 	"hona/backend/internal/domain/ports"
 	domainredis "hona/backend/internal/domain/ports/redis"
 	domainstorage "hona/backend/internal/domain/storage"
@@ -59,6 +60,7 @@ var ServiceProviderSet = wire.NewSet(
 	service.NewCommentService,
 	wire.Bind(new(domainjwt.JWTService), new(*jwt.JWTService)),
 	wire.Bind(new(domainjwt.JWTKeyManager), new(*jwt.JWTKeyManager)),
+	wire.Bind(new(domainmail.Mail), new(*mail.EmailService)),
 	wire.Bind(new(usecase.RBACService), new(*service.RBACService)),
 	wire.Bind(new(usecase.UserService), new(*service.UserService)),
 	wire.Bind(new(usecase.PetService), new(*service.PetService)),

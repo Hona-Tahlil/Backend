@@ -3,7 +3,7 @@ package consumers
 import (
 	"encoding/json"
 	"hona/backend/bootstrap"
-	"hona/backend/internal/infrastructure/mail"
+	domainmail "hona/backend/internal/domain/mail"
 	"hona/backend/internal/infrastructure/rabbitmq"
 	"log"
 )
@@ -12,12 +12,12 @@ var constants = bootstrap.Run().Constants.RabbitMQConstants
 
 type EmailConsumer struct {
 	rabbitMQ     *rabbitmq.RabbitMQ
-	emailService mail.EmailService
+	emailService domainmail.Mail
 }
 
 func NewEmailConsumer(
 	rabbitMQ *rabbitmq.RabbitMQ,
-	emailService mail.EmailService,
+	emailService domainmail.Mail,
 ) *EmailConsumer {
 	return &EmailConsumer{
 		rabbitMQ:     rabbitMQ,

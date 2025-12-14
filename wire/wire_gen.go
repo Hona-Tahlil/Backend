@@ -12,6 +12,7 @@ import (
 	"hona/backend/internal/application/service"
 	"hona/backend/internal/application/usecase"
 	"hona/backend/internal/domain/jwt"
+	"hona/backend/internal/domain/mail"
 	"hona/backend/internal/domain/ports"
 	"hona/backend/internal/domain/ports/redis"
 	"hona/backend/internal/domain/storage"
@@ -19,6 +20,8 @@ import (
 	"hona/backend/internal/infrastructure/jwt"
 	"hona/backend/internal/infrastructure/persistence"
 	"hona/backend/internal/infrastructure/persistence/repository/redis"
+	"hona/backend/internal/infrastructure/rabbitmq"
+	"hona/backend/internal/infrastructure/rabbitmq/consumers"
 	"hona/backend/internal/infrastructure/seeder"
 	"hona/backend/internal/infrastructure/storage"
 	"hona/backend/internal/presentation/controllers/v1/admin"
@@ -105,7 +108,12 @@ func InitializeApplication(container *bootstrap.Config) (*Application, error) {
 	wireStorage := &Storage{
 		S3Storage: s3Storage,
 	}
-	application := NewApplication(controllers, middlewares, wireSeeder, wireStorage)
+	rabbitMQ := rabbitmq.NewRabbitMQ()
+	emailConsumer := consumers.NewEmailConsumer(rabbitMQ, emailService)
+	wireConsumers := &Consumers{
+		EmailConsumer: emailConsumer,
+	}
+	application := NewApplication(controllers, middlewares, wireSeeder, wireStorage, wireConsumers)
 	return application, nil
 }
 
@@ -115,7 +123,7 @@ var StorageProviderSet = wire.NewSet(storage.NewS3Storage, wire.Bind(new(domains
 
 var RepositoryProviderSet = wire.NewSet(persistence.NewRepositoryFactory, persistence.NewUnitOfWork, persistence.NewPostgresDatabase, persistence.NewRedisDatabase, redis.NewUserCacheRepository, wire.Bind(new(persistence.Cache), new(*persistence.RedisDatabase)), wire.Bind(new(domainredis.UserCacheRepository), new(*redis.UserCacheRepository)), wire.Bind(new(ports.RepositoryFactory), new(*persistence.RepositoryFactory)), wire.Bind(new(ports.UnitOfWork), new(*persistence.UnitOfWork)))
 
-var ServiceProviderSet = wire.NewSet(wire.Struct(new(service.RequestServiceDeps), "*"), service.NewUserService, jwt.NewJWTService, jwt.NewJWTKeyManager, mail.NewEmailService, service.NewRBACService, service.NewPetService, service.NewRequestService, service.NewAddressService, service.NewPetSitterService, service.NewCommentService, wire.Bind(new(domainjwt.JWTService), new(*jwt.JWTService)), wire.Bind(new(domainjwt.JWTKeyManager), new(*jwt.JWTKeyManager)), wire.Bind(new(usecase.RBACService), new(*service.RBACService)), wire.Bind(new(usecase.UserService), new(*service.UserService)), wire.Bind(new(usecase.PetService), new(*service.PetService)), wire.Bind(new(usecase.RequestService), new(*service.RequestService)), wire.Bind(new(usecase.AddressService), new(*service.AddressService)), wire.Bind(new(usecase.PetSitterService), new(*service.PetSitterService)), wire.Bind(new(usecase.CommentService), new(*service.CommentService)))
+var ServiceProviderSet = wire.NewSet(wire.Struct(new(service.RequestServiceDeps), "*"), service.NewUserService, jwt.NewJWTService, jwt.NewJWTKeyManager, mail.NewEmailService, service.NewRBACService, service.NewPetService, service.NewRequestService, service.NewAddressService, service.NewPetSitterService, service.NewCommentService, wire.Bind(new(domainjwt.JWTService), new(*jwt.JWTService)), wire.Bind(new(domainjwt.JWTKeyManager), new(*jwt.JWTKeyManager)), wire.Bind(new(domainmail.Mail), new(*mail.EmailService)), wire.Bind(new(usecase.RBACService), new(*service.RBACService)), wire.Bind(new(usecase.UserService), new(*service.UserService)), wire.Bind(new(usecase.PetService), new(*service.PetService)), wire.Bind(new(usecase.RequestService), new(*service.RequestService)), wire.Bind(new(usecase.AddressService), new(*service.AddressService)), wire.Bind(new(usecase.PetSitterService), new(*service.PetSitterService)), wire.Bind(new(usecase.CommentService), new(*service.CommentService)))
 
 var GeneralControllersProviderSet = wire.NewSet(general.NewGeneralUserController, general.NewGeneralPetController, general.NewGeneralProvinceController, wire.Struct(new(GeneralControllers), "*"))
 
@@ -131,6 +139,8 @@ var MiddlewaresProviderSet = wire.NewSet(middleware.NewLocalizationMiddleware, m
 
 var SeederProviderSet = wire.NewSet(seeder.NewDatabaseSeeder, wire.Struct(new(Seeder), "*"))
 
+var ConsumersProviderSet = wire.NewSet(consumers.NewEmailConsumer, rabbitmq.NewRabbitMQ, wire.Struct(new(Consumers), "*"))
+
 var ProviderSet = wire.NewSet(
 	MiddlewaresProviderSet,
 	ControllersProviderSet,
@@ -142,6 +152,7 @@ var ProviderSet = wire.NewSet(
 	RepositoryProviderSet,
 	SeederProviderSet,
 	StorageProviderSet,
+	ConsumersProviderSet,
 )
 
 type GeneralControllers struct {
@@ -188,18 +199,24 @@ type Storage struct {
 	S3Storage *storage.S3Storage
 }
 
+type Consumers struct {
+	EmailConsumer *consumers.EmailConsumer
+}
+
 type Application struct {
 	Controllers *Controllers
 	Middlewares *Middlewares
 	Seeder      *Seeder
 	Storage     *Storage
+	Consumers   *Consumers
 }
 
-func NewApplication(controllers *Controllers, middlewares *Middlewares, seeder2 *Seeder, storage2 *Storage) *Application {
+func NewApplication(controllers *Controllers, middlewares *Middlewares, seeder2 *Seeder, storage2 *Storage, consumers2 *Consumers) *Application {
 	return &Application{
 		Controllers: controllers,
 		Middlewares: middlewares,
 		Seeder:      seeder2,
 		Storage:     storage2,
+		Consumers:   consumers2,
 	}
 }
