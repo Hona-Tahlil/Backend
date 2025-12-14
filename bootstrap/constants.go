@@ -161,6 +161,7 @@ type RedisKey struct {
 type TemplatesPath struct {
 	Path                   string
 	EmailVerification      string
+	ForgetPassword         string
 	NewRequest             string
 	PetOwnerRequestCancel  string
 	PetSitterRequestCancel string
@@ -269,6 +270,7 @@ func NewConstants() *Constants {
 		TemplatesPath: TemplatesPath{
 			Path:                   "./internal/infrastructure/mail/",
 			EmailVerification:      "email_verification.html",
+			ForgetPassword:         "forget_password.html",
 			NewRequest:             "new_request.html",
 			PetOwnerRequestCancel:  "pet_owner_request_cancel.html",
 			PetSitterRequestCancel: "pet_sitter_request_cancel.html",
