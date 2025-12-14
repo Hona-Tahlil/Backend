@@ -16,6 +16,8 @@ import (
 	"hona/backend/internal/infrastructure/mail"
 	"hona/backend/internal/infrastructure/persistence"
 	"hona/backend/internal/infrastructure/persistence/repository/redis"
+	"hona/backend/internal/infrastructure/rabbitmq"
+	"hona/backend/internal/infrastructure/rabbitmq/consumers"
 	"hona/backend/internal/infrastructure/seeder"
 	"hona/backend/internal/infrastructure/storage"
 	"hona/backend/internal/presentation/controllers/v1/admin"
@@ -112,6 +114,12 @@ var SeederProviderSet = wire.NewSet(
 	wire.Struct(new(Seeder), "*"),
 )
 
+var ConsumersProviderSet = wire.NewSet(
+	consumers.NewEmailConsumer,
+	rabbitmq.NewRabbitMQ,
+	wire.Struct(new(Consumers), "*"),
+)
+
 var ProviderSet = wire.NewSet(
 	MiddlewaresProviderSet,
 	ControllersProviderSet,
@@ -123,6 +131,7 @@ var ProviderSet = wire.NewSet(
 	RepositoryProviderSet,
 	SeederProviderSet,
 	StorageProviderSet,
+	ConsumersProviderSet,
 )
 
 type GeneralControllers struct {
@@ -167,19 +176,25 @@ type Storage struct {
 	S3Storage *storage.S3Storage
 }
 
+type Consumers struct {
+	EmailConsumer *consumers.EmailConsumer
+}
+
 type Application struct {
 	Controllers *Controllers
 	Middlewares *Middlewares
 	Seeder      *Seeder
 	Storage     *Storage
+	Consumers   *Consumers
 }
 
-func NewApplication(controllers *Controllers, middlewares *Middlewares, seeder *Seeder, storage *Storage) *Application {
+func NewApplication(controllers *Controllers, middlewares *Middlewares, seeder *Seeder, storage *Storage, consumers *Consumers) *Application {
 	return &Application{
 		Controllers: controllers,
 		Middlewares: middlewares,
 		Seeder:      seeder,
 		Storage:     storage,
+		Consumers:   consumers,
 	}
 }
 

@@ -14,7 +14,7 @@ import (
 
 var config = bootstrap.Run().Env.RabbitMQ
 var constants = bootstrap.Run().Constants.RabbitMQConstants
-var channelNames = []string{constants.Channels.StorageUpload, constants.Channels.StorageUpload, constants.Channels.Notifications, constants.Channels.Emails}
+var channelNames = []string{constants.Channels.StorageUpload, constants.Channels.StorageUpload, constants.Channels.Notifications, constants.Channels.Emails, constants.Channels.DLQ}
 
 type RabbitMQ struct {
 	conn        *amqp.Connection
@@ -86,7 +86,7 @@ func (rmq *RabbitMQ) MakeChannels(conn *amqp.Connection, channelNames ...string)
 }
 
 func (rmq *RabbitMQ) MakeQueues(channelNames ...string) {
-	queues := []string{constants.Events.FileUpload, constants.Events.MultipleFilesUpload, constants.Events.SendNotification, constants.Events.SendEmail}
+	queues := []string{constants.Events.FileUpload, constants.Events.MultipleFilesUpload, constants.Events.SendNotification, constants.Events.SendEmail, constants.Queues.DLQ}
 	for i, queue := range queues {
 		if err := rmq.declareQueueWithDLX(queue, constants.Exchanges.DLX, channelNames[i]); err != nil {
 			err2 := rmq.Close()
@@ -323,4 +323,90 @@ func (rmq *RabbitMQ) PublishMessage(queue string, message interface{}) error {
 	}
 
 	return nil
+}
+
+func (rmq *RabbitMQ) ConsumeMessages(queue string, handler func([]byte) error) error {
+	rmq.mu.RLock()
+	connected := rmq.isConnected
+	channel, exists := rmq.channels[queue]
+	if !exists || channel == nil {
+		return fmt.Errorf("channel %s does not exist", queue)
+	}
+
+	rmq.mu.RUnlock()
+
+	if !connected {
+		return fmt.Errorf("not connected to RabbitMQ")
+	}
+
+	msgs, err := channel.Consume(
+		queue,
+		"",
+		false,
+		false,
+		false,
+		false,
+		nil,
+	)
+	if err != nil {
+		return fmt.Errorf("failed to register a consumer: %w", err)
+	}
+
+	go func() {
+		for d := range msgs {
+			if err := handler(d.Body); err != nil {
+				log.Printf("Error processing message: %v", err)
+				rmq.handleRetry(&d, err)
+			} else {
+				d.Ack(false)
+			}
+		}
+	}()
+
+	return nil
+}
+
+func (rmq *RabbitMQ) handleRetry(d *amqp.Delivery, err error) {
+	if d.Headers == nil {
+		d.Headers = amqp.Table{}
+	}
+
+	retry := int32(0)
+	if v, ok := d.Headers[constants.Headers.RetryCount].(int32); ok {
+		retry = v
+	}
+	retry++
+
+	if retry > int32(config.MaxRetryCount) {
+		_ = rmq.channels[constants.Channels.DLQ].Publish(
+			rmq.exchanges[constants.Exchanges.DLX],
+			constants.Queues.DLQ,
+			false,
+			false,
+			amqp.Publishing{
+				Headers: d.Headers,
+				Body:    d.Body,
+			},
+		)
+		d.Ack(false)
+		return
+	}
+
+	d.Headers[constants.Headers.RetryCount] = retry
+	d.Headers[constants.Headers.LastError] = err.Error()
+
+	time.Sleep(time.Second)
+
+	_ = rmq.channels[d.RoutingKey].Publish(
+		rmq.exchanges[constants.Exchanges.General],
+		d.RoutingKey,
+		false,
+		false,
+		amqp.Publishing{
+			Headers: d.Headers,
+			Body:    d.Body,
+		},
+	)
+
+	d.Ack(false)
 }

@@ -297,10 +297,9 @@ func NewConstants() *Constants {
 				DeadLetter: "x-dead-letter-exchange",
 			},
 			Events: Events{
-				SendEmail:           "send_email",
-				SendNotification:    "send_notification",
-				FileUpload:          "file_upload",
-				MultipleFilesUpload: "multiple_files_upload",
+				SendEmail:        "emails",
+				SendNotification: "notifications",
+				FileUpload:       "storage_upload",
 			},
 		},
 	}
