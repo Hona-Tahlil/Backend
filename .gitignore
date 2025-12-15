@@ -1,4 +1,4 @@
-.env
+*.env
 .vscode
 *.pem
 # Air (Go live-reload tool)
@@ -15,3 +15,5 @@ tmp/**/*
 cmd/tmp/
 cmd/tmp/*
 cmd/tmp/**/*
+
+.idea/
