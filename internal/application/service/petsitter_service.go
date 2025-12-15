@@ -6,9 +6,7 @@ import (
 	"hona/backend/internal/domain/entities"
 	"hona/backend/internal/domain/ports"
 	domainstorage "hona/backend/internal/domain/storage"
-	"hona/backend/internal/infrastructure/persistence/repository/postgres"
-
-	"github.com/go-faker/faker/v4/pkg/options"
+	"hona/backend/internal/infrastructure/dsl"
 )
 
 type PetSitterService struct {
@@ -369,11 +367,47 @@ func NewPetSitterService(unitOfWork ports.UnitOfWork, storage domainstorage.Stor
 // 	return err
 // }
 
-func (ps *PetSitterService) SearchPetSitters(info petsitter.SearchPetSittersRequest) ([]*entities.PetSitter, int64, error ) {
-	// options := postgres.NewQueryOptions().WithPagination(info.Limit, info.Offset).WithSorting(info.Sorts)
+func (ps *PetSitterService) SearchPetSitters(info petsitter.SearchPetSittersRequest) ([]*entities.PetSitter, int64, error) {
+	// Convert DTO filters and sorts to DSL types
+	dslFilters := make([]dsl.Filter, len(info.Filters))
+	for i, f := range info.Filters {
+		dslFilters[i] = dsl.Filter{
+			Field: f.Field,
+			Op:    f.Op,
+			Value: f.Value,
+		}
+	}
 
-	petSitters, total, err := ps.petSitterRepository.SearchPetSitters(info.Offset, info.Limit, info.Filters, info.Sorts)
-    if err != nil {
-        return nil, err
-    }
+	dslSorts := make([]dsl.Sort, len(info.Sorts))
+	for i, s := range info.Sorts {
+		dslSorts[i] = dsl.Sort{
+			Field: s.Field,
+			Dir:   s.Dir,
+		}
+	}
+
+	var petSitters []*entities.PetSitter
+	var total int64
+
+	// Use WithTransaction to safely access the database
+	err := ps.unitOfWork.WithTransaction(func(rf ports.RepositoryFactory) error {
+		petSitterRepo := rf.PetSitterRepository()
+
+		// Search with filters and sorts
+		results, count, err := petSitterRepo.SearchPetSitters(info.Offset, info.Limit, dslFilters, dslSorts)
+		if err != nil {
+			return err
+		}
+
+		petSitters = results
+		total = count
+
+		return nil
+	})
+
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return petSitters, total, nil
 }

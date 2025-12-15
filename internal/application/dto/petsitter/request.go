@@ -1,10 +1,19 @@
 package petsitter
 
-import "hona/backend/internal/infrastructure/dsl"
+type Filter struct {
+	Field string `json:"field"`
+	Op    string `json:"op"`
+	Value any    `json:"value"`
+}
+
+type Sort struct {
+	Field string `json:"field"`
+	Dir   string `json:"dir"`
+}
 
 type SearchPetSittersRequest struct {
 	Offset  int
 	Limit   int
-	Filters []dsl.Filter
-	Sorts   []dsl.Sort
+	Filters []Filter
+	Sorts   []Sort
 }

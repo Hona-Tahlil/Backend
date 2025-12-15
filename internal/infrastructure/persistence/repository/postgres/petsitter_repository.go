@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"hona/backend/internal/domain/entities"
+	"hona/backend/internal/infrastructure/dsl"
 
 	"gorm.io/gorm"
 )
@@ -48,12 +49,59 @@ func (pr *PetSitterRepository) FindPetSitterByUserID(id uint) (*entities.PetSitt
 	return &petsitter, nil
 }
 
-func (pr *PetSitterRepository) SearchPetSitters(offset int, limit int, ) ([]*entities.PetSitter, error) {
-	db := applyModifiers(
-		pr.db.Model(&entities.PetSitter{}),
-		PaginationModifier{Offset: info.Page, Limit: req.Count},
-		FilterModifier{Filters: req.Filters},
-		SortModifier{Sorts: req.Sorts},
-	)
+func (pr *PetSitterRepository) SearchPetSitters(offset int, limit int, filters []dsl.Filter, sorts []dsl.Sort) ([]*entities.PetSitter, int64, error) {
+	var petSitters []*entities.PetSitter
+	var total int64
 
+	// Start with base query
+	query := pr.db.Model(&entities.PetSitter{})
+
+	// Apply filters
+	for _, filter := range filters {
+		query = applyFilterToQuery(query, filter)
+	}
+
+	// Count total records (before pagination)
+	if err := query.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	// Apply sorts
+	for _, sort := range sorts {
+		query = query.Order(sort.Field + " " + sort.Dir)
+	}
+
+	// Apply pagination
+	query = query.Offset(offset).Limit(limit)
+
+	// Fetch paginated results
+	if err := query.Find(&petSitters).Error; err != nil {
+		return nil, 0, err
+	}
+
+	return petSitters, total, nil
+}
+
+// applyFilterToQuery applies a single filter to a gorm query
+func applyFilterToQuery(query *gorm.DB, filter dsl.Filter) *gorm.DB {
+	switch filter.Op {
+	case "=":
+		return query.Where(filter.Field+" = ?", filter.Value)
+	case "!=":
+		return query.Where(filter.Field+" != ?", filter.Value)
+	case ">":
+		return query.Where(filter.Field+" > ?", filter.Value)
+	case "<":
+		return query.Where(filter.Field+" < ?", filter.Value)
+	case ">=":
+		return query.Where(filter.Field+" >= ?", filter.Value)
+	case "<=":
+		return query.Where(filter.Field+" <= ?", filter.Value)
+	case "LIKE":
+		return query.Where(filter.Field+" LIKE ?", filter.Value)
+	case "IN":
+		return query.Where(filter.Field+" IN (?)", filter.Value)
+	default:
+		return query
+	}
 }

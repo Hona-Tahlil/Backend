@@ -12,7 +12,6 @@ import (
 	domainjwt "hona/backend/internal/domain/jwt"
 	"hona/backend/internal/domain/ports"
 	domainredis "hona/backend/internal/domain/ports/redis"
-	"hona/backend/internal/infrastructure/dsl"
 	"hona/backend/internal/infrastructure/mail"
 	"regexp"
 	"time"
@@ -101,9 +100,9 @@ func (us *UserService) GetUserInfosResponse(users []entities.User) []rbac.UserIn
 	return r
 }
 
-func (us *UserService) GetRoleUsersByID(roleID uint, query *dsl.ParsedQuery) ([]entities.User, error) {
+func (us *UserService) GetRoleUsersByID(roleID uint, limit, offset int) ([]entities.User, error) {
 	userRepo := us.unitOfWork.Factory().UserRepository()
-	users, err := userRepo.GetRoleUsersByID(roleID, query)
+	users, err := userRepo.GetRoleUsersByID(roleID, limit, offset)
 	if err != nil {
 		return nil, err
 	}

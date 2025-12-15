@@ -3,7 +3,6 @@ package general
 import (
 	"hona/backend/internal/application/dto/petsitter"
 	"hona/backend/internal/application/service"
-	"hona/backend/internal/infrastructure/dsl"
 	"hona/backend/internal/presentation/controllers"
 
 	"github.com/gin-gonic/gin"
@@ -98,35 +97,33 @@ func (gc *GeneralPetSitterController) SearchPetSitters(ctx *gin.Context) {
 	params := controllers.Receive[SearchPetSittersParams](ctx)
 
 	offset, limit := controllers.GetOffsetLimit(params.Page, params.Count, 1, 10)
-	
 
-	filters := make([]dsl.Filter,0)
-	for _, f := range params.Filters {
-		filter  := dsl.Filter {
+	// Convert params to DTO (no DSL conversion here)
+	filters := make([]petsitter.Filter, len(params.Filters))
+	for i, f := range params.Filters {
+		filters[i] = petsitter.Filter{
 			Field: f.Field,
-			Op: f.Op,
+			Op:    f.Op,
 			Value: f.Value,
 		}
-		filters = append(filters, filter)
 	}
 
-	sorts := make([]dsl.Sort,0)
-	for _,s := range params.Sorts {
-		sort := dsl.Sort {
+	sorts := make([]petsitter.Sort, len(params.Sorts))
+	for i, s := range params.Sorts {
+		sorts[i] = petsitter.Sort{
 			Field: s.Field,
-			Dir: s.Dir,
+			Dir:   s.Dir,
 		}
-		sorts = append(sorts, sort)
 	}
 
 	req := petsitter.SearchPetSittersRequest{
-		Offset:    offset,
+		Offset:  offset,
 		Limit:   limit,
 		Filters: filters,
 		Sorts:   sorts,
 	}
 
-	petsitters ,count , err := gc.petSitterService.SearchPetSitters(req)
+	petsitters, count, err := gc.petSitterService.SearchPetSitters(req)
 	if err != nil {
 		panic(err)
 	}
