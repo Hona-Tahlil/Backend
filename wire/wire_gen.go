@@ -41,7 +41,8 @@ func InitializeApplication(container *bootstrap.Config) (*Application, error) {
 	redisDatabase := persistence.NewRedisDatabase()
 	userCacheRepository := redis.NewUserCacheRepository(redisDatabase)
 	emailService := mail.NewEmailService()
-	userService := service.NewUserService(jwtService, unitOfWork, userCacheRepository, emailService)
+	rabbitMQ := rabbitmq.NewRabbitMQ()
+	userService := service.NewUserService(jwtService, unitOfWork, userCacheRepository, emailService, rabbitMQ)
 	generalUserController := general.NewGeneralUserController(userService)
 	s3Storage := storage.NewS3Storage()
 	petService := service.NewPetService(unitOfWork, s3Storage, userService)
@@ -66,7 +67,7 @@ func InitializeApplication(container *bootstrap.Config) (*Application, error) {
 		PetService:       petService,
 		PetSitterService: petSitterService,
 		UnitOfWork:       unitOfWork,
-		EmailService:     emailService,
+		RabbitMQ:         rabbitMQ,
 	}
 	requestService := service.NewRequestService(requestServiceDeps)
 	userRequestController := user.NewUserRequestController(requestService)
@@ -108,7 +109,6 @@ func InitializeApplication(container *bootstrap.Config) (*Application, error) {
 	wireStorage := &Storage{
 		S3Storage: s3Storage,
 	}
-	rabbitMQ := rabbitmq.NewRabbitMQ()
 	emailConsumer := consumers.NewEmailConsumer(rabbitMQ, emailService)
 	wireConsumers := &Consumers{
 		EmailConsumer: emailConsumer,

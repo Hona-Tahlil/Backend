@@ -88,21 +88,23 @@ func (rmq *RabbitMQ) MakeChannels(conn *amqp.Connection, channelNames ...string)
 func (rmq *RabbitMQ) MakeQueues(channelNames ...string) {
 	queues := []string{constants.Events.FileUpload, constants.Events.MultipleFilesUpload, constants.Events.SendNotification, constants.Events.SendEmail, constants.Queues.DLQ}
 	for i, queue := range queues {
-		if err := rmq.declareQueueWithDLX(queue, constants.Exchanges.DLX, channelNames[i]); err != nil {
-			err2 := rmq.Close()
-			if err2 != nil {
-				panic(err2)
+		if !rmq.queues[queue] {
+			if err := rmq.declareQueueWithDLX(queue, constants.Exchanges.DLX, channelNames[i]); err != nil {
+				err2 := rmq.Close()
+				if err2 != nil {
+					panic(err2)
+				}
+				log.Printf("error during declare Queue: %v", err)
+				panic(err)
 			}
-			log.Printf("error during declare Queue: %v", err)
-			panic(err)
-		}
-		if err := rmq.bindQueue(queue, constants.Exchanges.General, queue, channelNames[i]); err != nil {
-			err2 := rmq.Close()
-			if err2 != nil {
-				panic(err2)
+			if err := rmq.bindQueue(queue, constants.Exchanges.General, queue, channelNames[i]); err != nil {
+				err2 := rmq.Close()
+				if err2 != nil {
+					panic(err2)
+				}
+				log.Printf("error during bind Queue: %v", err)
+				panic(err)
 			}
-			log.Printf("error during bind Queue: %v", err)
-			panic(err)
 		}
 	}
 }

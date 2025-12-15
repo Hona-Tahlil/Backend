@@ -268,7 +268,7 @@ func NewConstants() *Constants {
 			Request: "request",
 		},
 		TemplatesPath: TemplatesPath{
-			Path:                   "./internal/infrastructure/mail/",
+			Path:                   "./internal/infrastructure/communication/mail/",
 			EmailVerification:      "email_verification.html",
 			ForgetPassword:         "forget_password.html",
 			NewRequest:             "new_request.html",

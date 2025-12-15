@@ -273,10 +273,10 @@ func (us *UserService) Register(registerInfo user.RegisterRequest) error {
 			return err
 		}
 
-		err = us.SendVerificationEmail(user.SendVerificationEmailRequest{Email: newUser.Email})
-		if err != nil {
-			return err
-		}
+		// err = us.SendVerificationEmail(user.SendVerificationEmailRequest{Email: newUser.Email})
+		// if err != nil {
+		// 	return err
+		// }
 
 		return nil
 	})
