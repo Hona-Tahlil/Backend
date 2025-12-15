@@ -209,6 +209,8 @@ func (ps *PetService) getPetBasicDataResponse(petEntity *entities.Pet) (*pet.Pet
 		Species:     petEntity.Species.String(),
 		Gender:      petEntity.Gender.String(),
 		PictureLink: link,
+		BirthDate:   petEntity.BirthDate,
+		IsAdult:     petEntity.IsAdult,
 	}, nil
 
 }
