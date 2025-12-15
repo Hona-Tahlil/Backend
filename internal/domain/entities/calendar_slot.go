@@ -9,10 +9,8 @@ import (
 
 type CalendarSlot struct {
 	gorm.Model
-	StartTime        time.Time `gorm:"not null"`
-	EndTime          time.Time `gorm:"not null"`
-	IsDailyRepeated  bool      `gorm:"default=false"`
-	IsWeeklyRepeated bool      `gorm:"default=false"`
-	Status           enums.CalendarStatus
-	Refer            uint
+	Date   time.Time            `gorm:"not null"`
+	Slots  []enums.Slot         `gorm:"type:integer[]"`
+	Status enums.CalendarStatus `gorm:"index"`
+	Refer  uint                 `gorm:"index"`
 }

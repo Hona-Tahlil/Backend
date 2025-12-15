@@ -77,36 +77,3 @@ func (f *Filters) In(field string, values []any) *Filters {
 
 // 	return db
 // }
-
-/////////////////////////////////
-// type Server struct {
-//     Host string
-//     Port int
-// }
-
-// type Option func(*Server)
-
-// func WithHost(host string) Option {
-//     return func(s *Server) {
-//         s.Host = host
-//     }
-// }
-
-// func WithPort(port int) Option {
-//     return func(s *Server) {
-//         s.Port = port
-//     }
-// }
-
-// func NewServer(opts ...Option) *Server {
-//     s := &Server{
-//         Host: "localhost", // مقدار پیش‌فرض
-//         Port: 8080,
-//     }
-
-//     for _, opt := range opts {
-//         opt(s)
-//     }
-
-//     return s
-// }

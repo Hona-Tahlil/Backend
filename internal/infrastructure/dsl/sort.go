@@ -1,10 +1,9 @@
 package dsl
 
-import "gorm.io/gorm"
 
 type Sort struct {
 	Field string
-	Dir   string // ASC یا DESC
+	Dir   string // ASC or DESC
 }
 
 type Sorts struct {
@@ -25,9 +24,9 @@ func (s *Sorts) Desc(field string) *Sorts {
 	return s
 }
 
-func (s *Sorts) Apply(db *gorm.DB) *gorm.DB {
-	for _, sort := range s.Items {
-		db = db.Order(sort.Field + " " + sort.Dir)
-	}
-	return db
-}
+// func (s *Sorts) Apply(db *gorm.DB) *gorm.DB {
+// 	for _, sort := range s.Items {
+// 		db = db.Order(sort.Field + " " + sort.Dir)
+// 	}
+// 	return db
+// }

@@ -12,8 +12,7 @@ type ParsedQuery struct {
 	Page    int
 	Limit   int
 }
-// ctx := *gin.Contex
-// ctx.Request.URL.Query()
+
 func ParseQuery(values url.Values) *ParsedQuery {
 
 	filters := NewFilters()
@@ -69,7 +68,11 @@ func ParseQuery(values url.Values) *ParsedQuery {
 			continue
 		}
 
-		// >= یا <=
+		// Other operators: =, !=, >, <, >=, <=
+		if strings.HasPrefix(value, "!=") {
+			filters.Ne(key, value[2:])
+			continue
+		}
 		if strings.HasPrefix(value, ">=") {
 			filters.Gte(key, value[2:])
 			continue
@@ -78,8 +81,6 @@ func ParseQuery(values url.Values) *ParsedQuery {
 			filters.Lte(key, value[2:])
 			continue
 		}
-
-		// > یا <
 		if strings.HasPrefix(value, ">") {
 			filters.Gt(key, value[1:])
 			continue
@@ -89,7 +90,7 @@ func ParseQuery(values url.Values) *ParsedQuery {
 			continue
 		}
 
-		// پیشفرض: EQ
+
 		filters.Eq(key, value)
 	}
 

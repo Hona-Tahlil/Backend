@@ -12,7 +12,7 @@ import (
 	domainjwt "hona/backend/internal/domain/jwt"
 	"hona/backend/internal/domain/ports"
 	domainredis "hona/backend/internal/domain/ports/redis"
-	"hona/backend/internal/infrastructure/mail"
+	"hona/backend/internal/infrastructure/communication/mail"
 	"regexp"
 	"time"
 
@@ -35,54 +35,60 @@ func NewUserService(jwtService domainjwt.JWTService, unitOfWork ports.UnitOfWork
 	}
 }
 
-func (us *UserService) GetRolesResponse(user entities.User) []rbac.RoleResponse {
-	r := make([]rbac.RoleResponse, 0)
-	for _, role := range user.Roles {
-		p := make([]rbac.PermissionResponse, 0)
-		for _, per := range role.Permissions {
+func (us *UserService) GetRolesResponse(user *entities.User) []rbac.RoleResponse {
+	r := make([]rbac.RoleResponse, len(user.Roles))
+	for j, role := range user.Roles {
+		p := make([]rbac.PermissionResponse, len(role.Permissions))
+		for i, per := range role.Permissions {
 			des := ""
 			if per.Description != nil {
 				des = *per.Description
 			}
-			p = append(p, rbac.PermissionResponse{
+			p[i] = rbac.PermissionResponse{
 				ID:          per.ID,
 				Name:        per.Type.String(),
 				Description: des,
 				Category:    per.Category.String(),
-			})
+			}
 		}
 		des := ""
 		if role.Description != nil {
 			des = *role.Description
 		}
-		r = append(r, rbac.RoleResponse{
+		r[j] = rbac.RoleResponse{
 			ID:          role.ID,
 			Name:        role.Type,
 			Description: des,
 			Permissions: p,
-		})
+		}
 	}
 	return r
 }
 
 func (us *UserService) Login(loginInfo user.LoginRequest) (*user.LoginResponse, string, int, error) {
 	foundUser, err := us.FindUserByEmail(loginInfo.Email)
+
 	if err != nil {
 		if _, ok := err.(*exceptions.NotFoundError); !ok {
 			return nil, "", 0, err
 		}
+
 		invalidCredentialsErr := exceptions.NewInvalidCredentialsError("password is wrong")
 		return nil, "", 0, invalidCredentialsErr
+	}
+
+	err = us.PreloadFields(foundUser, []string{"Roles.Permissions"})
+	if err != nil {
+		return nil, "", 0, err
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(foundUser.Password), []byte(loginInfo.Password)); err != nil {
 		invalidCredentialsErr := exceptions.NewInvalidCredentialsError("password is wrong")
 		return nil, "", 0, invalidCredentialsErr
 	}
-
 	accessToken, refreshToken, expireTime := us.jwtService.GenerateTokens(foundUser.ID, loginInfo.RememberMe)
 
-	roles := us.GetRolesResponse(*foundUser)
+	roles := us.GetRolesResponse(foundUser)
 
 	return &user.LoginResponse{
 		AccessToken: accessToken,
@@ -91,11 +97,11 @@ func (us *UserService) Login(loginInfo user.LoginRequest) (*user.LoginResponse, 
 }
 
 func (us *UserService) GetUserInfosResponse(users []entities.User) []rbac.UserInfoResponse {
-	r := make([]rbac.UserInfoResponse, 0)
-	for _, user := range users {
-		r = append(r, rbac.UserInfoResponse{
+	r := make([]rbac.UserInfoResponse, len(users))
+	for i, user := range users {
+		r[i] = rbac.UserInfoResponse{
 			Email: user.Email,
-		})
+		}
 	}
 	return r
 }
@@ -109,7 +115,7 @@ func (us *UserService) GetRoleUsersByID(roleID uint, limit, offset int) ([]entit
 	return users, nil
 }
 
-func (us *UserService) findVerifiedUserByEmail(email string) (*entities.User, error) {
+func (us *UserService) FindVerifiedUserByEmail(email string) (*entities.User, error) {
 	foundUser, err := us.FindUserByEmail(email)
 	if err != nil {
 		return nil, err
@@ -138,7 +144,7 @@ func (us *UserService) FindUserByEmail(email string) (*entities.User, error) {
 	return foundUser, nil
 }
 
-func (us *UserService) findVerifiedUserByID(id uint) (*entities.User, error) {
+func (us *UserService) FindVerifiedUserByID(id uint) (*entities.User, error) {
 	foundUser, err := us.FindUserByID(id)
 	if err != nil {
 		return nil, err
@@ -162,20 +168,6 @@ func (us *UserService) FindUserByID(id uint) (*entities.User, error) {
 
 	if err != nil {
 		return nil, err
-	}
-
-	return foundUser, nil
-}
-
-func (us *UserService) FindVerifiedUserByEmail(email string) (*entities.User, error) {
-	foundUser, err := us.FindUserByEmail(email)
-	if err != nil {
-		return nil, err
-	}
-
-	if !foundUser.IsEmailVerified {
-		notVerifiedErr := exceptions.NewNotVerifiedError()
-		return nil, notVerifiedErr
 	}
 
 	return foundUser, nil
@@ -440,10 +432,20 @@ func (us *UserService) RefreshTokens(refreshTokenInfo rbac.RefreshTokenRequest) 
 		return nil, "", 0, err
 	}
 
-	roles := us.GetRolesResponse(*foundUser)
+	err = us.PreloadFields(foundUser, []string{"Roles.Permissions"})
+	if err != nil {
+		return nil, "", 0, err
+	}
+
+	roles := us.GetRolesResponse(foundUser)
 
 	return &rbac.RefreshTokenResponse{
 		AccessToken: accessToken,
 		Roles:       roles,
 	}, refreshToken, expireTime, nil
+}
+
+func (us *UserService) PreloadFields(user *entities.User, fields []string) error {
+	userRepo := us.unitOfWork.Factory().UserRepository()
+	return userRepo.PreloadFields(user, fields)
 }

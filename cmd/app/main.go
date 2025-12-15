@@ -1,12 +1,18 @@
 package main
 
 import (
+	"context"
+	"errors"
 	"hona/backend/bootstrap"
 	"hona/backend/internal/presentation/routes"
 	"hona/backend/wire"
+	"log"
+	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
-	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
@@ -16,24 +22,36 @@ func main() {
 	gin.SetMode(gin.ReleaseMode)
 
 	ginEngine := gin.Default()
+	ginEngine.RedirectTrailingSlash = true
 
 	app, err := wire.InitializeApplication(bootstrap.Run())
 	if err != nil {
 		panic(err)
 	}
 
-	app.Seeder.DatabaseSeeder.SeedAll()
-
-	ginEngine.Use(cors.New(cors.Config{
-		AllowAllOrigins:  true,
-		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
-		AllowHeaders:     []string{"*"},
-		ExposeHeaders:    []string{"Content-Length"},
-		AllowCredentials: true,
-		MaxAge:           12 * time.Hour,
-	}))
-
 	routes.SetUpRoutes(ginEngine, app)
 
-	ginEngine.Run()
+	srv := &http.Server{
+		Addr:    ":8080",
+		Handler: ginEngine.Handler(),
+	}
+
+	go func() {
+		log.Println("Server Running ...")
+		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			log.Fatalf("listen: %s\n", err)
+		}
+	}()
+
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+	log.Println("Shutdown Server ...")
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	if err := srv.Shutdown(ctx); err != nil {
+		log.Println("Server Shutdown:", err)
+	}
+	log.Println("Server exiting")
 }

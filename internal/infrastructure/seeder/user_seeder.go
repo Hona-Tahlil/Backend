@@ -24,12 +24,17 @@ func NewUserSeeder(db *gorm.DB) *UserSeeder {
 func (s *UserSeeder) Seed(count int) error {
 	users := make([]entities.User, 0, count)
 
+	if s.db.First(&entities.User{}).Error == nil {
+		log.Println("✓ Users already seeded, skipping...")
+		return nil
+	}
+
 	for i := 0; i < count; i++ {
-		email := faker.Email()
+		email := "test" + fmt.Sprintf("%d", i) + "@email.com"
 		firstName := faker.FirstName()
 		lastName := faker.LastName()
 
-		rawPass := "password123" // Use fixed password for dev
+		rawPass := "password123"
 		hashed, err := bcrypt.GenerateFromPassword([]byte(rawPass), bcrypt.DefaultCost)
 		if err != nil {
 			return fmt.Errorf("hash password: %w", err)
@@ -55,12 +60,12 @@ func (s *UserSeeder) Seed(count int) error {
 
 		user := entities.User{
 			Email:           email,
-			IsEmailVerified: rand.Intn(2) == 1,
+			IsEmailVerified: i%2 == 0,
 			Password:        string(hashed),
 			FirstName:       firstName,
 			LastName:        lastName,
 			Phone:           phone,
-			IsPhoneVerified: rand.Intn(2) == 1,
+			IsPhoneVerified: i%3 == 0,
 			Gender:          gender,
 			BirthDate:       birthDate,
 			PictureLink:     nil,

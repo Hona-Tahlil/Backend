@@ -5,21 +5,21 @@ package wire
 
 import (
 	"hona/backend/bootstrap"
-
 	"hona/backend/internal/application/service"
 	"hona/backend/internal/application/usecase"
 	domainjwt "hona/backend/internal/domain/jwt"
 	"hona/backend/internal/domain/ports"
 	domainredis "hona/backend/internal/domain/ports/redis"
 	domainstorage "hona/backend/internal/domain/storage"
+	"hona/backend/internal/infrastructure/communication/mail"
 	"hona/backend/internal/infrastructure/jwt"
-	"hona/backend/internal/infrastructure/mail"
 	"hona/backend/internal/infrastructure/persistence"
 	"hona/backend/internal/infrastructure/persistence/repository/redis"
 	"hona/backend/internal/infrastructure/seeder"
 	"hona/backend/internal/infrastructure/storage"
 	"hona/backend/internal/presentation/controllers/v1/admin"
 	"hona/backend/internal/presentation/controllers/v1/general"
+	petsitter "hona/backend/internal/presentation/controllers/v1/pet_sitter"
 	"hona/backend/internal/presentation/controllers/v1/user"
 	"hona/backend/internal/presentation/middleware"
 
@@ -44,21 +44,32 @@ var RepositoryProviderSet = wire.NewSet(
 	wire.Bind(new(ports.UnitOfWork), new(*persistence.UnitOfWork)),
 )
 var ServiceProviderSet = wire.NewSet(
+	wire.Struct(new(service.RequestServiceDeps), "*"),
 	service.NewUserService,
 	jwt.NewJWTService,
 	jwt.NewJWTKeyManager,
+	mail.NewEmailService,
 	service.NewRBACService,
 	service.NewPetService,
-	mail.NewEmailService,
+	service.NewRequestService,
+	service.NewAddressService,
+	service.NewPetSitterService,
+	service.NewCommentService,
 	wire.Bind(new(domainjwt.JWTService), new(*jwt.JWTService)),
 	wire.Bind(new(domainjwt.JWTKeyManager), new(*jwt.JWTKeyManager)),
 	wire.Bind(new(usecase.RBACService), new(*service.RBACService)),
 	wire.Bind(new(usecase.UserService), new(*service.UserService)),
 	wire.Bind(new(usecase.PetService), new(*service.PetService)),
+	wire.Bind(new(usecase.RequestService), new(*service.RequestService)),
+	wire.Bind(new(usecase.AddressService), new(*service.AddressService)),
+	wire.Bind(new(usecase.PetSitterService), new(*service.PetSitterService)),
+	wire.Bind(new(usecase.CommentService), new(*service.CommentService)),
 )
 
 var GeneralControllersProviderSet = wire.NewSet(
 	general.NewGeneralUserController,
+	general.NewGeneralPetController,
+	general.NewGeneralProvinceController,
 	wire.Struct(new(GeneralControllers), "*"),
 )
 
@@ -69,7 +80,15 @@ var AdminControllersProviderSet = wire.NewSet(
 
 var UserControllersProviderSet = wire.NewSet(
 	user.NewUserPetController,
+	user.NewUserRequestController,
+	user.NewUserCommentController,
 	wire.Struct(new(UserControllers), "*"),
+)
+
+var PetSitterControllersProviderSet = wire.NewSet(
+	petsitter.NewPetSitterRegisterController,
+	petsitter.NewPetSitterRequestController,
+	wire.Struct(new(PetSitterControllers), "*"),
 )
 
 var ControllersProviderSet = wire.NewSet(
@@ -96,6 +115,7 @@ var ProviderSet = wire.NewSet(
 	GeneralControllersProviderSet,
 	AdminControllersProviderSet,
 	UserControllersProviderSet,
+	PetSitterControllersProviderSet,
 	ServiceProviderSet,
 	RepositoryProviderSet,
 	SeederProviderSet,
@@ -103,7 +123,9 @@ var ProviderSet = wire.NewSet(
 )
 
 type GeneralControllers struct {
-	GeneralUserController *general.GeneralUserController
+	GeneralUserController     *general.GeneralUserController
+	GeneralPetController      *general.GeneralPetController
+	GeneralProvinceController *general.GeneralProvinceController
 }
 
 type AdminControllers struct {
@@ -111,13 +133,21 @@ type AdminControllers struct {
 }
 
 type UserControllers struct {
-	UserPetController *user.UserPetController
+	UserPetController     *user.UserPetController
+	UserRequestController *user.UserRequestController
+	UserCommentController *user.UserCommentController
+}
+
+type PetSitterControllers struct {
+	PetSitterRegisterController *petsitter.PetSitterRegisterController
+	PetSitterRequestController  *petsitter.PetSitterRequestController
 }
 
 type Controllers struct {
-	GeneralControllers *GeneralControllers
-	AdminControllers   *AdminControllers
-	UserControllers    *UserControllers
+	GeneralControllers   *GeneralControllers
+	AdminControllers     *AdminControllers
+	UserControllers      *UserControllers
+	PetSitterControllers *PetSitterControllers
 }
 
 type Middlewares struct {

@@ -25,7 +25,6 @@ func (js *JWTService) GenerateTokens(userID uint, rememberMe bool) (accessTokenS
 
 	accessToken := jwt.NewWithClaims(jwt.SigningMethodRS256, accessTokenClaims)
 	refreshToken := jwt.NewWithClaims(jwt.SigningMethodRS256, refreshTokenClaims)
-
 	var err error
 	accessTokenString, err = accessToken.SignedString(js.keyManager.GetPrivateKey())
 	if err != nil {
@@ -35,7 +34,6 @@ func (js *JWTService) GenerateTokens(userID uint, rememberMe bool) (accessTokenS
 	if err != nil {
 		panic(err)
 	}
-
 	return
 }
 

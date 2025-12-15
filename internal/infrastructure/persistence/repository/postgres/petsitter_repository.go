@@ -1,8 +1,9 @@
 package postgres
 
 import (
+	"hona/backend/internal/application/dto/general"
 	"hona/backend/internal/domain/entities"
-	"hona/backend/internal/infrastructure/dsl"
+	domainpostgres "hona/backend/internal/domain/ports/postgres"
 
 	"gorm.io/gorm"
 )
@@ -17,6 +18,28 @@ func NewPetSitterRepository(db *gorm.DB) *PetSitterRepository {
 	}
 }
 
+func (pr *PetSitterRepository) FindPetSitterByUserID(id uint) (*entities.PetSitter, error) {
+	var foundPetsitter entities.PetSitter
+
+	if result := pr.db.First(&foundPetsitter, "userID = ?", id); result.Error != nil {
+		if result.Error == gorm.ErrRecordNotFound {
+			return nil, nil
+		}
+		return nil, result.Error
+	}
+	return &foundPetsitter, nil
+}
+
+func (pr *PetSitterRepository) PreloadFields(petSitter *entities.PetSitter, fields []string) error {
+	for _, field := range fields {
+		err := pr.db.Preload(field).First(petSitter, petSitter.ID).Error
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
 func (pr *PetSitterRepository) PreloadServices(petSitter *entities.PetSitter) error {
 	return pr.db.Preload("Services").First(petSitter, petSitter.ID).Error
 }
@@ -29,52 +52,25 @@ func (pr *PetSitterRepository) UpdatePetSitter(petSitter *entities.PetSitter) er
 	return pr.db.Save(petSitter).Error
 }
 
-func (pr *PetSitterRepository) FindPetSitterByUserID(id uint) (*entities.PetSitter, error) {
-	var petsitter entities.PetSitter
-	err := pr.db.First(&petsitter, id).Error
-	if err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return nil, nil
-		}
-		return nil, err
-	}
-	// return &	, nil
-
-	// if result := pr.db.First(&petsitter, "userid = ?", id); result.Error != nil {
-	// 	if result.Error == gorm.ErrRecordNotFound {
-	// 		return nil, nil
-	// 	}
-	// 	return nil, result.Error
-	// }
-	return &petsitter, nil
-}
-
-func (pr *PetSitterRepository) SearchPetSitters(offset int, limit int, filters []dsl.Filter, sorts []dsl.Sort) ([]*entities.PetSitter, int64, error) {
+func (pr *PetSitterRepository) SearchPetSitters(options *domainpostgres.QueryOptions) ([]*entities.PetSitter, int64, error) {
 	var petSitters []*entities.PetSitter
 	var total int64
-
-	// Start with base query
 	query := pr.db.Model(&entities.PetSitter{})
-
-	// Apply filters
-	for _, filter := range filters {
-		query = applyFilterToQuery(query, filter)
+	if options.Filters != nil {
+		filterModifier := NewFilterModifier(options.Filters.Filters)
+		query = filterModifier.Apply(query)
 	}
-
-	// Count total records (before pagination)
 	if err := query.Count(&total).Error; err != nil {
 		return nil, 0, err
 	}
-
-	// Apply sorts
-	for _, sort := range sorts {
-		query = query.Order(sort.Field + " " + sort.Dir)
+	if options.Sorting != nil {
+		sortModifier := NewSortModifier(options.Sorting.Sorts)
+		query = sortModifier.Apply(query)
 	}
-
-	// Apply pagination
-	query = query.Offset(offset).Limit(limit)
-
-	// Fetch paginated results
+	if options.Pagination != nil {
+		paginationModifier := NewPaginationModifier(options.Pagination.Offset, options.Pagination.Limit)
+		query = paginationModifier.Apply(query)
+	}
 	if err := query.Find(&petSitters).Error; err != nil {
 		return nil, 0, err
 	}
@@ -82,26 +78,42 @@ func (pr *PetSitterRepository) SearchPetSitters(offset int, limit int, filters [
 	return petSitters, total, nil
 }
 
-// applyFilterToQuery applies a single filter to a gorm query
-func applyFilterToQuery(query *gorm.DB, filter dsl.Filter) *gorm.DB {
-	switch filter.Op {
-	case "=":
-		return query.Where(filter.Field+" = ?", filter.Value)
-	case "!=":
-		return query.Where(filter.Field+" != ?", filter.Value)
-	case ">":
-		return query.Where(filter.Field+" > ?", filter.Value)
-	case "<":
-		return query.Where(filter.Field+" < ?", filter.Value)
-	case ">=":
-		return query.Where(filter.Field+" >= ?", filter.Value)
-	case "<=":
-		return query.Where(filter.Field+" <= ?", filter.Value)
-	case "LIKE":
-		return query.Where(filter.Field+" LIKE ?", filter.Value)
-	case "IN":
-		return query.Where(filter.Field+" IN (?)", filter.Value)
-	default:
-		return query
+
+func (pr *PetSitterRepository) FindPetSitterByID(id uint) (*entities.PetSitter, error) {
+	var petSitter entities.PetSitter
+	result := pr.db.First(&petSitter, id)
+	if result.Error != nil {
+		if result.Error == gorm.ErrRecordNotFound {
+			return nil, nil
+		}
+		return nil, result.Error
 	}
+	return &petSitter, nil
+}
+
+func (pr *PetSitterRepository) GetAllPetSitters(limit, offset int) ([]entities.PetSitter, error) {
+	var petSitters []entities.PetSitter
+	err := pr.db.Limit(limit).Offset(offset).Find(&petSitters).Error
+	if err != nil {
+		return nil, err
+	}
+	return petSitters, nil
+}
+
+func (pr *PetSitterRepository) GetPetSittersCount() (int64, error) {
+	var count int64
+	err := pr.db.Model(&entities.PetSitter{}).Count(&count).Error
+	return count, err
+}
+
+func (pr *PetSitterRepository) FindServiceByID(id uint) (*entities.Service, error) {
+	var foundService entities.Service
+
+	if result := pr.db.First(&foundService, id); result.Error != nil {
+		if result.Error == gorm.ErrRecordNotFound {
+			return nil, nil
+		}
+		return nil, result.Error
+	}
+	return &foundService, nil
 }

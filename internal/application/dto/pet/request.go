@@ -20,6 +20,7 @@ type AddPetRequest struct {
 }
 
 type UpdatePetRequest struct {
+	UserID     uint
 	ID         uint
 	Name       string
 	Kind       enums.PetKind
@@ -33,7 +34,8 @@ type UpdatePetRequest struct {
 }
 
 type RemovePetRequest struct {
-	ID uint
+	UserID uint
+	ID     uint
 }
 
 type GetPetsBasicDataRequest struct {
@@ -42,4 +44,8 @@ type GetPetsBasicDataRequest struct {
 
 type GetPetFullDataRequest struct {
 	ID uint
+}
+
+type GetPetKindSpecies struct {
+	Num enums.PetKind
 }

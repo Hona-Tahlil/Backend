@@ -2,13 +2,18 @@ package domainpostgres
 
 import (
 	"hona/backend/internal/domain/entities"
-	"hona/backend/internal/infrastructure/dsl"
 )
 
 type PetSitterRepository interface {
 	CreatePetSitter(petSitter *entities.PetSitter) error
-	UpdatePetSitter(petSitter *entities.PetSitter) error
-	FindPetSitterByUserID(userID uint) (*entities.PetSitter, error)
 	PreloadServices(petSitter *entities.PetSitter) error
-	SearchPetSitters(offset int, limit int, filters []dsl.Filter, sorts []dsl.Sort) ([]*entities.PetSitter, int64, error)
+	FindPetSitterByUserID(id uint) (*entities.PetSitter, error)
+	GetAllPetSitters(limit, offset int) ([]entities.PetSitter, error)
+	GetPetSittersCount() (int64, error)
+	PreloadFields(petSitter *entities.PetSitter, fields []string) error
+	UpdatePetSitter(petSitter *entities.PetSitter) error
+	FindPetSitterByID(id uint) (*entities.PetSitter, error)
+	FindServiceByID(id uint) (*entities.Service, error)
+	SearchPetSitters(options *QueryOptions) ([]*entities.PetSitter, int64, error)
 }
+	

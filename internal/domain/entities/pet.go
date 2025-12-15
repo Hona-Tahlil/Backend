@@ -10,6 +10,7 @@ import (
 type Pet struct {
 	gorm.Model
 	UserID     uint          `gorm:"index"`
+	RequestID  *uint         `gorm:"index"`
 	Name       string        `gorm:"not null"`
 	Kind       enums.PetKind `gorm:"index"`
 	Species    enums.Species
@@ -19,4 +20,5 @@ type Pet struct {
 	Weight     *float32
 	PictureKey *string
 	AboutPet   *string
+	Type       string `gorm:"default:'regular'"` // regular, request
 }

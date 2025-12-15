@@ -1,6 +1,7 @@
 package general
 
 import (
+	"hona/backend/internal/application/dto/general"
 	"hona/backend/internal/application/dto/petsitter"
 	"hona/backend/internal/application/service"
 	"hona/backend/internal/presentation/controllers"
@@ -18,64 +19,6 @@ func NewGeneralPetSitterController(petSitterService *service.PetSitterService) *
 	}
 }
 
-// @Summary Search pet sitters
-// @Description Search for pet sitters by name, bio, or location
-// @Tags Pet Sitters
-// @Param q query string true "Search query"
-// @Param province query string false "Filter by province"
-// @Param page query int false "Page number" default(1)
-// @Param count query int false "Results per page" default(10)
-// @Param sort_by query string false "Sort by: rating or experience" default(id)
-// @Success 200 {object} petsitter.SearchPetSittersResponse
-// @Failure 400 {object} response.ErrorResponse
-// @Router /v1/pet-sitters/search [get]
-// type Filter struct {
-// 	Field string
-// 	Op    string // =, !=, >, <, >=, <=, LIKE, IN
-// 	Value any
-// }
-
-// type Filters struct {
-// 	Items []Filter
-// }
-
-// func (gc *GeneralPetSitterController) SearchPetSitters(c *gin.Context) {
-//     query := c.Query("q")
-//     if query == "" {
-//         response.Error(c, http.StatusBadRequest, "Search query is required")
-//         return
-//     }
-
-//     page := 1
-//     if p := c.Query("page"); p != "" {
-//         if pageNum, err := strconv.Atoi(p); err == nil && pageNum > 0 {
-//             page = pageNum
-//         }
-//     }
-
-//     count := 10
-//     if cnt := c.Query("count"); cnt != "" {
-//         if countNum, err := strconv.Atoi(cnt); err == nil && countNum > 0 && countNum <= 100 {
-//             count = countNum
-//         }
-//     }
-
-//     req := petsitter.SearchPetSittersRequest{
-//         Query:    query,
-//         Province: c.Query("province"),
-//         Page:     page,
-//         Count:    count,
-//         SortBy:   c.Query("sort_by"),
-//     }
-
-//     result, err := gc.petSitterService.SearchPetSitters(req)
-//     if err != nil {
-//         response.Error(c, http.StatusInternalServerError, "Failed to search pet sitters")
-//         return
-//     }
-
-//     response.Success(c, http.StatusOK, "Pet sitters found", result)
-// }
 
 func (gc *GeneralPetSitterController) SearchPetSitters(ctx *gin.Context) {
 	type Filter struct {
@@ -99,18 +42,18 @@ func (gc *GeneralPetSitterController) SearchPetSitters(ctx *gin.Context) {
 	offset, limit := controllers.GetOffsetLimit(params.Page, params.Count, 1, 10)
 
 	// Convert params to DTO (no DSL conversion here)
-	filters := make([]petsitter.Filter, len(params.Filters))
+	filters := make([]general.Filter, len(params.Filters))
 	for i, f := range params.Filters {
-		filters[i] = petsitter.Filter{
+		filters[i] = general.Filter{
 			Field: f.Field,
 			Op:    f.Op,
 			Value: f.Value,
 		}
 	}
 
-	sorts := make([]petsitter.Sort, len(params.Sorts))
+	sorts := make([]general.Sort, len(params.Sorts))
 	for i, s := range params.Sorts {
-		sorts[i] = petsitter.Sort{
+		sorts[i] = general.Sort{
 			Field: s.Field,
 			Dir:   s.Dir,
 		}

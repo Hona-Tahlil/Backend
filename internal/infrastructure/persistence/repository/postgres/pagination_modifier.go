@@ -7,6 +7,13 @@ type PaginationModifier struct {
 	Limit  int
 }
 
+func NewPaginationModifier(offset, limit int) PaginationModifier { 
+	return PaginationModifier{
+		Offset: offset,
+		Limit:  limit,
+	}
+}
+
 func (p PaginationModifier) Apply(db *gorm.DB) *gorm.DB {
 	return db.Offset(p.Offset).Limit(p.Limit)
 }

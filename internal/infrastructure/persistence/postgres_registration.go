@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"hona/backend/bootstrap"
 	"hona/backend/internal/domain/entities"
+	"hona/backend/internal/infrastructure/seeder"
 	"sync"
 
 	"gorm.io/driver/postgres"
@@ -32,25 +33,8 @@ func NewPostgresDatabase() *gorm.DB {
 
 		dbInstance = db
 
-		db.Migrator().DropTable(
-			&entities.User{},
-			&entities.Role{},
-			&entities.Permission{},
-			&entities.Wallet{},
-			&entities.Request{},
-			&entities.CalendarSlot{},
-			&entities.Pet{},
-			&entities.PetSitter{},
-			&entities.Service{},
-			&entities.Chat{},
-			&entities.Comment{},
-			&entities.Address{},
-			&entities.Province{},
-			&entities.City{},
-			&entities.TextMessage{},
-			&entities.Transaction{},
-			&entities.Transfer{},
-		)
+		seeder := seeder.NewDatabaseSeeder(db)
+
 		db.AutoMigrate(
 			&entities.User{},
 			&entities.User{},
@@ -65,22 +49,12 @@ func NewPostgresDatabase() *gorm.DB {
 			&entities.Chat{},
 			&entities.Comment{},
 			&entities.Address{},
-			&entities.Province{},
-			&entities.City{},
 			&entities.TextMessage{},
 			&entities.Transaction{},
 			&entities.Transfer{},
 		)
-		// user := entities.User{
-		// 	Email: "test@email",
-		// }
-		// db.Create(&user)
-		// permission := entities.Permission{
-		// 	Type:     enums.RequestPermission,
-		// 	Category: enums.ReadPermissionCategory,
-		// }
-		// db.Create(&permission)
 
+		seeder.SeedAll()
 	})
 
 	return dbInstance

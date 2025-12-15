@@ -15,14 +15,15 @@ import (
 	"hona/backend/internal/domain/ports"
 	"hona/backend/internal/domain/ports/redis"
 	"hona/backend/internal/domain/storage"
+	"hona/backend/internal/infrastructure/communication/mail"
 	"hona/backend/internal/infrastructure/jwt"
-	"hona/backend/internal/infrastructure/mail"
 	"hona/backend/internal/infrastructure/persistence"
 	"hona/backend/internal/infrastructure/persistence/repository/redis"
 	"hona/backend/internal/infrastructure/seeder"
 	"hona/backend/internal/infrastructure/storage"
 	"hona/backend/internal/presentation/controllers/v1/admin"
 	"hona/backend/internal/presentation/controllers/v1/general"
+	"hona/backend/internal/presentation/controllers/v1/pet_sitter"
 	"hona/backend/internal/presentation/controllers/v1/user"
 	"hona/backend/internal/presentation/middleware"
 )
@@ -39,24 +40,51 @@ func InitializeApplication(container *bootstrap.Config) (*Application, error) {
 	emailService := mail.NewEmailService()
 	userService := service.NewUserService(jwtService, unitOfWork, userCacheRepository, emailService)
 	generalUserController := general.NewGeneralUserController(userService)
+	s3Storage := storage.NewS3Storage()
+	petService := service.NewPetService(unitOfWork, s3Storage, userService)
+	generalPetController := general.NewGeneralPetController(petService)
+	addressService := service.NewAddressService(unitOfWork, userService)
+	generalProvinceController := general.NewGeneralProvinceController(addressService)
 	generalControllers := &GeneralControllers{
-		GeneralUserController: generalUserController,
+		GeneralUserController:     generalUserController,
+		GeneralPetController:      generalPetController,
+		GeneralProvinceController: generalProvinceController,
 	}
 	rbacService := service.NewRBACService(unitOfWork, userService)
 	adminRBACController := admin.NewAdminRBACController(rbacService)
 	adminControllers := &AdminControllers{
 		AdminRBACController: adminRBACController,
 	}
-	s3Storage := storage.NewS3Storage()
-	petService := service.NewPetService(unitOfWork, s3Storage, userService)
 	userPetController := user.NewUserPetController(petService)
+	petSitterService := service.NewPetSitterService(unitOfWork, s3Storage, userService, addressService)
+	requestServiceDeps := service.RequestServiceDeps{
+		UserService:      userService,
+		AddressService:   addressService,
+		PetService:       petService,
+		PetSitterService: petSitterService,
+		UnitOfWork:       unitOfWork,
+		EmailService:     emailService,
+	}
+	requestService := service.NewRequestService(requestServiceDeps)
+	userRequestController := user.NewUserRequestController(requestService)
+	commentService := service.NewCommentService(unitOfWork, userService, requestService)
+	userCommentController := user.NewUserCommentController(commentService)
 	userControllers := &UserControllers{
-		UserPetController: userPetController,
+		UserPetController:     userPetController,
+		UserRequestController: userRequestController,
+		UserCommentController: userCommentController,
+	}
+	petSitterRegisterController := petsitter.NewPetSitterRegisterController(petSitterService)
+	petSitterRequestController := petsitter.NewPetSitterRequestController(requestService)
+	petSitterControllers := &PetSitterControllers{
+		PetSitterRegisterController: petSitterRegisterController,
+		PetSitterRequestController:  petSitterRequestController,
 	}
 	controllers := &Controllers{
-		GeneralControllers: generalControllers,
-		AdminControllers:   adminControllers,
-		UserControllers:    userControllers,
+		GeneralControllers:   generalControllers,
+		AdminControllers:     adminControllers,
+		UserControllers:      userControllers,
+		PetSitterControllers: petSitterControllers,
 	}
 	localizationMiddleware := middleware.NewLocalizationMiddleware()
 	recoveryMiddleware := middleware.NewRecoveryMiddleware()
@@ -87,13 +115,15 @@ var StorageProviderSet = wire.NewSet(storage.NewS3Storage, wire.Bind(new(domains
 
 var RepositoryProviderSet = wire.NewSet(persistence.NewRepositoryFactory, persistence.NewUnitOfWork, persistence.NewPostgresDatabase, persistence.NewRedisDatabase, redis.NewUserCacheRepository, wire.Bind(new(persistence.Cache), new(*persistence.RedisDatabase)), wire.Bind(new(domainredis.UserCacheRepository), new(*redis.UserCacheRepository)), wire.Bind(new(ports.RepositoryFactory), new(*persistence.RepositoryFactory)), wire.Bind(new(ports.UnitOfWork), new(*persistence.UnitOfWork)))
 
-var ServiceProviderSet = wire.NewSet(service.NewUserService, jwt.NewJWTService, jwt.NewJWTKeyManager, service.NewRBACService, service.NewPetService, mail.NewEmailService, wire.Bind(new(domainjwt.JWTService), new(*jwt.JWTService)), wire.Bind(new(domainjwt.JWTKeyManager), new(*jwt.JWTKeyManager)), wire.Bind(new(usecase.RBACService), new(*service.RBACService)), wire.Bind(new(usecase.UserService), new(*service.UserService)), wire.Bind(new(usecase.PetService), new(*service.PetService)))
+var ServiceProviderSet = wire.NewSet(wire.Struct(new(service.RequestServiceDeps), "*"), service.NewUserService, jwt.NewJWTService, jwt.NewJWTKeyManager, mail.NewEmailService, service.NewRBACService, service.NewPetService, service.NewRequestService, service.NewAddressService, service.NewPetSitterService, service.NewCommentService, wire.Bind(new(domainjwt.JWTService), new(*jwt.JWTService)), wire.Bind(new(domainjwt.JWTKeyManager), new(*jwt.JWTKeyManager)), wire.Bind(new(usecase.RBACService), new(*service.RBACService)), wire.Bind(new(usecase.UserService), new(*service.UserService)), wire.Bind(new(usecase.PetService), new(*service.PetService)), wire.Bind(new(usecase.RequestService), new(*service.RequestService)), wire.Bind(new(usecase.AddressService), new(*service.AddressService)), wire.Bind(new(usecase.PetSitterService), new(*service.PetSitterService)), wire.Bind(new(usecase.CommentService), new(*service.CommentService)))
 
-var GeneralControllersProviderSet = wire.NewSet(general.NewGeneralUserController, wire.Struct(new(GeneralControllers), "*"))
+var GeneralControllersProviderSet = wire.NewSet(general.NewGeneralUserController, general.NewGeneralPetController, general.NewGeneralProvinceController, wire.Struct(new(GeneralControllers), "*"))
 
 var AdminControllersProviderSet = wire.NewSet(admin.NewAdminRBACController, wire.Struct(new(AdminControllers), "*"))
 
-var UserControllersProviderSet = wire.NewSet(user.NewUserPetController, wire.Struct(new(UserControllers), "*"))
+var UserControllersProviderSet = wire.NewSet(user.NewUserPetController, user.NewUserRequestController, user.NewUserCommentController, wire.Struct(new(UserControllers), "*"))
+
+var PetSitterControllersProviderSet = wire.NewSet(petsitter.NewPetSitterRegisterController, petsitter.NewPetSitterRequestController, wire.Struct(new(PetSitterControllers), "*"))
 
 var ControllersProviderSet = wire.NewSet(wire.Struct(new(Controllers), "*"))
 
@@ -107,6 +137,7 @@ var ProviderSet = wire.NewSet(
 	GeneralControllersProviderSet,
 	AdminControllersProviderSet,
 	UserControllersProviderSet,
+	PetSitterControllersProviderSet,
 	ServiceProviderSet,
 	RepositoryProviderSet,
 	SeederProviderSet,
@@ -114,7 +145,9 @@ var ProviderSet = wire.NewSet(
 )
 
 type GeneralControllers struct {
-	GeneralUserController *general.GeneralUserController
+	GeneralUserController     *general.GeneralUserController
+	GeneralPetController      *general.GeneralPetController
+	GeneralProvinceController *general.GeneralProvinceController
 }
 
 type AdminControllers struct {
@@ -122,13 +155,21 @@ type AdminControllers struct {
 }
 
 type UserControllers struct {
-	UserPetController *user.UserPetController
+	UserPetController     *user.UserPetController
+	UserRequestController *user.UserRequestController
+	UserCommentController *user.UserCommentController
+}
+
+type PetSitterControllers struct {
+	PetSitterRegisterController *petsitter.PetSitterRegisterController
+	PetSitterRequestController  *petsitter.PetSitterRequestController
 }
 
 type Controllers struct {
-	GeneralControllers *GeneralControllers
-	AdminControllers   *AdminControllers
-	UserControllers    *UserControllers
+	GeneralControllers   *GeneralControllers
+	AdminControllers     *AdminControllers
+	UserControllers      *UserControllers
+	PetSitterControllers *PetSitterControllers
 }
 
 type Middlewares struct {

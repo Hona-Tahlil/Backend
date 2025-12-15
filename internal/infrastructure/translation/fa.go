@@ -16,6 +16,12 @@ var Persian = map[string]interface{}{
 	"magicLink":  "لینک تایید ایمیل",
 	"pet":        "پت",
 	"species":    "نژاد",
+	"comment":    "نظر",
+	"petSitter":     "پتیار",
+	"request":       "درخواست",
+	"calendarSlots": "بازه های زمانی",
+	"calendarSlot":  "بازه  زمانی",
+	"service":       "خدمت",
 	"errors": map[string]interface{}{
 		"generic":                "خطایی رخ داده است، لطفا دوباره تلاش کنید.",
 		"binding":                "فرمت ورودی نادرست است",
@@ -49,6 +55,9 @@ var Persian = map[string]interface{}{
 		"email":                  "فرمت ایمیل نادرست است.",
 		"duplicateName":          "نام تکراری مجاز نیست",
 		"unacceptableInput":      "ورودی قابل قبول نیست",
+		"calendarConflict":       "بازه زمانی انتخاب شده با برنامه کاری پتیار تداخل دارد",
+		"min":                    "حداقل مقدار مجاز برای {0} رعایت نشده",
+		"oldInfo":                "اطلاعات به روز شده است لطفا صفحه را رفرش کنید",
 	},
 	"successMessage": map[string]interface{}{
 		"userRegister":      "ثبت نام موفق بود! لطفاً پیامک های خود را بررسی کنید تا حساب خود را تأیید کرده و فرآیند ثبت نام را تکمیل نمایید.",
