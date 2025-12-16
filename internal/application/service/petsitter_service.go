@@ -191,7 +191,7 @@ func (ps *PetSitterService) CreateSignupSession(PetsitterInfo petsitter.GetPetSi
 	petSitterRepo := ps.unitOfWork.Factory().PetSitterRepository()
 	foundUser, err := ps.userService.FindVerifiedUserByID(PetsitterInfo.UserID)
 	if err != nil {
-		return nil, err
+		return nil, exceptions.NewNotFoundError(bootstrap.Run().Constants.ErrorFields.User)
 	}
 	err = userRepo.PreloadPetSitter(foundUser)
 	if err != nil {
@@ -224,9 +224,6 @@ func (ps *PetSitterService) GetPersonalInfo(userID uint) (*petsitter.PersonalInf
 		return nil, exceptions.NewNotFoundError(bootstrap.Run().Constants.ErrorFields.User)
 	}
 	userRepo := ps.unitOfWork.Factory().UserRepository()
-	if err != nil {
-		return nil, err
-	}
 	err = userRepo.PreloadPetSitter(foundUser)
 	if err != nil {
 		return nil, err
@@ -495,7 +492,7 @@ func (ps *PetSitterService) GetAllPetSitters(page, count int) (*petsitter.PetSit
 func (ps *PetSitterService) SubmitPersonalInfo(petSitterInfo petsitter.SubmitPersonalInfoRequest) error {
 	foundUser, err := ps.userService.FindVerifiedUserByID(petSitterInfo.UserID)
 	if err != nil {
-		return err
+		return exceptions.NewNotFoundError(bootstrap.Run().Constants.ErrorFields.User)
 	}
 	err = ps.unitOfWork.WithTransaction(func(rf ports.RepositoryFactory) error {
 		userRepo := rf.UserRepository()
@@ -509,11 +506,11 @@ func (ps *PetSitterService) SubmitPersonalInfo(petSitterInfo petsitter.SubmitPer
 		}
 		err = ps.CheckPetSitterStatus(foundUser.PetSitter.Status)
 		if err != nil {
-			return exceptions.NewNotFoundError(bootstrap.Run().Constants.ErrorFields.PetSitter)
+			return err
 		}
 		err = ps.CheckPetSitterStep(foundUser.PetSitter.OnboardingStep, enums.OBS_Profile)
 		if err != nil {
-			return exceptions.NewNotFoundError(bootstrap.Run().Constants.ErrorFields.PetSitter)
+			return err
 		}
 		err = userRepo.PreloadAddress(foundUser)
 		if err != nil {
