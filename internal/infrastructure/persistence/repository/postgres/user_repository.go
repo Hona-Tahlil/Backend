@@ -16,6 +16,28 @@ func NewUserRepository(db *gorm.DB) *UserRepository {
 	}
 }
 
+// type UserRepository struct {
+// 	*BaseRepository
+// }
+
+// func NewUserRepository(db *gorm.DB) *UserRepository {
+// 	return &UserRepository{
+// 		BaseRepository: NewBaseRepository(db),
+// 	}
+// }
+
+// func (up *UserRepository) GetUsers(queryoptins dsl.ParsedQuery) ([]entities.User, error) {
+// 	var users []entities.User
+
+// 	dbQuery := applyQueryOptions(up.db., queryoptins)
+
+// 	if err := dbQuery.FindAll(&users); err != nil {
+// 		return nil, err
+// 	}
+// 	return users, nil
+
+// }
+
 func (up *UserRepository) FindUserByEmail(email string) (*entities.User, error) {
 	var foundUser entities.User
 
@@ -47,7 +69,6 @@ func (up *UserRepository) CreateUser(user *entities.User) error {
 func (up *UserRepository) DeleteUserByEmail(email string) error {
 	return up.db.Where("email = ?", email).Delete(&entities.User{}).Error
 }
-
 
 func (up *UserRepository) SaveUser(user *entities.User) error {
 	return up.db.Save(user).Error

@@ -1,5 +1,6 @@
 package rbac
 
+
 type RefreshTokenRequest struct {
 	RefreshToken string
 }
@@ -82,6 +83,7 @@ type GetPermissionRolesRequest struct {
 type ListRolesWithUsersRequest struct {
 	Page  int
 	Count int
+	// Query *dsl.ParsedQuery
 }
 
 

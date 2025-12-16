@@ -34,4 +34,5 @@ type PetSitterService interface {
 	GetFreeMap(calendarSlots []entities.CalendarSlot) map[string]map[interface{}]bool
 	FindServiceByID(id uint) (*entities.Service, error)
 	GetServiceResponse(serviceEntity *entities.Service) servicedto.ServiceInfoResponse
+	SearchPetSitters(info petsitter.SearchPetSittersRequest) ([]*entities.PetSitter, int64, error)
 }

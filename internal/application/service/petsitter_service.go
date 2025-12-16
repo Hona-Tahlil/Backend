@@ -13,8 +13,12 @@ import (
 	"hona/backend/internal/domain/enums"
 	"hona/backend/internal/domain/exceptions"
 	"hona/backend/internal/domain/ports"
+	domainpostgres "hona/backend/internal/domain/ports/postgres"
 	domainstorage "hona/backend/internal/domain/storage"
+	"hona/backend/internal/infrastructure/dsl"
+	"hona/backend/internal/infrastructure/persistence/repository/postgres"
 
+	"github.com/go-faker/faker/v4/pkg/options"
 	"github.com/samber/lo"
 )
 
@@ -163,8 +167,9 @@ func (ps *PetSitterService) AutoUpdateSlots(petSitter *entities.PetSitter, calen
 	petSitter.Schedule = append(petSitter.Schedule, newSlots...)
 	ps.removeEmptySitterSlots(petSitter)
 	petSitterRepo := ps.unitOfWork.Factory().PetSitterRepository()
-	return petSitterRepo.EditPetSitter(petSitter)
+	return petSitterRepo.UpdatePetSitter(petSitter)
 }
+
 
 func (ps *PetSitterService) removeEmptySitterSlots(petSitter *entities.PetSitter) {
 	for i, slot := range petSitter.Schedule {
@@ -302,7 +307,7 @@ func (ps *PetSitterService) UploadDocuments(info petsitter.UploadDocumentsReques
 	foundPetSitter.OnboardingStep = enums.OBS_Documents
 	foundPetSitter.Status = enums.PSS_Draft
 	petSitterRepo := ps.unitOfWork.Factory().PetSitterRepository()
-	err = petSitterRepo.EditPetSitter(foundPetSitter)
+	err = petSitterRepo.UpdatePetSitter(foundPetSitter)
 	if err != nil {
 		return err
 	}
@@ -368,7 +373,7 @@ func (ps *PetSitterService) SubmitSkills(SkillsInfo petsitter.SubmitSkillsReques
 	foundPetSitter.OnboardingStep = enums.OBS_Done
 	foundPetSitter.Status = enums.PSS_InReview
 
-	err = petSitterRepo.EditPetSitter(foundPetSitter)
+	err = petSitterRepo.UpdatePetSitter(foundPetSitter)
 	if err != nil {
 		return err
 	}
@@ -625,4 +630,22 @@ func (ps *PetSitterService) GetServiceResponse(serviceEntity *entities.Service) 
 		Description: serviceEntity.Description,
 		Price:       serviceEntity.Price,
 	}
+}
+
+func (ps *PetSitterService) SearchPetSitters(info petsitter.SearchPetSittersRequest) ([]*entities.PetSitter, int64, error) {
+	var petSitters []*entities.PetSitter
+	var total int64
+	options := domainpostgres.NewQueryOptions().
+		WithPagination(info.Limit, info.Offset).
+		WithSorting(info.Sorts).
+		WithFilters(info.Filters)
+
+	petSitterRepo := ps.unitOfWork.Factory().PetSitterRepository()
+	petSitters, total, err := petSitterRepo.SearchPetSitters(options)
+
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return petSitters, total, nil
 }
