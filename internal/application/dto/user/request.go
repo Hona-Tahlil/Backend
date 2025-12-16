@@ -27,5 +27,7 @@ type ResetPasswordRequest struct {
 }
 
 type SendVerificationEmailRequest struct {
+	FirstName string	
+	LastName  string
 	Email string
 }
