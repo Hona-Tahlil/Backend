@@ -255,11 +255,13 @@ func (us *UserService) Register(registerInfo user.RegisterRequest) error {
 	if err != nil {
 		return err
 	}
-	err = us.unitOfWork.WithTransaction(func(rf ports.RepositoryFactory) error {
-		err = rf.UserRepository().DeleteUserByEmail(registerInfo.Email)
+
+	registrationErr := us.unitOfWork.WithTransaction(func(rf ports.RepositoryFactory) error {
+		err := rf.UserRepository().DeleteUserByEmail(registerInfo.Email)
 		if err != nil {
 			return err
 		}
+
 		newUser := &entities.User{
 			FirstName:       registerInfo.FirstName,
 			LastName:        registerInfo.LastName,
@@ -280,7 +282,7 @@ func (us *UserService) Register(registerInfo user.RegisterRequest) error {
 		return nil
 	})
 
-	return err
+	return registrationErr
 }
 func (us *UserService) CreateFPLink(token string, email string) string {
 	baseURL := bootstrap.Run().Env.URLs.BaseURL
