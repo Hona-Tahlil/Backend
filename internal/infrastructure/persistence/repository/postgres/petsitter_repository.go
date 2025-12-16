@@ -1,7 +1,9 @@
 package postgres
 
 import (
+	"hona/backend/internal/application/dto/general"
 	"hona/backend/internal/domain/entities"
+	domainpostgres "hona/backend/internal/domain/ports/postgres"
 
 	"gorm.io/gorm"
 )
@@ -46,9 +48,36 @@ func (pr *PetSitterRepository) CreatePetSitter(petSitter *entities.PetSitter) er
 	return pr.db.Create(petSitter).Error
 }
 
-func (pr *PetSitterRepository) EditPetSitter(petSitter *entities.PetSitter) error {
+func (pr *PetSitterRepository) UpdatePetSitter(petSitter *entities.PetSitter) error {
 	return pr.db.Save(petSitter).Error
 }
+
+func (pr *PetSitterRepository) SearchPetSitters(options *domainpostgres.QueryOptions) ([]*entities.PetSitter, int64, error) {
+	var petSitters []*entities.PetSitter
+	var total int64
+	query := pr.db.Model(&entities.PetSitter{})
+	if options.Filters != nil {
+		filterModifier := NewFilterModifier(options.Filters.Filters)
+		query = filterModifier.Apply(query)
+	}
+	if err := query.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+	if options.Sorting != nil {
+		sortModifier := NewSortModifier(options.Sorting.Sorts)
+		query = sortModifier.Apply(query)
+	}
+	if options.Pagination != nil {
+		paginationModifier := NewPaginationModifier(options.Pagination.Offset, options.Pagination.Limit)
+		query = paginationModifier.Apply(query)
+	}
+	if err := query.Find(&petSitters).Error; err != nil {
+		return nil, 0, err
+	}
+
+	return petSitters, total, nil
+}
+
 
 func (pr *PetSitterRepository) FindPetSitterByID(id uint) (*entities.PetSitter, error) {
 	var petSitter entities.PetSitter

@@ -1,6 +1,7 @@
 package petsitter
 
 import (
+	"hona/backend/internal/application/dto/general"
 	"hona/backend/internal/domain/enums"
 	"mime/multipart"
 	"time"
@@ -46,4 +47,13 @@ type SubmitSkillsRequest struct {
 	Bio      string
 	PetKinds []enums.PetKind
 	Services []enums.ServiceType
+}
+
+
+
+type SearchPetSittersRequest struct {
+	Offset  int
+	Limit   int
+	Filters []general.Filter
+	Sorts   []general.Sort
 }

@@ -25,6 +25,7 @@ func (ac *AdminRBACController) ListRolesWithUsers(ctx *gin.Context) {
 	type ListRolesWithUsersParams struct {
 		Page  int `form:"page" validate:"min=0"`
 		Count int `form:"count" validate:"min=0,max=100"`
+
 	}
 	params := controllers.Receive[ListRolesWithUsersParams](ctx)
 	ListRolesWithUsersInfo := rbac.ListRolesWithUsersRequest{
