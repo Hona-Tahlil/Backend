@@ -15,8 +15,6 @@ import (
 	"hona/backend/internal/domain/ports"
 	domainpostgres "hona/backend/internal/domain/ports/postgres"
 	domainstorage "hona/backend/internal/domain/storage"
-	"log"
-
 	"github.com/samber/lo"
 )
 
