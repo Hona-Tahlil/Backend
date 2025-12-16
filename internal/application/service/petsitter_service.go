@@ -15,10 +15,6 @@ import (
 	"hona/backend/internal/domain/ports"
 	domainpostgres "hona/backend/internal/domain/ports/postgres"
 	domainstorage "hona/backend/internal/domain/storage"
-	"hona/backend/internal/infrastructure/dsl"
-	"hona/backend/internal/infrastructure/persistence/repository/postgres"
-
-	"github.com/go-faker/faker/v4/pkg/options"
 	"github.com/samber/lo"
 )
 
