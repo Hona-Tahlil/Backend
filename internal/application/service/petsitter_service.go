@@ -15,6 +15,8 @@ import (
 	"hona/backend/internal/domain/ports"
 	domainpostgres "hona/backend/internal/domain/ports/postgres"
 	domainstorage "hona/backend/internal/domain/storage"
+	"log"
+
 	"github.com/samber/lo"
 )
 
@@ -165,7 +167,6 @@ func (ps *PetSitterService) AutoUpdateSlots(petSitter *entities.PetSitter, calen
 	petSitterRepo := ps.unitOfWork.Factory().PetSitterRepository()
 	return petSitterRepo.UpdatePetSitter(petSitter)
 }
-
 
 func (ps *PetSitterService) removeEmptySitterSlots(petSitter *entities.PetSitter) {
 	for i, slot := range petSitter.Schedule {
@@ -495,7 +496,7 @@ func (ps *PetSitterService) SubmitPersonalInfo(petSitterInfo petsitter.SubmitPer
 	if err != nil {
 		return exceptions.NewNotFoundError(bootstrap.Run().Constants.ErrorFields.User)
 	}
-	err = ps.unitOfWork.WithTransaction(func(rf ports.RepositoryFactory) error {
+	errr := ps.unitOfWork.WithTransaction(func(rf ports.RepositoryFactory) error {
 		userRepo := rf.UserRepository()
 		addressRepo := rf.AddressRepository()
 		err = userRepo.PreloadPetSitter(foundUser)
@@ -558,15 +559,22 @@ func (ps *PetSitterService) SubmitPersonalInfo(petSitterInfo petsitter.SubmitPer
 		foundUser.Gender = petSitterInfo.Gender
 		foundUser.BirthDate = petSitterInfo.BirthDate
 		foundUser.Phone = &petSitterInfo.Phone
+		err = userRepo.SaveUser(foundUser)
+		if err != nil {
+			return err
+		}
+
+		// Save PetSitter changes explicitly
 		foundUser.PetSitter.Status = enums.PSS_Draft
 		foundUser.PetSitter.OnboardingStep = enums.OBS_Profile
-		err = userRepo.SaveUser(foundUser)
+		petSitterRepo := rf.PetSitterRepository()
+		err = petSitterRepo.UpdatePetSitter(foundUser.PetSitter)
 		if err != nil {
 			return err
 		}
 		return nil
 	})
-	return err
+	return errr
 }
 
 func (ps *PetSitterService) GetCalendarSlotsResponse(calendarSlots []entities.CalendarSlot) []calendarslot.CalendarSlotInfoResponse {

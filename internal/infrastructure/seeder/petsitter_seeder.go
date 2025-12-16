@@ -45,8 +45,8 @@ func (s *PetSitterSeeder) Seed(count int) error {
 			bio = &bioText
 		}
 
-		statuses := enums.GetAllPetSitterStatus()
-		status := statuses[rand.Intn(len(statuses))]
+		// statuses := enums.GetAllPetSitterStatus()
+		status := enums.PSS_Draft
 
 		petSitter := entities.PetSitter{
 			UserID: userID,
