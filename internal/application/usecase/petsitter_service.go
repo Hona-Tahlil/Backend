@@ -26,7 +26,7 @@ type PetSitterService interface {
 	GetPetsitterStatus(userID uint) (*petsitter.PetSitterStatusResponse, error)
 	FindPetSitterByID(id uint) (*entities.PetSitter, error)
 	GetAllPetSitters(page, count int) (*petsitter.PetSittersListResponse, error)
-	GetPetsitterServicesResponse(Services []enums.ServiceType) []entities.Service
+	GetPetsitterServicesResponse(Services []enums.ServiceType, petSitterID uint) []entities.Service
 	CheckPetSitterStatus(pss enums.PetSitterStatus) error
 	CheckPetSitterStep(currentStep enums.OnboardingStep, requiredStep enums.OnboardingStep) error
 	SubmitPersonalInfo(petSitterInfo petsitter.SubmitPersonalInfoRequest) error
