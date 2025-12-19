@@ -35,4 +35,14 @@ func SetUpUserRoutes(v1 *gin.RouterGroup, app *wire.Application) {
 		comments.DELETE("/:id", app.Controllers.UserControllers.UserCommentController.DeleteComment)
 		comments.GET("/petsitters/:petSitterID", app.Controllers.UserControllers.UserCommentController.GetAllPetSitterComments)
 	}
+	chat := v1.Group("/chat")
+	chat.Use(app.Middlewares.WebsocketMiddleware.UpgradeToWebSocket)
+	{
+		//request
+		chat.POST("/room/:petSitterID", app.Controllers.UserControllers.UserChatController.CreateOrGetRoom)
+		chat.GET("/rooms", app.Controllers.UserControllers.UserChatController.GetAllRooms)
+		chat.PUT("/room/:roomID/block", app.Controllers.UserControllers.UserChatController.BlockRoom)
+		chat.PUT("/room/:roomID/unblock", app.Controllers.UserControllers.UserChatController.UnblockRoom)
+		chat.GET("/room/:roomID/request-info", app.Controllers.UserControllers.UserChatController.GetRoomRequestInfo)
+	}
 }

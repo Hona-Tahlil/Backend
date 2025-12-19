@@ -36,5 +36,18 @@ func SetUpPetSitterRoutes(v1 *gin.RouterGroup, app *wire.Application) {
 			requests.PUT("/cancel", app.Controllers.PetSitterControllers.PetSitterRequestController.CancelRequest)
 			requests.PUT("/respond", app.Controllers.PetSitterControllers.PetSitterRequestController.RespondToRequest)
 		}
+		chat := petsitter.Group("/chat")
+		chat.Use(app.Middlewares.WebsocketMiddleware.UpgradeToWebSocket)
+		{
+			//get by status
+			chat.POST("/room/:userID", app.Controllers.UserControllers.UserChatController.CreateOrGetRoom)
+			chat.GET("/rooms", app.Controllers.PetSitterControllers.PetSitterChatController.GetAllRooms)
+			chat.PUT("/room/:userID", app.Controllers.PetSitterControllers.PetSitterChatController.AcceptRoom)
+			chat.PUT("/room/:roomID/reject", app.Controllers.PetSitterControllers.PetSitterChatController.RejectRoom)
+			chat.PUT("/room/:roomID/block", app.Controllers.PetSitterControllers.PetSitterChatController.BlockRoom)
+			chat.PUT("/room/:roomID/unblock", app.Controllers.PetSitterControllers.PetSitterChatController.UnblockRoom)
+			chat.GET("/room/:roomID/request-info", app.Controllers.PetSitterControllers.PetSitterChatController.GetRoomRequestInfo)
+		}
 	}
+
 }

@@ -109,11 +109,12 @@ type JWTKeysPath struct {
 }
 
 type Context struct {
-	Translator     string
-	ID             string
-	RefreshToken   string
-	AcceptLanguage string
-	Authorization  string
+	Translator          string
+	ID                  string
+	RefreshToken        string
+	AcceptLanguage      string
+	Authorization       string
+	WebsocketConnection string
 }
 type RedisKey struct {
 }
@@ -132,11 +133,12 @@ type TemplatesPath struct {
 func NewConstants() *Constants {
 	return &Constants{
 		Context: Context{
-			Translator:     "translator",
-			ID:             "id",
-			RefreshToken:   "refreshToken",
-			AcceptLanguage: "Accept-Language",
-			Authorization:  "Authorization",
+			Translator:          "translator",
+			ID:                  "id",
+			RefreshToken:        "refreshToken",
+			AcceptLanguage:      "Accept-Language",
+			Authorization:       "Authorization",
+			WebsocketConnection: "wsConnection",
 		},
 		JWTKeysPath: JWTKeysPath{
 			PublicKey:  "./internal/infrastructure/jwt/public_key.pem",

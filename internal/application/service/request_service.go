@@ -104,7 +104,7 @@ func (rs *RequestService) CreateRequest(info request.CreateRequestRequest) error
 		UserID:        info.UserID,
 		PetSitterID:   petSitter.ID,
 		Status:        enums.Pending,
-		Chat:          entities.Chat{},
+		Chat:          entities.ChatRoom{},
 		TransferID:    nil,
 		CalendarSlots: calendarSlots,
 		Pets:          pets,

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"hona/backend/bootstrap"
+	"hona/backend/internal/infrastructure/websocket"
 	"hona/backend/internal/presentation/routes"
 	"hona/backend/wire"
 	"log"
@@ -24,6 +25,9 @@ func main() {
 	ginEngine := gin.Default()
 	ginEngine.RedirectTrailingSlash = true
 
+	hub := websocket.NewHub()
+	go hub.Run()
+	
 	app, err := wire.InitializeApplication(bootstrap.Run())
 	if err != nil {
 		panic(err)

@@ -55,6 +55,7 @@ var ServiceProviderSet = wire.NewSet(
 	service.NewAddressService,
 	service.NewPetSitterService,
 	service.NewCommentService,
+	service.NewChatService,
 	wire.Bind(new(domainjwt.JWTService), new(*jwt.JWTService)),
 	wire.Bind(new(domainjwt.JWTKeyManager), new(*jwt.JWTKeyManager)),
 	wire.Bind(new(usecase.RBACService), new(*service.RBACService)),
@@ -64,6 +65,7 @@ var ServiceProviderSet = wire.NewSet(
 	wire.Bind(new(usecase.AddressService), new(*service.AddressService)),
 	wire.Bind(new(usecase.PetSitterService), new(*service.PetSitterService)),
 	wire.Bind(new(usecase.CommentService), new(*service.CommentService)),
+	wire.Bind(new(usecase.ChatService), new(*service.ChatService)),
 )
 
 var GeneralControllersProviderSet = wire.NewSet(
@@ -82,12 +84,14 @@ var UserControllersProviderSet = wire.NewSet(
 	user.NewUserPetController,
 	user.NewUserRequestController,
 	user.NewUserCommentController,
+	user.NewUserChatController,
 	wire.Struct(new(UserControllers), "*"),
 )
 
 var PetSitterControllersProviderSet = wire.NewSet(
 	petsitter.NewPetSitterRegisterController,
 	petsitter.NewPetSitterRequestController,
+	petsitter.NewPetSitterChatController,
 	wire.Struct(new(PetSitterControllers), "*"),
 )
 
@@ -101,6 +105,7 @@ var MiddlewaresProviderSet = wire.NewSet(
 	middleware.NewRBACMiddleware,
 	middleware.NewAuthMiddleware,
 	middleware.NewCORSMiddleware,
+	middleware.NewWebsocketMiddleware,
 	wire.Struct(new(Middlewares), "*"),
 )
 
@@ -136,11 +141,13 @@ type UserControllers struct {
 	UserPetController     *user.UserPetController
 	UserRequestController *user.UserRequestController
 	UserCommentController *user.UserCommentController
+	UserChatController    *user.UserChatController
 }
 
 type PetSitterControllers struct {
 	PetSitterRegisterController *petsitter.PetSitterRegisterController
 	PetSitterRequestController  *petsitter.PetSitterRequestController
+	PetSitterChatController     *petsitter.PetSitterChatController
 }
 
 type Controllers struct {
@@ -156,6 +163,7 @@ type Middlewares struct {
 	AuthMiddleware         *middleware.AuthMiddleware
 	RBACMiddleware         *middleware.RBACMiddleware
 	CORSMiddleware         *middleware.CORSMiddleware
+	WebsocketMiddleware    *middleware.WebsocketMiddleware
 }
 
 type Seeder struct {

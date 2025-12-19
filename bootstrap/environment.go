@@ -3,6 +3,7 @@ package bootstrap
 import (
 	"os"
 	"strconv"
+	"time"
 
 	"github.com/joho/godotenv"
 )
@@ -15,6 +16,7 @@ type Env struct {
 	EmailConfig       EmailConfig
 	URLs              URLs
 	EmailVerification EmailVerification
+	WebsocketSetting  WebsocketSetting
 }
 
 type Storage struct {
@@ -63,6 +65,13 @@ type EmailConfig struct {
 	Password string
 	From     string
 }
+type WebsocketSetting struct {
+	WriteTimeout      time.Duration
+	ReadTimeout       time.Duration
+	PingPeriod        time.Duration
+	MaxMessageSize    int
+	MessageBufferSize int
+}
 
 func NewEnv() *Env {
 	godotenv.Load(".env")
@@ -107,12 +116,28 @@ func NewEnv() *Env {
 		EmailVerification: EmailVerification{
 			ExpireMinutes: expireMinutes,
 		},
+		WebsocketSetting: WebsocketSetting{
+			WriteTimeout:      getEnvDuration("WRITE_TIMEOUT", 10*time.Second),
+			ReadTimeout:       getEnvDuration("READ_TIMEOUT", 60*time.Second),
+			PingPeriod:        getEnvDuration("PING_PERIOD", 54*time.Second),
+			MaxMessageSize:    getEnvInt("MAX_MESSAGE_SIZE", 524288),
+			MessageBufferSize: getEnvInt("MESSAGE_BUFFER_SIZE", 256),
+		},
 	}
 }
 
 func getEnvInt(key string, defaultVal int) int {
 	if val := os.Getenv(key); val != "" {
 		if parsed, err := strconv.Atoi(val); err == nil {
+			return parsed
+		}
+	}
+	return defaultVal
+}
+
+func getEnvDuration(key string, defaultVal time.Duration) time.Duration {
+	if val := os.Getenv(key); val != "" {
+		if parsed, err := time.ParseDuration(val); err == nil {
 			return parsed
 		}
 	}

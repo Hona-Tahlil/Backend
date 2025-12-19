@@ -127,7 +127,7 @@ var PetSitterControllersProviderSet = wire.NewSet(petsitter.NewPetSitterRegister
 
 var ControllersProviderSet = wire.NewSet(wire.Struct(new(Controllers), "*"))
 
-var MiddlewaresProviderSet = wire.NewSet(middleware.NewLocalizationMiddleware, middleware.NewRecoveryMiddleware, middleware.NewRBACMiddleware, middleware.NewAuthMiddleware, middleware.NewCORSMiddleware, wire.Struct(new(Middlewares), "*"))
+var MiddlewaresProviderSet = wire.NewSet(middleware.NewLocalizationMiddleware, middleware.NewRecoveryMiddleware, middleware.NewRBACMiddleware, middleware.NewAuthMiddleware, middleware.NewCORSMiddleware, middleware.NewWebsocketMiddleware, wire.Struct(new(Middlewares), "*"))
 
 var SeederProviderSet = wire.NewSet(seeder.NewDatabaseSeeder, wire.Struct(new(Seeder), "*"))
 
@@ -158,11 +158,13 @@ type UserControllers struct {
 	UserPetController     *user.UserPetController
 	UserRequestController *user.UserRequestController
 	UserCommentController *user.UserCommentController
+	UserChatController    *user.UserChatController
 }
 
 type PetSitterControllers struct {
 	PetSitterRegisterController *petsitter.PetSitterRegisterController
 	PetSitterRequestController  *petsitter.PetSitterRequestController
+	PetSitterChatController     *petsitter.PetSitterChatController
 }
 
 type Controllers struct {
@@ -178,6 +180,7 @@ type Middlewares struct {
 	AuthMiddleware         *middleware.AuthMiddleware
 	RBACMiddleware         *middleware.RBACMiddleware
 	CORSMiddleware         *middleware.CORSMiddleware
+	WebsocketMiddleware    *middleware.WebsocketMiddleware
 }
 
 type Seeder struct {
