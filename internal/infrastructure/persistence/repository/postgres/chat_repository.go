@@ -74,7 +74,7 @@ func (cr *ChatRepository) GetRequestIDByRoomID(roomID uint) (uint, error) {
 	return room.RequestID, nil
 }
 
-func (cr *ChatRepository) SaveMessage(message *entities.ChatMessage) error {
+func (cr *ChatRepository) CreateMessage(message *entities.ChatMessage) error {
 	return cr.db.Create(message).Error
 }
 
@@ -163,4 +163,11 @@ func (cr *ChatRepository) FindMessageByID(messageID uint) (*entities.ChatMessage
 		return nil, err
 	}
 	return &message, nil
+}
+
+func (cr *ChatRepository) UpdateMessage(message *entities.ChatMessage) error {
+	return cr.db.Save(message).Error
+}
+func (cr *ChatRepository) DeleteMessageByID(messageID uint) error {
+	return cr.db.Delete(&entities.ChatMessage{}, messageID).Error
 }

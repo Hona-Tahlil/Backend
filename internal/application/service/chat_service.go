@@ -44,14 +44,25 @@ func (cs *ChatService) CreateOrGetRoom(info chat.CreateOrGetUserRoomRequest) (ch
 	return chat.ChatRoomDetailsResponse{RoomID: room.ID}, nil
 }
 
-func (cs *ChatService) SaveMessage(info chat.SaveMessageRequest) error {
+func (cs *ChatService) SaveMessage(info chat.SaveMessageRequest) (chat.SaveMessageResponse, error) {
 	chatRepo := cs.unitOfWork.Factory().ChatRepository()
 	message := &entities.ChatMessage{
-		RoomID:   info.RoomID,
-		SenderID: info.SenderID,
-		Content:  info.Content,
+		RoomID:        info.RoomID,
+		SenderID:      info.SenderID,
+		Content:       info.Content,
+		ReplyToMessageID: info.ReplyToMessageID,
 	}
-	return chatRepo.SaveMessage(message)
+	err := chatRepo.CreateMessage(message)
+	if err != nil {
+		return chat.SaveMessageResponse{}, err	
+	}
+	return chat.SaveMessageResponse{
+		ID:        message.ID,
+		RoomID:    message.RoomID,
+		SenderID:  message.SenderID,
+		Content:   message.Content,
+		CreatedAt: message.CreatedAt,
+	}, nil
 }
 
 func (cs *ChatService) GetAllRooms(request chat.GetAllRoomsRequest) ([]chat.PetSitterRoomsResponse, int64, error) {

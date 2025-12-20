@@ -14,6 +14,7 @@ type SaveMessageRequest struct {
 	RoomID  uint
 	SenderID  uint
 	Content string
+	ReplyToMessageID *uint
 }
 
 type BlockRoomRequest struct {

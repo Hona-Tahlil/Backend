@@ -18,7 +18,6 @@ type Message struct {
 	Timestamp time.Time       `json:"timestamp"`
 	Content   json.RawMessage `json:"content,omitempty"`
 
-	// داخلی (به کلاینت‌ها ارسال نمی‌شود)
 	Client *Client `json:"-"`
 }
 

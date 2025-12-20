@@ -3,8 +3,9 @@ package websocket
 import (
 	"bytes"
 	"encoding/json"
-	"hona/backend/internal/application/usecase"
 	"hona/backend/bootstrap"
+	"hona/backend/internal/application/dto/chat"
+	"hona/backend/internal/application/usecase"
 	"sync"
 	"time"
 
@@ -170,19 +171,22 @@ func (c *Client) CloseConnection() {
 }
 
 func (c *Client) processAndSaveChatMessage(msg *Message) {
-	// Content باید JSON string باشد: "سلام"
 	var content string
 	if err := json.Unmarshal(msg.Content, &content); err != nil {
 		return
 	}
+	req := chat.SaveMessageRequest{
+		RoomID:  c.roomID,
+		SenderID:  c.userID,
+		Content: content,
+		ReplyToMessageID: nil,
+	}
+	saved, err := c.chatService.SaveMessage(req)
+	if err != nil {
+		return
+	}
 
-	// // saved, err := c.chatService.SaveMessage(c.roomID, c.userID, content)
-	// if err != nil {
-	// 	return
-	// }
-
-	// msg.MessageID = saved.ID
-	// اگر Message struct شما Sender هم دارد، اینجا ست کن
+	msg.MessageID = saved.ID
 }
 
 func (c *Client) IsReady() bool {

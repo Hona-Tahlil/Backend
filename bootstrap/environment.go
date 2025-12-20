@@ -97,12 +97,12 @@ func NewEnv() *Env {
 				PetProfilePic: os.Getenv("STORAGE_PET_PROFILE_PIC_BUCKET"),
 			},
 		},
-		// PrimaryRedis: Redis{
-		// 	Port:      os.Getenv("RDB_PORT"),
-		// 	Address:   os.Getenv("RDB_ADDRESS"),
-		// 	Password:  os.Getenv("RDB_PASSWORD"),
-		// 	RDBNumber: os.Getenv("RDB_NUMBER"),
-		// },
+		PrimaryRedis: Redis{
+			Port:      os.Getenv("RDB_PORT"),
+			Address:   os.Getenv("RDB_ADDRESS"),
+			Password:  os.Getenv("RDB_PASSWORD"),
+			RDBNumber: os.Getenv("RDB_NUMBER"),
+		},
 		EmailConfig: EmailConfig{
 			Host:     os.Getenv("SMTP_HOST"),
 			Port:     os.Getenv("SMTP_PORT"),

@@ -53,3 +53,11 @@ type PetSitterRoomsResponse struct {
 	LastMessageTime    *time.Time              `json:"last_message_time,omitempty"`
 	UnreadMessageCount int64                   `json:"unread_message_count"`
 }
+
+type SaveMessageResponse struct {
+	ID        uint      `json:"id"`
+	RoomID    uint      `json:"room_id"`	
+	SenderID  uint      `json:"sender_id"`
+	Content   string    `json:"content"`
+	CreatedAt time.Time `json:"created_at"`
+}

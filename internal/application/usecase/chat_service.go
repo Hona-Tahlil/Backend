@@ -4,7 +4,7 @@ import "hona/backend/internal/application/dto/chat"
 
 type ChatService interface {
 	CreateOrGetRoom(info chat.CreateOrGetUserRoomRequest) (chat.ChatRoomDetailsResponse, error)
-	SaveMessage(info chat.SaveMessageRequest) error
+	SaveMessage(info chat.SaveMessageRequest) (chat.SaveMessageResponse, error)
 	GetAllRooms(request chat.GetAllRoomsRequest) ([]chat.ChatRoomDetailsResponse, int64, error)
 	BlockRoom(request chat.BlockRoomRequest) error
 	UnblockRoom(request chat.UnblockRoomRequest) error

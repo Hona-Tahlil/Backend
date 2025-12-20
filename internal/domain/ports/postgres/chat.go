@@ -13,11 +13,14 @@ type ChatRepository interface {
 	UpdateRoomBlockedBy(roomID uint, blockedBy string) error
 	GetRoomByID(roomID uint) (*entities.ChatRoom, error)
 	GetRequestIDByRoomID(roomID uint) (uint, error)
-	SaveMessage(message *entities.ChatMessage) error
+	CreateMessage(message *entities.ChatMessage) error
 	UpdateRoom(room *entities.ChatRoom) error
 	GetAllRooms(senderID uint, options *QueryOptions) ([]*entities.ChatRoom, int64, error)
 	UnreadMessageCount(roomID uint, senderID uint, lastReadMessageID *uint) (int64, error)
 	FindLastMessageByID(messageID *uint) (*entities.ChatMessage, error)
 	FindMessageByID(messageID uint) (*entities.ChatMessage, error)
 	GetMessagesByRoomID(roomID uint, options *QueryOptions) ([]*entities.ChatMessage, int64, error)
+	UpdateMessage(message *entities.ChatMessage) error
+	DeleteMessageByID(messageID uint) error
+
 }

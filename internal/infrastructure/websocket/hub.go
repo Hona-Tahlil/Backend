@@ -7,9 +7,7 @@ import (
 )
 
 type Hub struct {
-	// userID -> connections
 	clients map[uint]map[*Client]bool
-	// roomID -> connections
 	rooms map[uint]map[*Client]bool
 
 	Broadcast   chan *Message
@@ -44,22 +42,18 @@ func (h *Hub) Run() {
 func (h *Hub) handleRegister(c *Client) {
 	h.mu.Lock()
 
-	// add to clients[userID]
 	if _, ok := h.clients[c.userID]; !ok {
 		h.clients[c.userID] = make(map[*Client]bool)
 	}
 	h.clients[c.userID][c] = true
 
-	// add to rooms[roomID]
 	if _, ok := h.rooms[c.roomID]; !ok {
 		h.rooms[c.roomID] = make(map[*Client]bool)
 	}
 	h.rooms[c.roomID][c] = true
 
-	// presence online payload
 	presenceBytes := h.buildPresenceBytes(c.roomID, c.userID, true)
 
-	// یک کپی از کلاینت‌های روم برای ارسال بیرون از lock
 	targets := h.snapshotRoomLocked(c.roomID)
 
 	h.mu.Unlock()
@@ -70,7 +64,6 @@ func (h *Hub) handleRegister(c *Client) {
 func (h *Hub) handleUnregister(c *Client) {
 	h.mu.Lock()
 
-	// remove from clients
 	if set, ok := h.clients[c.userID]; ok {
 		delete(set, c)
 		if len(set) == 0 {
@@ -78,7 +71,6 @@ func (h *Hub) handleUnregister(c *Client) {
 		}
 	}
 
-	// remove from rooms
 	if set, ok := h.rooms[c.roomID]; ok {
 		delete(set, c)
 		if len(set) == 0 {
@@ -86,21 +78,17 @@ func (h *Hub) handleUnregister(c *Client) {
 		}
 	}
 
-	// presence offline payload
 	presenceBytes := h.buildPresenceBytes(c.roomID, c.userID, false)
 	targets := h.snapshotRoomLocked(c.roomID)
 
 	h.mu.Unlock()
 
-	// اتصال را ببند
 	c.CloseConnection()
 
-	// به باقی اعضای روم اطلاع بده
 	h.sendToClients(targets, presenceBytes)
 }
 
 func (h *Hub) handleBroadcast(msg *Message) {
-	// فقط Chat داخل room پخش می‌شود
 	if msg.Type != MessageTypeChat {
 		return
 	}
@@ -124,7 +112,6 @@ func (h *Hub) IsUserOnline(userID uint) bool {
 	return ok && len(set) > 0
 }
 
-// --- helpers ---
 
 func (h *Hub) buildPresenceBytes(roomID, userID uint, online bool) []byte {
 	wire := struct {
@@ -144,7 +131,6 @@ func (h *Hub) buildPresenceBytes(roomID, userID uint, online bool) []byte {
 	return b
 }
 
-// در حالت Lock
 func (h *Hub) snapshotRoomLocked(roomID uint) []*Client {
 	set, ok := h.rooms[roomID]
 	if !ok || len(set) == 0 {
@@ -157,7 +143,6 @@ func (h *Hub) snapshotRoomLocked(roomID uint) []*Client {
 	return out
 }
 
-// در حالت RLock
 func (h *Hub) snapshotRoomRLocked(roomID uint) []*Client {
 	set, ok := h.rooms[roomID]
 	if !ok || len(set) == 0 {
@@ -177,7 +162,6 @@ func (h *Hub) sendToClients(targets []*Client, payload []byte) {
 	for _, c := range targets {
 		select {
 		case <-c.Done():
-			// اگر مرده است، درخواست حذف بده
 			select {
 			case h.Unregister <- c:
 			default:
@@ -189,7 +173,6 @@ func (h *Hub) sendToClients(targets []*Client, payload []byte) {
 		select {
 		case c.send <- payload:
 		default:
-			// اگر send پر شد، کلاینت کند/خراب است → حذف
 			select {
 			case h.Unregister <- c:
 			default:
