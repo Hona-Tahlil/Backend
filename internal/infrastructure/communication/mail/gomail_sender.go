@@ -25,7 +25,7 @@ func NewEmailService() *EmailService {
 		mail.WithSMTPAuth(mail.SMTPAuthPlain),
 		mail.WithUsername(config.Username),
 		mail.WithPassword(config.Password),
-		mail.WithTLSPortPolicy(mail.TLSOpportunistic),
+		mail.WithTLSPortPolicy(mail.TLSMandatory),
 	)
 
 	if err != nil {
