@@ -17,6 +17,7 @@ import (
 	"hona/backend/internal/infrastructure/persistence/repository/redis"
 	"hona/backend/internal/infrastructure/seeder"
 	"hona/backend/internal/infrastructure/storage"
+	"hona/backend/internal/infrastructure/websocket"
 	"hona/backend/internal/presentation/controllers/v1/admin"
 	"hona/backend/internal/presentation/controllers/v1/general"
 	petsitter "hona/backend/internal/presentation/controllers/v1/pet_sitter"
@@ -68,10 +69,15 @@ var ServiceProviderSet = wire.NewSet(
 	wire.Bind(new(usecase.ChatService), new(*service.ChatService)),
 )
 
+var WebsocketProviderSet = wire.NewSet(
+	websocket.NewHub,
+)
+
 var GeneralControllersProviderSet = wire.NewSet(
 	general.NewGeneralUserController,
 	general.NewGeneralPetController,
 	general.NewGeneralProvinceController,
+	general.NewGeneralWebsocketTestController,
 	wire.Struct(new(GeneralControllers), "*"),
 )
 
@@ -125,12 +131,14 @@ var ProviderSet = wire.NewSet(
 	RepositoryProviderSet,
 	SeederProviderSet,
 	StorageProviderSet,
+	WebsocketProviderSet,
 )
 
 type GeneralControllers struct {
-	GeneralUserController     *general.GeneralUserController
-	GeneralPetController      *general.GeneralPetController
-	GeneralProvinceController *general.GeneralProvinceController
+	GeneralUserController          *general.GeneralUserController
+	GeneralPetController           *general.GeneralPetController
+	GeneralProvinceController      *general.GeneralProvinceController
+	GeneralWebsocketTestController *general.GeneralWebsocketTestController
 }
 
 type AdminControllers struct {

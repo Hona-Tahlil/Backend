@@ -44,5 +44,6 @@ func SetUpUserRoutes(v1 *gin.RouterGroup, app *wire.Application) {
 		chat.PUT("/room/:roomID/block", app.Controllers.UserControllers.UserChatController.BlockRoom)
 		chat.PUT("/room/:roomID/unblock", app.Controllers.UserControllers.UserChatController.UnblockRoom)
 		chat.GET("/room/:roomID/request-info", app.Controllers.UserControllers.UserChatController.GetRoomRequestInfo)
+		chat.GET("/room/:roomID/messages", app.Controllers.UserControllers.UserChatController.GetRoomMessages)
 	}
 }

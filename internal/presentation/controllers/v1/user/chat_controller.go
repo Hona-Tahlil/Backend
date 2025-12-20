@@ -3,7 +3,9 @@ package user
 import (
 	"hona/backend/bootstrap"
 	"hona/backend/internal/application/dto/chat"
+	"hona/backend/internal/application/dto/general"
 	"hona/backend/internal/application/usecase"
+	"hona/backend/internal/domain/enums"
 	"hona/backend/internal/infrastructure/websocket"
 	"hona/backend/internal/presentation/controllers"
 
@@ -23,7 +25,6 @@ func NewUserChatController(chatService usecase.ChatService, hub *websocket.Hub) 
 }
 
 func (c *UserChatController) CreateOrGetRoom(ctx *gin.Context) {
-	// Implementation for creating or getting a chat room
 	type roomParams struct {
 		PetSitterID uint `uri:"petSitterID" validate:"required"`
 	}
@@ -48,9 +49,6 @@ func (c *UserChatController) HandleWebsocket(ctx *gin.Context) {
 	params := controllers.Receive[wsParams](ctx)
 	userID := controllers.GetID(ctx)
 	conn, _ := ctx.Get(bootstrap.Run().Constants.Context.WebsocketConnection)
-	// Implementation for handling websocket connection
-	// client := websocket.NewClient(chatController.hub, conn, params.RoomID, userID, chatController.websocketSetting, chatController.chatService, nil)
-	//new client
 	client := websocket.NewClient(c.hub, conn, params.RoomID, userID, &bootstrap.Run().Env.WebsocketSetting, c.chatService)
 	client.Hub.Register <- client
 
@@ -59,26 +57,96 @@ func (c *UserChatController) HandleWebsocket(ctx *gin.Context) {
 }
 
 func (c *UserChatController) GetAllRooms(ctx *gin.Context) {
-	// For now return empty list or delegate to service when available
-	// Query params can be added later (e.g., status)
-	// userID := controllers.GetID(ctx)
-	// res, err := c.chatService.GetAllRooms(userID)
-	// if err != nil { panic(err) }
+	type Sort struct {
+		Field string `form:"field" validate:"required"`
+		Dir   string `form:"dir"   validate:"required,oneof=ASC DESC"`
+	}
+	type Params struct {
+		Page  int    `form:"page"`
+		Count int    `form:"count"`
+		Sort  []Sort `form:"sort"`
+	}
+	senderID := controllers.GetID(ctx)
+	p := controllers.Receive[Params](ctx)
+	offset, limit := controllers.GetOffsetLimit(p.Page, p.Count, 1, 10)
+
+	sorts := make([]general.Sort, len(p.Sort))
+	for i, s := range p.Sort {
+		sorts[i] = general.Sort{
+			Field: s.Field,
+			Dir:   s.Dir,
+		}
+	}
+
+	request := chat.GetAllRoomsRequest{
+		SenderID: senderID,
+		Offset:   offset,
+		Limit:    limit,
+		Sort:     sorts,
+	}
+	rooms, totalCount, err := c.chatService.GetAllRooms(request)
+	if err != nil {
+		panic(err)
+	}
+	data := controllers.NewPaginatedResponse(rooms, totalCount, offset, limit)
 	msg := controllers.Message{}
-	controllers.Respond(ctx, 200, msg, []interface{}{})
+	controllers.Respond(ctx, 200, msg, data)
 }
+
+func (c *UserChatController) GetRoomMessages(ctx *gin.Context) {
+	type Sort struct {
+		Field string `form:"field" validate:"required"`
+		Dir   string `form:"dir"   validate:"required,oneof=ASC DESC"`
+	}
+	type params struct {
+		RoomID uint   `uri:"roomID" validate:"required"`
+		page   int    `form:"page" validate:"required"`
+		count  int    `form:"count" validate:"required"`
+		Sort   []Sort `form:"sort" validate:"required"`
+	}
+	p := controllers.Receive[params](ctx)
+	senderID := controllers.GetID(ctx)
+	offset, limit := controllers.GetOffsetLimit(p.page, p.count, 1, 10)
+
+	sorts := make([]general.Sort, len(p.Sort))
+	for i, s := range p.Sort {
+		sorts[i] = general.Sort{
+			Field: s.Field,
+			Dir:   s.Dir,
+		}
+	}
+	request := chat.GetRoomMessagesRequest{
+		RoomID:   p.RoomID,
+		SenderID: senderID,
+		Offset:   offset,
+		Limit:    limit,
+		Sort:     sorts,
+	}
+	messages, totalCount, err := c.chatService.GetRoomMessages(request)
+	if err != nil {
+		panic(err)
+	}
+	data := controllers.NewPaginatedResponse(messages, totalCount, offset, limit)
+
+	msg := controllers.Message{}
+	controllers.Respond(ctx, 200, msg, data)
+}
+
 
 func (c *UserChatController) BlockRoom(ctx *gin.Context) {
 	type params struct {
 		RoomID uint `uri:"roomID" validate:"required"`
 	}
 	p := controllers.Receive[params](ctx)
-	userID := controllers.GetID(ctx)
-
-	if err := c.chatService.BlockRoom(userID, p.RoomID); err != nil {
+	senderID := controllers.GetID(ctx)
+	request := chat.BlockRoomRequest{
+		RoomID:    p.RoomID,
+		SenderID:  senderID,
+		BlockedBy: enums.C_BlockedByUser,
+	}
+	if err := c.chatService.BlockRoom(request); err != nil {
 		panic(err)
 	}
-
 	msg := controllers.Message{}
 	controllers.Respond(ctx, 200, msg, nil)
 }
@@ -88,12 +156,14 @@ func (c *UserChatController) UnblockRoom(ctx *gin.Context) {
 		RoomID uint `uri:"roomID" validate:"required"`
 	}
 	p := controllers.Receive[params](ctx)
-	userID := controllers.GetID(ctx)
-
-	if err := c.chatService.UnblockRoom(userID, p.RoomID); err != nil {
+	senderID := controllers.GetID(ctx)
+	request := chat.UnblockRoomRequest{
+		RoomID:   p.RoomID,
+		SenderID: senderID,
+	}
+	if err := c.chatService.UnblockRoom(request); err != nil {
 		panic(err)
 	}
-
 	msg := controllers.Message{}
 	controllers.Respond(ctx, 200, msg, nil)
 }
@@ -112,3 +182,4 @@ func (c *UserChatController) GetRoomRequestInfo(ctx *gin.Context) {
 	msg := controllers.Message{}
 	controllers.Respond(ctx, 200, msg, res)
 }
+

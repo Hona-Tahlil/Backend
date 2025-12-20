@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"hona/backend/internal/domain/entities"
+	domainpostgres "hona/backend/internal/domain/ports/postgres"
 
 	"gorm.io/gorm"
 )
@@ -75,4 +76,91 @@ func (cr *ChatRepository) GetRequestIDByRoomID(roomID uint) (uint, error) {
 
 func (cr *ChatRepository) SaveMessage(message *entities.ChatMessage) error {
 	return cr.db.Create(message).Error
+}
+
+func (cr *ChatRepository) UpdateRoom(room *entities.ChatRoom) error {
+	return cr.db.Save(room).Error
+}
+
+func (cr *ChatRepository) GetAllRooms(senderID uint, options *domainpostgres.QueryOptions) ([]*entities.ChatRoom, int64, error) {
+	var rooms []*entities.ChatRoom
+	var totalCount int64
+	query := cr.db.Model(&entities.ChatRoom{}).Where("user_id = ? OR pet_sitter_id = ?", senderID, senderID)
+	if options.Filters != nil {
+		filterModifier := NewFilterModifier(options.Filters.Filters)
+		query = filterModifier.Apply(query)
+	}
+	if err := query.Count(&totalCount).Error; err != nil {
+		return nil, 0, err
+	}
+	if options.Sorting != nil {
+		sortModifier := NewSortModifier(options.Sorting.Sorts)
+		query = sortModifier.Apply(query)
+	}
+	if options.Pagination != nil {
+		paginationModifier := NewPaginationModifier(options.Pagination.Offset, options.Pagination.Limit)
+		query = paginationModifier.Apply(query)
+	}
+	if err := query.Find(&rooms).Error; err != nil {
+		return nil, 0, err
+	}
+	return rooms, totalCount, nil
+}
+
+func (cr *ChatRepository) UnreadMessageCount(roomID uint, senderID uint, lastReadMessageID *uint) (int64, error) {
+	var count int64
+	query := cr.db.Model(&entities.ChatMessage{}).
+		Where("room_id = ? AND id > ?", roomID, lastReadMessageID).
+		Where("sender_id != ?", senderID).
+		Count(&count).Error
+	return count, query
+}
+
+func (cr *ChatRepository) FindLastMessageByID(messageID *uint) (*entities.ChatMessage, error) {
+	var message entities.ChatMessage
+	err := cr.db.First(&message, messageID).Error
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &message, nil
+}
+
+func (cr *ChatRepository) GetMessagesByRoomID(roomID uint, options *domainpostgres.QueryOptions) ([]*entities.ChatMessage, int64, error) {
+	var messages []*entities.ChatMessage
+	var totalCount int64
+	query := cr.db.Model(&entities.ChatMessage{}).Where("room_id = ?", roomID)
+	if options.Filters != nil {
+		filterModifier := NewFilterModifier(options.Filters.Filters)
+		query = filterModifier.Apply(query)
+	}
+	if err := query.Count(&totalCount).Error; err != nil {
+		return nil, 0, err
+	}
+	if options.Sorting != nil {
+		sortModifier := NewSortModifier(options.Sorting.Sorts)
+		query = sortModifier.Apply(query)
+	}
+	if options.Pagination != nil {
+		paginationModifier := NewPaginationModifier(options.Pagination.Offset, options.Pagination.Limit)
+		query = paginationModifier.Apply(query)
+	}
+	if err := query.Find(&messages).Error; err != nil {
+		return nil, 0, err
+	}
+	return messages, totalCount, nil
+}
+
+func (cr *ChatRepository) FindMessageByID(messageID uint) (*entities.ChatMessage, error) {
+	var message entities.ChatMessage
+	err := cr.db.First(&message, messageID).Error	
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &message, nil
 }

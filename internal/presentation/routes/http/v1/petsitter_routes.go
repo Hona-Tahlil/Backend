@@ -42,11 +42,13 @@ func SetUpPetSitterRoutes(v1 *gin.RouterGroup, app *wire.Application) {
 			//get by status
 			chat.POST("/room/:userID", app.Controllers.UserControllers.UserChatController.CreateOrGetRoom)
 			chat.GET("/rooms", app.Controllers.PetSitterControllers.PetSitterChatController.GetAllRooms)
-			chat.PUT("/room/:userID", app.Controllers.PetSitterControllers.PetSitterChatController.AcceptRoom)
+			chat.PUT("/room/:roomID/accept", app.Controllers.PetSitterControllers.PetSitterChatController.AcceptRoom)
 			chat.PUT("/room/:roomID/reject", app.Controllers.PetSitterControllers.PetSitterChatController.RejectRoom)
 			chat.PUT("/room/:roomID/block", app.Controllers.PetSitterControllers.PetSitterChatController.BlockRoom)
 			chat.PUT("/room/:roomID/unblock", app.Controllers.PetSitterControllers.PetSitterChatController.UnblockRoom)
 			chat.GET("/room/:roomID/request-info", app.Controllers.PetSitterControllers.PetSitterChatController.GetRoomRequestInfo)
+			chat.GET("/room/:roomID/messages", app.Controllers.PetSitterControllers.PetSitterChatController.GetRoomMessages)
+			
 		}
 	}
 

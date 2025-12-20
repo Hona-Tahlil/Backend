@@ -7,14 +7,13 @@
 package wire
 
 import (
-	"github.com/google/wire"
 	"hona/backend/bootstrap"
 	"hona/backend/internal/application/service"
 	"hona/backend/internal/application/usecase"
-	"hona/backend/internal/domain/jwt"
+	domainjwt "hona/backend/internal/domain/jwt"
 	"hona/backend/internal/domain/ports"
-	"hona/backend/internal/domain/ports/redis"
-	"hona/backend/internal/domain/storage"
+	domainredis "hona/backend/internal/domain/ports/redis"
+	domainstorage "hona/backend/internal/domain/storage"
 	"hona/backend/internal/infrastructure/communication/mail"
 	"hona/backend/internal/infrastructure/jwt"
 	"hona/backend/internal/infrastructure/persistence"
@@ -23,9 +22,11 @@ import (
 	"hona/backend/internal/infrastructure/storage"
 	"hona/backend/internal/presentation/controllers/v1/admin"
 	"hona/backend/internal/presentation/controllers/v1/general"
-	"hona/backend/internal/presentation/controllers/v1/pet_sitter"
+	petsitter "hona/backend/internal/presentation/controllers/v1/pet_sitter"
 	"hona/backend/internal/presentation/controllers/v1/user"
 	"hona/backend/internal/presentation/middleware"
+
+	"github.com/google/wire"
 )
 
 // Injectors from wire.go:
@@ -131,6 +132,8 @@ var MiddlewaresProviderSet = wire.NewSet(middleware.NewLocalizationMiddleware, m
 
 var SeederProviderSet = wire.NewSet(seeder.NewDatabaseSeeder, wire.Struct(new(Seeder), "*"))
 
+// var WebsocketProviderSet = wire.NewSet(websocket.NewHub)
+
 var ProviderSet = wire.NewSet(
 	MiddlewaresProviderSet,
 	ControllersProviderSet,
@@ -142,12 +145,14 @@ var ProviderSet = wire.NewSet(
 	RepositoryProviderSet,
 	SeederProviderSet,
 	StorageProviderSet,
+	// WebsocketProviderSet,
 )
 
 type GeneralControllers struct {
-	GeneralUserController     *general.GeneralUserController
-	GeneralPetController      *general.GeneralPetController
-	GeneralProvinceController *general.GeneralProvinceController
+	GeneralUserController          *general.GeneralUserController
+	GeneralPetController           *general.GeneralPetController
+	GeneralProvinceController      *general.GeneralProvinceController
+	// GeneralWebsocketTestController *general.GeneralWebsocketTestController
 }
 
 type AdminControllers struct {
