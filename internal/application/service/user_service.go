@@ -421,9 +421,7 @@ func (us *UserService) SendVerificationEmail(info user.SendVerificationEmailRequ
 		ExpiryMinute: bootstrap.Run().Env.EmailVerification.ExpireMinutes,
 		Year:         time.Now().Year(),
 	}
-	us.emailService.SendEmail(info.Email, "Email Verification", bootstrap.Run().Constants.TemplatesPath.EmailVerification, data)
-
-	return nil
+	return us.emailService.SendEmail(info.Email, "Email Verification", bootstrap.Run().Constants.TemplatesPath.EmailVerification, data)
 }
 
 func (us *UserService) RefreshTokens(refreshTokenInfo rbac.RefreshTokenRequest) (*rbac.RefreshTokenResponse, string, int, error) {
