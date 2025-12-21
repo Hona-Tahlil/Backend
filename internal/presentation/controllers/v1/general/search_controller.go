@@ -38,7 +38,7 @@ func (gc *GeneralSearchController) SearchPetSitters(ctx *gin.Context) {
 
 	params := controllers.Receive[SearchPetSittersParams](ctx)
 
-	offset, limit := controllers.GetOffsetLimit(params.Page, params.Count, 1, 10)
+	offset, limit := controllers.GetOffsetLimit(params.Page, params.Count)
 
 	// Convert params to DTO (no DSL conversion here)
 	filters := make([]general.Filter, len(params.Filters))

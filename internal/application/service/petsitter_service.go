@@ -13,8 +13,8 @@ import (
 	"hona/backend/internal/domain/enums"
 	"hona/backend/internal/domain/exceptions"
 	"hona/backend/internal/domain/ports"
-	domainpostgres "hona/backend/internal/domain/ports/postgres"
 	domainstorage "hona/backend/internal/domain/storage"
+	"hona/backend/internal/infrastructure/persistence/repository/postgres"
 
 	"github.com/samber/lo"
 )
@@ -164,7 +164,6 @@ func (ps *PetSitterService) AutoUpdateSlots(petSitter *entities.PetSitter, calen
 	petSitter.Schedule = append(petSitter.Schedule, newSlots...)
 	ps.removeEmptySitterSlots(petSitter)
 	petSitterRepo := ps.unitOfWork.Factory().PetSitterRepository()
-	return petSitterRepo.UpdatePetSitter(petSitter)
 	return petSitterRepo.UpdatePetSitter(petSitter)
 }
 
@@ -638,7 +637,7 @@ func (ps *PetSitterService) GetServiceResponse(serviceEntity *entities.Service) 
 func (ps *PetSitterService) SearchPetSitters(info petsitter.SearchPetSittersRequest) ([]*petsitter.PetSitterInfoResponse, int64, error) {
 	var petSitters []*entities.PetSitter
 	var total int64
-	options := domainpostgres.NewQueryOptions().
+	options := postgres.NewQueryOptions().
 		WithPagination(info.Limit, info.Offset).
 		WithSorting(info.Sorts).
 		WithFilters(info.Filters)

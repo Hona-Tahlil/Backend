@@ -1,4 +1,3 @@
-
 package service
 
 import (
@@ -8,6 +7,7 @@ import (
 	"hona/backend/internal/domain/entities"
 	"hona/backend/internal/domain/exceptions"
 	"hona/backend/internal/domain/ports"
+	"hona/backend/internal/infrastructure/persistence/repository/postgres"
 	"strings"
 )
 
@@ -51,16 +51,13 @@ func (rs *RBACService) GetRoleResponse(role entities.Role) *rbac.RoleResponse {
 }
 
 func (rs *RBACService) ListRolesWithUsers(info rbac.ListRolesWithUsersRequest) ([]rbac.RoleWithUsersResponse, error) {
-	limit := info.Count
-	offset := (info.Page - 1) * limit
-
 	roles, err := rs.unitOfWork.Factory().RBACRepository().GetAllRoles()
 	if err != nil {
 		return nil, err
 	}
 	r := make([]rbac.RoleWithUsersResponse, len(roles))
 	for i, role := range roles {
-		res, err := rs.getRoleWithUsers(&role, limit, offset)
+		res, err := rs.getRoleWithUsers(&role, info.Limit, info.Offset)
 		if err != nil {
 			return nil, err
 		}
@@ -71,8 +68,11 @@ func (rs *RBACService) ListRolesWithUsers(info rbac.ListRolesWithUsersRequest) (
 }
 
 func (rs *RBACService) getRoleWithUsers(role *entities.Role, limit, offset int) (*rbac.RoleWithUsersResponse, error) {
+	options := postgres.NewQueryOptions().
+		WithPagination(limit, offset)
+
 	rbacRepo := rs.unitOfWork.Factory().RBACRepository()
-	users, err := rs.userService.GetRoleUsersByID(role.ID, limit, offset)
+	users, err := rs.userService.GetRoleUsersByID(role.ID, options)
 	if err != nil {
 		return nil, err
 	}
@@ -148,10 +148,7 @@ func (rs *RBACService) GetRoleWithUsersByID(info rbac.GetRoleWithUsersByIDReques
 		return nil, err
 	}
 
-	limit := info.Count
-	offset := (info.Page - 1) * limit
-
-	return rs.getRoleWithUsers(role, limit, offset)
+	return rs.getRoleWithUsers(role, info.Limit, info.Offset)
 }
 
 func (rs *RBACService) GetRoleWithUsersByType(info rbac.GetRoleWithUsersByTypeRequest) (*rbac.RoleWithUsersResponse, error) {
@@ -160,10 +157,7 @@ func (rs *RBACService) GetRoleWithUsersByType(info rbac.GetRoleWithUsersByTypeRe
 		return nil, err
 	}
 
-	limit := info.Count
-	offset := (info.Page - 1) * limit
-
-	return rs.getRoleWithUsers(role, limit, offset)
+	return rs.getRoleWithUsers(role, info.Limit, info.Offset)
 }
 
 func (rs *RBACService) GetRoleByID(info rbac.GetRoleByIDRequest) (*rbac.RoleResponse, error) {

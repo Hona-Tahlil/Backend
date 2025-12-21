@@ -2,6 +2,7 @@ package domainpostgres
 
 import (
 	"hona/backend/internal/domain/entities"
+	"hona/backend/internal/infrastructure/persistence/repository/postgres"
 )
 
 type PetSitterRepository interface {
@@ -14,6 +15,5 @@ type PetSitterRepository interface {
 	UpdatePetSitter(petSitter *entities.PetSitter) error
 	FindPetSitterByID(id uint) (*entities.PetSitter, error)
 	FindServiceByID(id uint) (*entities.Service, error)
-	SearchPetSitters(options *QueryOptions) ([]*entities.PetSitter, int64, error)
+	SearchPetSitters(options *postgres.QueryOptions) ([]*entities.PetSitter, int64, error)
 }
-	

@@ -1,13 +1,16 @@
 package controllers
 
-import "hona/backend/internal/application/dto/general"
+import (
+	"hona/backend/bootstrap"
+	"hona/backend/internal/application/dto/general"
+)
 
-func GetOffsetLimit(page, pageSize, defaultPage, defaultPageSize int) (int, int) {
+func GetOffsetLimit(page, pageSize int) (int, int) {
 	if page <= 0 {
-		page = defaultPage
+		page = bootstrap.Run().Constants.Pagination.DefaultPage
 	}
 	if pageSize <= 0 {
-		pageSize = defaultPageSize
+		pageSize = bootstrap.Run().Constants.Pagination.DefaultPageSize
 	}
 
 	return (page - 1) * pageSize, pageSize

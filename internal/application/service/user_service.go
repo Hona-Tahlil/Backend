@@ -13,6 +13,7 @@ import (
 	"hona/backend/internal/domain/ports"
 	domainredis "hona/backend/internal/domain/ports/redis"
 	"hona/backend/internal/infrastructure/communication/mail"
+	"hona/backend/internal/infrastructure/persistence/repository/postgres"
 	"regexp"
 	"time"
 
@@ -106,9 +107,9 @@ func (us *UserService) GetUserInfosResponse(users []entities.User) []rbac.UserIn
 	return r
 }
 
-func (us *UserService) GetRoleUsersByID(roleID uint, limit, offset int) ([]entities.User, error) {
+func (us *UserService) GetRoleUsersByID(roleID uint, options *postgres.QueryOptions) ([]entities.User, error) {
 	userRepo := us.unitOfWork.Factory().UserRepository()
-	users, err := userRepo.GetRoleUsersByID(roleID, limit, offset)
+	users, err := userRepo.GetRoleUsersByID(roleID, options)
 	if err != nil {
 		return nil, err
 	}

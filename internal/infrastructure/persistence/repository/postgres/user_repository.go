@@ -16,28 +16,6 @@ func NewUserRepository(db *gorm.DB) *UserRepository {
 	}
 }
 
-// type UserRepository struct {
-// 	*BaseRepository
-// }
-
-// func NewUserRepository(db *gorm.DB) *UserRepository {
-// 	return &UserRepository{
-// 		BaseRepository: NewBaseRepository(db),
-// 	}
-// }
-
-// func (up *UserRepository) GetUsers(queryoptins dsl.ParsedQuery) ([]entities.User, error) {
-// 	var users []entities.User
-
-// 	dbQuery := applyQueryOptions(up.db., queryoptins)
-
-// 	if err := dbQuery.FindAll(&users); err != nil {
-// 		return nil, err
-// 	}
-// 	return users, nil
-
-// }
-
 func (up *UserRepository) FindUserByEmail(email string) (*entities.User, error) {
 	var foundUser entities.User
 
@@ -74,15 +52,15 @@ func (up *UserRepository) SaveUser(user *entities.User) error {
 	return up.db.Save(user).Error
 }
 
-func (up *UserRepository) GetRoleUsersByID(roleID uint, limit, offset int) ([]entities.User, error) {
+func (up *UserRepository) GetRoleUsersByID(roleID uint, options *QueryOptions) ([]entities.User, error) {
 	var users []entities.User
 
-	err := up.db.
+	newDB := ApplyModifiers(up.db, *options)
+
+	err := newDB.
 		Joins("JOIN user_roles ur ON ur.user_id = users.id").
 		Where("ur.role_id = ?", roleID).
 		Preload("Roles").
-		Limit(limit).
-		Offset(offset).
 		Find(&users).Error
 
 	if err != nil {
