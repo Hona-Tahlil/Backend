@@ -746,5 +746,5 @@ func (ps *PetSitterService) ChangePetSitterStatus(info petsitter.ChangePetSitter
 	foundPetSitter.Status = info.Status
 
 	petSitterRepo := ps.unitOfWork.Factory().PetSitterRepository()
-	return petSitterRepo.EditPetSitter(foundPetSitter)
+	return petSitterRepo.UpdatePetSitter(foundPetSitter)
 }

@@ -58,15 +58,6 @@ type ChangePetSitterStatusRequest struct {
 	Status          enums.PetSitterStatus
 }
 
-type GetPetSitterDetailsRequest struct {
-	PetSitterUserID uint
-}
-
-type ChangePetSitterStatusRequest struct {
-	PetSitterUserID uint
-	Status          enums.PetSitterStatus
-}
-
 type SearchPetSittersRequest struct {
 	Offset  int
 	Limit   int
