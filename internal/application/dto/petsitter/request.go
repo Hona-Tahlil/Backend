@@ -57,3 +57,10 @@ type SearchPetSittersRequest struct {
 	Filters []general.Filter
 	Sorts   []general.Sort
 }
+
+type AdminSearchPetSittersRequest struct {
+	Offset  int
+	Limit   int
+	Filters []general.Filter
+	Sorts   []general.Sort
+}

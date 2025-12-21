@@ -36,7 +36,10 @@ func SetUpAdminRoutes(v1 *gin.RouterGroup, app *wire.Application) {
 		rbacGroup.DELETE("/permissions/:roleID/:permissionID", app.Controllers.AdminControllers.AdminRBACController.RemovePermissionFromRole)
 
 
-		// rbacGroup.GET("/petsitter", app.Controllers.AdminControllers.AdminRBACController.ListPetSitters)
+	}
 
+	petSitters := v1.Group("/admin/petsitters")
+	{
+		petSitters.POST("/search", app.Controllers.AdminControllers.AdminPetSitterController.SearchPetSitters)
 	}
 }

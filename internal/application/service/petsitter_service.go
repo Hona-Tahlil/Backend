@@ -471,13 +471,17 @@ func (ps *PetSitterService) GetAllPetSitters(page, count int) (*petsitter.PetSit
 		if err != nil {
 			continue
 		}
+		phoneNumber := ""
+		if user.Phone != nil {
+			phoneNumber = *user.Phone
+		}
 		items[i] = petsitter.PetSitterListItemResponse{
 			ID:             ps.ID,
 			UserID:         ps.UserID,
 			FirstName:      user.FirstName,
 			LastName:       user.LastName,
 			Email:          user.Email,
-			PhoneNumber:    *user.Phone,
+			PhoneNumber:    phoneNumber,
 			Status:         ps.Status,
 			OnboardingStep: ps.OnboardingStep,
 			CreatedAt:      ps.CreatedAt.Format("2006-01-02 15:04:05"),
@@ -683,4 +687,45 @@ func (ps *PetSitterService) SearchPetSitters(info petsitter.SearchPetSittersRequ
 	}
 
 	return res, total, nil
+}
+
+func (ps *PetSitterService) SearchPetSittersForAdmin(info petsitter.AdminSearchPetSittersRequest) ([]petsitter.PetSitterListItemResponse, int64, error) {
+	options := postgres.NewQueryOptions().WithPagination(info.Limit, info.Offset)
+	if len(info.Filters) > 0 {
+		options.WithFilters(info.Filters)
+	}
+	if len(info.Sorts) > 0 {
+		options.WithSorting(info.Sorts)
+	}
+
+	petSitterRepo := ps.unitOfWork.Factory().PetSitterRepository()
+	petSitters, total, err := petSitterRepo.SearchPetSitters(options)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	items := make([]petsitter.PetSitterListItemResponse, len(petSitters))
+	for i, psr := range petSitters {
+		user, err := ps.userService.FindUserByID(psr.UserID)
+		if err != nil {
+			continue
+		}
+		phoneNumber := ""
+		if user.Phone != nil {
+			phoneNumber = *user.Phone
+		}
+		items[i] = petsitter.PetSitterListItemResponse{
+			ID:             psr.ID,
+			UserID:         psr.UserID,
+			FirstName:      user.FirstName,
+			LastName:       user.LastName,
+			Email:          user.Email,
+			PhoneNumber:    phoneNumber,
+			Status:         psr.Status,
+			OnboardingStep: psr.OnboardingStep,
+			CreatedAt:      psr.CreatedAt.Format("2006-01-02 15:04:05"),
+		}
+	}
+
+	return items, total, nil
 }

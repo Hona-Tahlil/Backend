@@ -55,8 +55,10 @@ func InitializeApplication(container *bootstrap.Config) (*Application, error) {
 	}
 	rbacService := service.NewRBACService(unitOfWork, userService)
 	adminRBACController := admin.NewAdminRBACController(rbacService)
+	adminPetSitterController := admin.NewAdminPetSitterController(petSitterService)
 	adminControllers := &AdminControllers{
-		AdminRBACController: adminRBACController,
+		AdminRBACController:      adminRBACController,
+		AdminPetSitterController: adminPetSitterController,
 	}
 	userPetController := user.NewUserPetController(petService)
 	requestServiceDeps := service.RequestServiceDeps{
@@ -121,7 +123,7 @@ var ServiceProviderSet = wire.NewSet(wire.Struct(new(service.RequestServiceDeps)
 
 var GeneralControllersProviderSet = wire.NewSet(general.NewGeneralUserController, general.NewGeneralPetController, general.NewGeneralProvinceController, general.NewGeneralSearchController, wire.Struct(new(GeneralControllers), "*"))
 
-var AdminControllersProviderSet = wire.NewSet(admin.NewAdminRBACController, wire.Struct(new(AdminControllers), "*"))
+var AdminControllersProviderSet = wire.NewSet(admin.NewAdminRBACController, admin.NewAdminPetSitterController, wire.Struct(new(AdminControllers), "*"))
 
 var UserControllersProviderSet = wire.NewSet(user.NewUserPetController, user.NewUserRequestController, user.NewUserCommentController, wire.Struct(new(UserControllers), "*"))
 
@@ -154,7 +156,8 @@ type GeneralControllers struct {
 }
 
 type AdminControllers struct {
-	AdminRBACController *admin.AdminRBACController
+	AdminRBACController      *admin.AdminRBACController
+	AdminPetSitterController *admin.AdminPetSitterController
 }
 
 type UserControllers struct {
