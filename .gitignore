@@ -17,3 +17,5 @@ cmd/tmp/*
 cmd/tmp/**/*
 
 .idea/
+
+AGENTS.md
