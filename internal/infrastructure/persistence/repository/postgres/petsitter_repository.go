@@ -1,7 +1,6 @@
 package postgres
 
 import (
-	"hona/backend/internal/application/dto/general"
 	"hona/backend/internal/domain/entities"
 	domainpostgres "hona/backend/internal/domain/ports/postgres"
 

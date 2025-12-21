@@ -15,10 +15,7 @@ import (
 	"hona/backend/internal/domain/ports"
 	domainpostgres "hona/backend/internal/domain/ports/postgres"
 	domainstorage "hona/backend/internal/domain/storage"
-	"hona/backend/internal/infrastructure/dsl"
-	"hona/backend/internal/infrastructure/persistence/repository/postgres"
 
-	"github.com/go-faker/faker/v4/pkg/options"
 	"github.com/samber/lo"
 )
 
@@ -169,7 +166,6 @@ func (ps *PetSitterService) AutoUpdateSlots(petSitter *entities.PetSitter, calen
 	petSitterRepo := ps.unitOfWork.Factory().PetSitterRepository()
 	return petSitterRepo.UpdatePetSitter(petSitter)
 }
-
 
 func (ps *PetSitterService) removeEmptySitterSlots(petSitter *entities.PetSitter) {
 	for i, slot := range petSitter.Schedule {
@@ -635,7 +631,7 @@ func (ps *PetSitterService) GetServiceResponse(serviceEntity *entities.Service) 
 	}
 }
 
-func (ps *PetSitterService) SearchPetSitters(info petsitter.SearchPetSittersRequest) ([]*entities.PetSitter, int64, error) {
+func (ps *PetSitterService) SearchPetSitters(info petsitter.SearchPetSittersRequest) ([]*petsitter.PetSitterInfoResponse, int64, error) {
 	var petSitters []*entities.PetSitter
 	var total int64
 	options := domainpostgres.NewQueryOptions().
@@ -649,6 +645,39 @@ func (ps *PetSitterService) SearchPetSitters(info petsitter.SearchPetSittersRequ
 	if err != nil {
 		return nil, 0, err
 	}
+	res := make([]*petsitter.PetSitterInfoResponse, len(petSitters))
+	for i, petSitter := range petSitters {
+		user, err := ps.userService.FindUserByID(petSitter.UserID)
+		if err != nil {
+			return nil, 0, err
+		}
+		address, err := ps.addressService.FindAddressByID(user.Address.ID)
+		if err != nil {
+			return nil, 0, err
+		}
+		err = petSitterRepo.PreloadServices(petSitter)
+		if err != nil {
+			return nil, 0, err
+		}
+		services := make([]string, len(petSitter.Services))
+		for _, service := range petSitter.Services {
+			services = append(services, service.Type.String())
+		}
+		petkinds := make([]string, len(petSitter.PetKinds))
+		for _, petkind := range petSitter.PetKinds {
+			petkinds = append(petkinds, petkind.String())
+		}
+		// service, err := ps.FindServiceByID(info.ServiceID)
+		res[i] = &petsitter.PetSitterInfoResponse{
+			ID:        petSitter.ID,
+			FirstName: user.FirstName,
+			LastName:  user.LastName,
+			Province:  address.Province.String(),
+			City:      address.City.String(),
+			Services:  services,
+			PetKinds:  petkinds,
+		}
+	}
 
-	return petSitters, total, nil
+	return res, total, nil
 }

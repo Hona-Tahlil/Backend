@@ -9,18 +9,18 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type GeneralPetSitterController struct {
+type GeneralSearchController struct {
 	petSitterService *service.PetSitterService
 }
 
-func NewGeneralPetSitterController(petSitterService *service.PetSitterService) *GeneralPetSitterController {
-	return &GeneralPetSitterController{
+func NewGeneralSearchController(petSitterService *service.PetSitterService) *GeneralSearchController {
+	return &GeneralSearchController{
 		petSitterService: petSitterService,
 	}
 }
 
 
-func (gc *GeneralPetSitterController) SearchPetSitters(ctx *gin.Context) {
+func (gc *GeneralSearchController) SearchPetSitters(ctx *gin.Context) {
 	type Filter struct {
 		Field string `json:"field" validate:"required"`
 		Op    string `json:"op"    validate:"required,oneof== != > < >= <= LIKE IN"`

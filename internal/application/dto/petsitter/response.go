@@ -6,7 +6,7 @@ import (
 
 type PetSitterStatusResponse struct {
 	Status         enums.PetSitterStatus `json:"status"`
-	OnboardingStep enums.OnboardingStep   `json:"onboarding_step"`
+	OnboardingStep enums.OnboardingStep  `json:"onboarding_step"`
 }
 
 type PersonalInfoResponse struct {
@@ -42,8 +42,18 @@ type PetSitterListItemResponse struct {
 }
 
 type PetSittersListResponse struct {
-	Total      int64                      `json:"total"`
-	Page       int                        `json:"page"`
-	Count      int                        `json:"count"`
+	Total      int64                       `json:"total"`
+	Page       int                         `json:"page"`
+	Count      int                         `json:"count"`
 	PetSitters []PetSitterListItemResponse `json:"pet_sitters"`
+}
+
+type PetSitterInfoResponse struct {
+	ID        uint     `json:"id"`
+	FirstName string   `json:"first_name"`
+	LastName  string   `json:"last_name"`
+	Province  string   `json:"province"`
+	City      string   `json:"city"`
+	Services  []string `json:"services"`
+	PetKinds  []string `json:"pet_kinds"`
 }
