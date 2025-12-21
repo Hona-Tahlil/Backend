@@ -70,6 +70,7 @@ var GeneralControllersProviderSet = wire.NewSet(
 	general.NewGeneralUserController,
 	general.NewGeneralPetController,
 	general.NewGeneralProvinceController,
+	general.NewGeneralSearchController,
 	wire.Struct(new(GeneralControllers), "*"),
 )
 
@@ -126,6 +127,7 @@ type GeneralControllers struct {
 	GeneralUserController     *general.GeneralUserController
 	GeneralPetController      *general.GeneralPetController
 	GeneralProvinceController *general.GeneralProvinceController
+	GeneralSearchController   *general.GeneralSearchController
 }
 
 type AdminControllers struct {

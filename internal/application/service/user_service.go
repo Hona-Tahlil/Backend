@@ -238,7 +238,7 @@ func (us *UserService) generateRandomToken() (string, error) {
 
 func (us *UserService) CreateMagicLink(token, email string) string {
 	baseURL := bootstrap.Run().Env.URLs.BaseURL
-	return baseURL + "/auth/verify/email?token=" + token + "?email=" + email
+	return baseURL + "/auth/verify/email?token=" + token + "&email=" + email
 }
 
 func (us *UserService) Register(registerInfo user.RegisterRequest) error {
@@ -286,7 +286,7 @@ func (us *UserService) Register(registerInfo user.RegisterRequest) error {
 }
 func (us *UserService) CreateFPLink(token string, email string) string {
 	baseURL := bootstrap.Run().Env.URLs.BaseURL
-	return baseURL + "/auth/reset-password?token=" + token + "?email=" + email
+	return baseURL + "auth/reset-password?token=" + token + "&email=" + email
 }
 
 func (us *UserService) SendRestPassEmail(email string) error {

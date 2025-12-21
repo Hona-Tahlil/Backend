@@ -45,10 +45,13 @@ func InitializeApplication(container *bootstrap.Config) (*Application, error) {
 	generalPetController := general.NewGeneralPetController(petService)
 	addressService := service.NewAddressService(unitOfWork, userService)
 	generalProvinceController := general.NewGeneralProvinceController(addressService)
+	petSitterService := service.NewPetSitterService(unitOfWork, s3Storage, userService, addressService)
+	generalSearchController := general.NewGeneralSearchController(petSitterService)
 	generalControllers := &GeneralControllers{
 		GeneralUserController:     generalUserController,
 		GeneralPetController:      generalPetController,
 		GeneralProvinceController: generalProvinceController,
+		GeneralSearchController:   generalSearchController,
 	}
 	rbacService := service.NewRBACService(unitOfWork, userService)
 	adminRBACController := admin.NewAdminRBACController(rbacService)
@@ -56,7 +59,6 @@ func InitializeApplication(container *bootstrap.Config) (*Application, error) {
 		AdminRBACController: adminRBACController,
 	}
 	userPetController := user.NewUserPetController(petService)
-	petSitterService := service.NewPetSitterService(unitOfWork, s3Storage, userService, addressService)
 	requestServiceDeps := service.RequestServiceDeps{
 		UserService:      userService,
 		AddressService:   addressService,
@@ -117,7 +119,7 @@ var RepositoryProviderSet = wire.NewSet(persistence.NewRepositoryFactory, persis
 
 var ServiceProviderSet = wire.NewSet(wire.Struct(new(service.RequestServiceDeps), "*"), service.NewUserService, jwt.NewJWTService, jwt.NewJWTKeyManager, mail.NewEmailService, service.NewRBACService, service.NewPetService, service.NewRequestService, service.NewAddressService, service.NewPetSitterService, service.NewCommentService, wire.Bind(new(domainjwt.JWTService), new(*jwt.JWTService)), wire.Bind(new(domainjwt.JWTKeyManager), new(*jwt.JWTKeyManager)), wire.Bind(new(usecase.RBACService), new(*service.RBACService)), wire.Bind(new(usecase.UserService), new(*service.UserService)), wire.Bind(new(usecase.PetService), new(*service.PetService)), wire.Bind(new(usecase.RequestService), new(*service.RequestService)), wire.Bind(new(usecase.AddressService), new(*service.AddressService)), wire.Bind(new(usecase.PetSitterService), new(*service.PetSitterService)), wire.Bind(new(usecase.CommentService), new(*service.CommentService)))
 
-var GeneralControllersProviderSet = wire.NewSet(general.NewGeneralUserController, general.NewGeneralPetController, general.NewGeneralProvinceController, wire.Struct(new(GeneralControllers), "*"))
+var GeneralControllersProviderSet = wire.NewSet(general.NewGeneralUserController, general.NewGeneralPetController, general.NewGeneralProvinceController, general.NewGeneralSearchController, wire.Struct(new(GeneralControllers), "*"))
 
 var AdminControllersProviderSet = wire.NewSet(admin.NewAdminRBACController, wire.Struct(new(AdminControllers), "*"))
 
@@ -148,6 +150,7 @@ type GeneralControllers struct {
 	GeneralUserController     *general.GeneralUserController
 	GeneralPetController      *general.GeneralPetController
 	GeneralProvinceController *general.GeneralProvinceController
+	GeneralSearchController   *general.GeneralSearchController
 }
 
 type AdminControllers struct {
