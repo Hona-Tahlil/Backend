@@ -23,6 +23,7 @@ func main() {
 
 	ginEngine := gin.Default()
 	ginEngine.RedirectTrailingSlash = true
+	ginEngine.RemoveExtraSlash = true
 
 	app, err := wire.InitializeApplication(bootstrap.Run())
 	if err != nil {
@@ -33,7 +34,7 @@ func main() {
 
 	srv := &http.Server{
 		Addr:    ":8080",
-		Handler: ginEngine.Handler(),
+		Handler: app.Middlewares.CORSMiddleware.Handler(ginEngine),
 	}
 
 	go func() {
