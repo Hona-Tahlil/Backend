@@ -9,6 +9,7 @@ import (
 	"hona/backend/internal/domain/exceptions"
 	"hona/backend/internal/domain/ports"
 	"hona/backend/internal/infrastructure/communication/mail"
+	"hona/backend/internal/infrastructure/persistence/repository/postgres"
 	"log"
 	"sort"
 	"time"
@@ -315,6 +316,101 @@ func (rs *RequestService) CancelRequest(info request.CancelRequestRequest) error
 	}
 	requestRepo := rs.unitOfWork.Factory().RequestRepository()
 	return requestRepo.EditRequest(foundRequest)
+}
+
+func (rs *RequestService) SearchRequests(info request.SearchRequestsRequest) ([]request.RequestListItemResponse, int64, error) {
+	options := postgres.NewQueryOptions().WithPagination(info.Limit, info.Offset)
+	if len(info.Filters) > 0 {
+		options.WithFilters(info.Filters)
+	}
+	if len(info.Sorts) > 0 {
+		options.WithSorting(info.Sorts)
+	}
+
+	requestRepo := rs.unitOfWork.Factory().RequestRepository()
+	requests, total, err := requestRepo.SearchRequests(info.UserID, options)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	for i := range requests {
+		if err := rs.PreloadFields(&requests[i], []string{"Service"}); err != nil {
+			return nil, 0, err
+		}
+	}
+
+	res := make([]request.RequestListItemResponse, len(requests))
+	for i := range requests {
+		req := requests[i]
+		petSitter, err := rs.petSitterService.GetPetSitterByID(req.PetSitterID)
+		if err != nil {
+			return nil, 0, err
+		}
+		petSitterUser, err := rs.userService.FindUserByID(petSitter.UserID)
+		if err != nil {
+			return nil, 0, err
+		}
+		res[i] = request.RequestListItemResponse{
+			RequestID:          req.ID,
+			PetSitterUserID:    petSitter.UserID,
+			PetSitterFirstName: petSitterUser.FirstName,
+			PetSitterLastName:  petSitterUser.LastName,
+			Service:            rs.petSitterService.GetServiceResponse(&req.Service),
+			TotalPrice:         req.TotalPrice,
+			Status:             req.Status.String(),
+			UpdatedAt:          req.UpdatedAt,
+		}
+	}
+
+	return res, total, nil
+}
+
+func (rs *RequestService) SearchPetSitterRequests(info request.SearchPetSitterRequestsRequest) ([]request.RequestListItemResponse, int64, error) {
+	petSitter, err := rs.petSitterService.GetPetSitterByUserID(info.PetSitterUserID)
+	if err != nil {
+		return nil, 0, err
+	}
+	petSitterUser, err := rs.userService.FindUserByID(petSitter.UserID)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	options := postgres.NewQueryOptions().WithPagination(info.Limit, info.Offset)
+	if len(info.Filters) > 0 {
+		options.WithFilters(info.Filters)
+	}
+	if len(info.Sorts) > 0 {
+		options.WithSorting(info.Sorts)
+	}
+
+	requestRepo := rs.unitOfWork.Factory().RequestRepository()
+	requests, total, err := requestRepo.SearchRequestsByPetSitterID(petSitter.ID, options)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	for i := range requests {
+		if err := rs.PreloadFields(&requests[i], []string{"Service"}); err != nil {
+			return nil, 0, err
+		}
+	}
+
+	res := make([]request.RequestListItemResponse, len(requests))
+	for i := range requests {
+		req := requests[i]
+		res[i] = request.RequestListItemResponse{
+			RequestID:          req.ID,
+			PetSitterUserID:    petSitter.UserID,
+			PetSitterFirstName: petSitterUser.FirstName,
+			PetSitterLastName:  petSitterUser.LastName,
+			Service:            rs.petSitterService.GetServiceResponse(&req.Service),
+			TotalPrice:         req.TotalPrice,
+			Status:             req.Status.String(),
+			UpdatedAt:          req.UpdatedAt,
+		}
+	}
+
+	return res, total, nil
 }
 
 func (rs *RequestService) GetRequestFullData(info request.GetRequestFullDataRequest) (*request.RequestFullDataResponse, error) {

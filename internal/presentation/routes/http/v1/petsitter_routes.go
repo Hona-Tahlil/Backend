@@ -32,6 +32,7 @@ func SetUpPetSitterRoutes(v1 *gin.RouterGroup, app *wire.Application) {
 		}
 		requests := petsitter.Group("/requests")
 		{
+			requests.POST("/search", app.Controllers.PetSitterControllers.PetSitterRequestController.SearchRequests)
 			requests.GET("/:requestID", app.Controllers.PetSitterControllers.PetSitterRequestController.GetRequestFullData)
 			requests.PUT("/cancel", app.Controllers.PetSitterControllers.PetSitterRequestController.CancelRequest)
 			requests.PUT("/respond", app.Controllers.PetSitterControllers.PetSitterRequestController.RespondToRequest)

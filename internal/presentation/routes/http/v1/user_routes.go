@@ -22,6 +22,7 @@ func SetUpUserRoutes(v1 *gin.RouterGroup, app *wire.Application) {
 	{
 		requests.GET("/", app.Controllers.UserControllers.UserRequestController.GetCreateRequestInfo)
 		requests.POST("/", app.Controllers.UserControllers.UserRequestController.CreateRequest)
+		requests.POST("/search", app.Controllers.UserControllers.UserRequestController.SearchRequests)
 		requests.PUT("/", app.Controllers.UserControllers.UserRequestController.EditRequest)
 		requests.PUT("/cancel", app.Controllers.UserControllers.UserRequestController.CancelRequest)
 		requests.GET("/:requestID", app.Controllers.UserControllers.UserRequestController.GetRequestFullData)

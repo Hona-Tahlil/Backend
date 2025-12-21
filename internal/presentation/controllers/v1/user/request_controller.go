@@ -174,4 +174,59 @@ func (rc *UserRequestController) GetRequestFullData(ctx *gin.Context) {
 	controllers.Respond(ctx, 200, msg, *res)
 }
 
+func (rc *UserRequestController) SearchRequests(ctx *gin.Context) {
+	type Filter struct {
+		Field string `json:"field" validate:"required"`
+		Op    string `json:"op"    validate:"required,oneof== != > < >= <= LIKE IN"`
+		Value any    `json:"value" validate:"required"`
+	}
+	type Sort struct {
+		Field string `json:"field" validate:"required"`
+		Dir   string `json:"dir"   validate:"required,oneof=ASC DESC"`
+	}
+	type SearchRequestsParams struct {
+		Page    int      `json:"page" validate:"omitempty,min=1"`
+		Count   int      `json:"count" validate:"omitempty,min=1,max=100"`
+		Filters []Filter `json:"filters" validate:"omitempty,dive"`
+		Sorts   []Sort   `json:"sorts" validate:"omitempty,dive"`
+	}
+
+	params := controllers.Receive[SearchRequestsParams](ctx)
+	userID := controllers.GetID(ctx)
+	offset, limit := controllers.GetOffsetLimit(params.Page, params.Count)
+
+	filterParams := make([]controllers.FilterParams, len(params.Filters))
+	for i, f := range params.Filters {
+		filterParams[i] = controllers.FilterParams{
+			Field: f.Field,
+			Op:    f.Op,
+			Value: f.Value,
+		}
+	}
+
+	sortParams := make([]controllers.SortParams, len(params.Sorts))
+	for i, s := range params.Sorts {
+		sortParams[i] = controllers.SortParams{
+			Field: s.Field,
+			Dir:   s.Dir,
+		}
+	}
+
+	req := request.SearchRequestsRequest{
+		UserID:  userID,
+		Offset:  offset,
+		Limit:   limit,
+		Filters: controllers.ToFilters(filterParams),
+		Sorts:   controllers.ToSorts(sortParams),
+	}
+	requests, count, err := rc.requestService.SearchRequests(req)
+	if err != nil {
+		panic(err)
+	}
+	data := controllers.NewPaginatedResponse(requests, count, offset, limit)
+
+	msg := controllers.Message{}
+	controllers.Respond(ctx, 200, msg, data)
+}
+
 // TODO: View Requests With Different Filters -> Accepted - Pending - Rejected - Canceled - ... / Different Sorts / Pagination
