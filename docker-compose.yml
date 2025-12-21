@@ -29,9 +29,9 @@ services:
           memory: 64M
 
   app:
-    # build:
-    #   context: .
-    #   dockerfile: Dockerfile
+    build:
+      context: .
+      dockerfile: Dockerfile
     image: ghcr.io/hona-tahlil/backend
     container_name: backend
     restart: unless-stopped

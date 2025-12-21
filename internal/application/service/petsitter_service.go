@@ -6,6 +6,7 @@ import (
 	"hona/backend/bootstrap"
 	"hona/backend/internal/application/dto/address"
 	calendarslot "hona/backend/internal/application/dto/calendar_slot"
+	"hona/backend/internal/application/dto/pet"
 	"hona/backend/internal/application/dto/petsitter"
 	"hona/backend/internal/application/dto/servicedto"
 	"hona/backend/internal/application/usecase"
@@ -728,4 +729,66 @@ func (ps *PetSitterService) SearchPetSittersForAdmin(info petsitter.AdminSearchP
 	}
 
 	return items, total, nil
+}
+
+func (ps *PetSitterService) GetPetSitterDetails(info petsitter.GetPetSitterDetailsRequest) (*petsitter.PetSitterDetailsResponse, error) {
+	foundPetSitter, err := ps.GetPetSitterByUserID(info.PetSitterUserID)
+	if err != nil {
+		return nil, err
+	}
+	err = ps.PreloadFields(foundPetSitter, []string{"Services"})
+	if err != nil {
+		return nil, err
+	}
+
+	personalInfo, err := ps.GetPersonalInfo(info.PetSitterUserID)
+	if err != nil {
+		return nil, err
+	}
+	services, err := ps.GetServicesResponse(foundPetSitter)
+	if err != nil {
+		return nil, err
+	}
+	petKinds := make([]pet.PetKindResponse, 0)
+	for _, pk := range foundPetSitter.PetKinds {
+		petKinds = append(petKinds, pet.PetKindResponse{
+			Num:  pk,
+			Name: pk.String(),
+		})
+	}
+	documents, err := ps.GetDocuments(info.PetSitterUserID)
+	if err != nil {
+		return nil, err
+	}
+	return &petsitter.PetSitterDetailsResponse{
+		PersonalInfo: *personalInfo,
+		Skills: petsitter.SkillsResponse{
+			Bio:      *foundPetSitter.Bio,
+			Services: services,
+			PetKinds: petKinds,
+		},
+		Documents: *documents,
+	}, nil
+}
+
+func (ps *PetSitterService) ChangePetSitterStatus(info petsitter.ChangePetSitterStatusRequest) error {
+	foundPetSitter, err := ps.GetPetSitterByUserID(info.PetSitterUserID)
+	if err != nil {
+		return err
+	}
+	switch info.Status {
+	case enums.PSS_Suspended:
+		if foundPetSitter.Status != enums.PSS_Active && foundPetSitter.Status != enums.PSS_Rejected {
+			return exceptions.NewAccessDeniedError("can't change the status to suspend")
+		}
+	case enums.PSS_Active, enums.PSS_Rejected:
+		if foundPetSitter.Status != enums.PSS_Suspended && foundPetSitter.Status != enums.PSS_InReview {
+			return exceptions.NewAccessDeniedError("can't change the status to active or rejected")
+		}
+	}
+
+	foundPetSitter.Status = info.Status
+
+	petSitterRepo := ps.unitOfWork.Factory().PetSitterRepository()
+	return petSitterRepo.UpdatePetSitter(foundPetSitter)
 }
