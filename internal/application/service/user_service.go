@@ -1,10 +1,9 @@
 package service
 
 import (
-
 	"context"
 	"crypto/rand"
-	"encoding/base64"	
+	"encoding/base64"
 	"hona/backend/bootstrap"
 	"hona/backend/internal/application/dto/rbac"
 	"hona/backend/internal/application/dto/user"
@@ -13,7 +12,7 @@ import (
 	domainjwt "hona/backend/internal/domain/jwt"
 	"hona/backend/internal/domain/ports"
 	domainredis "hona/backend/internal/domain/ports/redis"
-	"hona/backend/internal/infrastructure/mail"
+	"hona/backend/internal/infrastructure/communication/mail"
 	"regexp"
 	"time"
 
@@ -37,31 +36,31 @@ func NewUserService(jwtService domainjwt.JWTService, unitOfWork ports.UnitOfWork
 }
 
 func (us *UserService) GetRolesResponse(user *entities.User) []rbac.RoleResponse {
-	r := make([]rbac.RoleResponse, 0)
-	for _, role := range user.Roles {
-		p := make([]rbac.PermissionResponse, 0)
-		for _, per := range role.Permissions {
+	r := make([]rbac.RoleResponse, len(user.Roles))
+	for j, role := range user.Roles {
+		p := make([]rbac.PermissionResponse, len(role.Permissions))
+		for i, per := range role.Permissions {
 			des := ""
 			if per.Description != nil {
 				des = *per.Description
 			}
-			p = append(p, rbac.PermissionResponse{
+			p[i] = rbac.PermissionResponse{
 				ID:          per.ID,
 				Name:        per.Type.String(),
 				Description: des,
 				Category:    per.Category.String(),
-			})
+			}
 		}
 		des := ""
 		if role.Description != nil {
 			des = *role.Description
 		}
-		r = append(r, rbac.RoleResponse{
+		r[j] = rbac.RoleResponse{
 			ID:          role.ID,
 			Name:        role.Type,
 			Description: des,
 			Permissions: p,
-		})
+		}
 	}
 	return r
 }
@@ -74,11 +73,9 @@ func (us *UserService) Login(loginInfo user.LoginRequest) (*user.LoginResponse, 
 			return nil, "", 0, err
 		}
 
-
 		invalidCredentialsErr := exceptions.NewInvalidCredentialsError("password is wrong")
 		return nil, "", 0, invalidCredentialsErr
 	}
-
 
 	err = us.PreloadFields(foundUser, []string{"Roles.Permissions"})
 	if err != nil {
@@ -95,16 +92,16 @@ func (us *UserService) Login(loginInfo user.LoginRequest) (*user.LoginResponse, 
 
 	return &user.LoginResponse{
 		AccessToken: accessToken,
-		Roles:      roles,
+		Roles:       roles,
 	}, refreshToken, expireTime, nil
 }
 
 func (us *UserService) GetUserInfosResponse(users []entities.User) []rbac.UserInfoResponse {
-	r := make([]rbac.UserInfoResponse, 0)
-	for _, user := range users {
-		r = append(r, rbac.UserInfoResponse{
+	r := make([]rbac.UserInfoResponse, len(users))
+	for i, user := range users {
+		r[i] = rbac.UserInfoResponse{
 			Email: user.Email,
-		})
+		}
 	}
 	return r
 }
@@ -241,7 +238,7 @@ func (us *UserService) generateRandomToken() (string, error) {
 
 func (us *UserService) CreateMagicLink(token, email string) string {
 	baseURL := bootstrap.Run().Env.URLs.BaseURL
-	return baseURL + "/auth/verify/email?token=" + token + "?email=" + email
+	return baseURL + "/auth/verify/email?token=" + token + "&email=" + email
 }
 
 func (us *UserService) Register(registerInfo user.RegisterRequest) error {
@@ -258,11 +255,13 @@ func (us *UserService) Register(registerInfo user.RegisterRequest) error {
 	if err != nil {
 		return err
 	}
-	err = us.unitOfWork.WithTransaction(func(rf ports.RepositoryFactory) error {
-		err = rf.UserRepository().DeleteUserByEmail(registerInfo.Email)
+
+	registrationErr := us.unitOfWork.WithTransaction(func(rf ports.RepositoryFactory) error {
+		err := rf.UserRepository().DeleteUserByEmail(registerInfo.Email)
 		if err != nil {
 			return err
 		}
+
 		newUser := &entities.User{
 			FirstName:       registerInfo.FirstName,
 			LastName:        registerInfo.LastName,
@@ -275,7 +274,7 @@ func (us *UserService) Register(registerInfo user.RegisterRequest) error {
 			return err
 		}
 
-		err = us.SendVerificationEmail(user.SendVerificationEmailRequest{Email: newUser.Email})
+		err = us.SendVerificationEmail(user.SendVerificationEmailRequest{Email: newUser.Email, FirstName: newUser.FirstName, LastName: newUser.LastName})
 		if err != nil {
 			return err
 		}
@@ -283,11 +282,11 @@ func (us *UserService) Register(registerInfo user.RegisterRequest) error {
 		return nil
 	})
 
-	return err
+	return registrationErr
 }
 func (us *UserService) CreateFPLink(token string, email string) string {
 	baseURL := bootstrap.Run().Env.URLs.BaseURL
-	return baseURL + "/auth/reset-password?token=" + token + "?email=" + email
+	return baseURL + "auth/reset-password?token=" + token + "&email=" + email
 }
 
 func (us *UserService) SendRestPassEmail(email string) error {
@@ -394,21 +393,21 @@ func (us *UserService) VerifyEmail(info user.VerifyEmailRequest) error {
 }
 
 func (us *UserService) SendVerificationEmail(info user.SendVerificationEmailRequest) error {
-	user, err := us.FindUserByEmail(info.Email)
-	if err != nil {
-		return err
-	}
+	// user, err := us.FindUserByEmail(info.Email)
+	// if err != nil {
+	// 	return err
+	// }
 	token, err := us.generateRandomToken()
 	if err != nil {
 		return err
 	}
-	redisKey := bootstrap.Run().Constants.RedisKey.GenerateMLKey(user.Email)
+	redisKey := bootstrap.Run().Constants.RedisKey.GenerateMLKey(info.Email)
 	err = us.userCacheRepository.Set(context.Background(), redisKey, token, time.Duration(bootstrap.Run().Env.EmailVerification.ExpireMinutes))
 	if err != nil {
 		return err
 	}
 
-	link := us.CreateMagicLink(token, user.Email)
+	link := us.CreateMagicLink(token, info.Email)
 	data := struct {
 		FirstName    string
 		LastName     string
@@ -416,15 +415,13 @@ func (us *UserService) SendVerificationEmail(info user.SendVerificationEmailRequ
 		ExpiryMinute int
 		Year         int
 	}{
-		FirstName:    user.FirstName,
-		LastName:     user.LastName,
+		FirstName:    info.FirstName,
+		LastName:     info.LastName,
 		MagicLink:    link,
 		ExpiryMinute: bootstrap.Run().Env.EmailVerification.ExpireMinutes,
 		Year:         time.Now().Year(),
 	}
-	us.emailService.SendEmail(user.Email, "Email Verification", bootstrap.Run().Constants.TemplatesPath.EmailVerification, data)
-
-	return nil
+	return us.emailService.SendEmail(info.Email, "Email Verification", bootstrap.Run().Constants.TemplatesPath.EmailVerification, data)
 }
 
 func (us *UserService) RefreshTokens(refreshTokenInfo rbac.RefreshTokenRequest) (*rbac.RefreshTokenResponse, string, int, error) {

@@ -2,7 +2,6 @@ package seeder
 
 import (
 	"hona/backend/internal/domain/entities"
-	"hona/backend/internal/infrastructure/persistence"
 	"log"
 
 	"gorm.io/gorm"
@@ -32,17 +31,9 @@ func (s *DatabaseSeeder) SeedAll() error {
 		return err
 	}
 
-	if err := s.SeedProvincesAndCities(); err != nil {
+	if err := s.SeedServices(30); err != nil {
 		return err
 	}
-
-	// if err := s.SeedServices(30); err != nil {
-	// 	return err
-	// }
-
-	// if err := s.SeedRequests(100); err != nil {
-	// 	return err
-	// }
 
 	log.Println("✅ Database seeding completed!")
 	return nil
@@ -66,18 +57,9 @@ func (s *DatabaseSeeder) SeedPetSitters(count int) error {
 	return seeder.Seed(count)
 }
 
-func (s *DatabaseSeeder) SeedProvincesAndCities() error {
-	unitOfWork := persistence.NewUnitOfWork(s.db)
-	seeder := NewAddressSeeder(unitOfWork, s.db)
-	seeder.SeedProvincesAndCities()
-	return nil
-}
-
 // SeedServices seeds service data
 func (s *DatabaseSeeder) SeedServices(count int) error {
-	// seeder := NewServiceSeeder(s.db)
-	// return seeder.Seed(count)
-	return nil
+	return ServiceSeeder(s.db)
 }
 
 // SeedRequests seeds request data
@@ -90,7 +72,6 @@ func (s *DatabaseSeeder) SeedRequests(count int) error {
 // SeedWallets seeds wallet data
 func (s *DatabaseSeeder) SeedWallets(count int) error {
 	log.Printf("💰 Seeding %d wallets...", count)
-	// TODO: implement when needed
 	log.Println("⚠️  Wallet seeding not implemented yet")
 	return nil
 }
@@ -98,7 +79,6 @@ func (s *DatabaseSeeder) SeedWallets(count int) error {
 // SeedAddresses seeds address data
 func (s *DatabaseSeeder) SeedAddresses(count int) error {
 	log.Printf("📍 Seeding %d addresses...", count)
-	// TODO: implement when needed
 	log.Println("⚠️  Address seeding not implemented yet")
 	return nil
 }
@@ -106,7 +86,6 @@ func (s *DatabaseSeeder) SeedAddresses(count int) error {
 // SeedChats seeds chat data
 func (s *DatabaseSeeder) SeedChats(count int) error {
 	log.Printf("💬 Seeding %d chats...", count)
-	// TODO: implement when needed
 	log.Println("⚠️  Chat seeding not implemented yet")
 	return nil
 }
@@ -127,8 +106,6 @@ func (s *DatabaseSeeder) ClearAll() {
 		&entities.Chat{},
 		&entities.Comment{},
 		&entities.Address{},
-		&entities.Province{},
-		&entities.City{},
 		&entities.TextMessage{},
 		&entities.Transaction{},
 		&entities.Transfer{},

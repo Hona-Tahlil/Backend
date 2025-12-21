@@ -21,6 +21,10 @@ func NewPetSeeder(db *gorm.DB) *PetSeeder {
 }
 
 func (s *PetSeeder) Seed(count int) error {
+	if s.db.First(&entities.Pet{}).Error == nil {
+		log.Println("✓ Pets already seeded, skipping...")
+		return nil
+	}
 	var users []entities.User
 	if err := s.db.Limit(100).Find(&users).Error; err != nil {
 		return fmt.Errorf("failed to fetch users: %w", err)

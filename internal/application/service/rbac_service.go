@@ -1,3 +1,4 @@
+
 package service
 
 import (
@@ -23,18 +24,18 @@ func NewRBACService(unitOfWork ports.UnitOfWork, userService usecase.UserService
 }
 
 func (rs *RBACService) GetRoleResponse(role entities.Role) *rbac.RoleResponse {
-	p := make([]rbac.PermissionResponse, 0)
-	for _, per := range role.Permissions {
+	p := make([]rbac.PermissionResponse, len(role.Permissions))
+	for i, per := range role.Permissions {
 		des := ""
 		if per.Description != nil {
 			des = *per.Description
 		}
-		p = append(p, rbac.PermissionResponse{
+		p[i] = rbac.PermissionResponse{
 			ID:          per.ID,
 			Name:        per.Type.String(),
 			Description: des,
 			Category:    per.Category.String(),
-		})
+		}
 	}
 	des := ""
 	if role.Description != nil {
@@ -50,8 +51,6 @@ func (rs *RBACService) GetRoleResponse(role entities.Role) *rbac.RoleResponse {
 }
 
 func (rs *RBACService) ListRolesWithUsers(info rbac.ListRolesWithUsersRequest) ([]rbac.RoleWithUsersResponse, error) {
-	r := make([]rbac.RoleWithUsersResponse, 0)
-
 	limit := info.Count
 	offset := (info.Page - 1) * limit
 
@@ -59,12 +58,13 @@ func (rs *RBACService) ListRolesWithUsers(info rbac.ListRolesWithUsersRequest) (
 	if err != nil {
 		return nil, err
 	}
-	for _, role := range roles {
+	r := make([]rbac.RoleWithUsersResponse, len(roles))
+	for i, role := range roles {
 		res, err := rs.getRoleWithUsers(&role, limit, offset)
 		if err != nil {
 			return nil, err
 		}
-		r = append(r, *res)
+		r[i] = *res
 	}
 
 	return r, nil
@@ -186,15 +186,15 @@ func (rs *RBACService) GetRoleByType(info rbac.GetRoleByTypeRequest) (*rbac.Role
 
 func (rs *RBACService) GetAllRoles() ([]rbac.RoleResponse, error) {
 	rbacRepo := rs.unitOfWork.Factory().RBACRepository()
-	r := make([]rbac.RoleResponse, 0)
 
 	roles, err := rbacRepo.GetAllRoles()
 	if err != nil {
 		return nil, err
 	}
-	for _, role := range roles {
+	r := make([]rbac.RoleResponse, len(roles))
+	for i, role := range roles {
 		res := rs.GetRoleResponse(role)
-		r = append(r, *res)
+		r[i] = *res
 	}
 
 	return r, nil
@@ -386,14 +386,14 @@ func (rs *RBACService) RemovePermissionFromRole(info rbac.RemovePermissionFromRo
 
 func (rs *RBACService) GetPermissionRoles(info rbac.GetPermissionRolesRequest) ([]rbac.RoleResponse, error) {
 	rbacRepo := rs.unitOfWork.Factory().RBACRepository()
-	r := make([]rbac.RoleResponse, 0)
 
 	roles, err := rbacRepo.GetPermissionRolesByID(info.PermissionID)
 	if err != nil {
 		return nil, err
 	}
-	for _, role := range roles {
-		r = append(r, *rs.GetRoleResponse(role))
+	r := make([]rbac.RoleResponse, len(roles))
+	for i, role := range roles {
+		r[i] = *rs.GetRoleResponse(role)
 	}
 
 	return r, nil

@@ -10,9 +10,9 @@ const (
 func (serviceType ServiceType) String() string {
 	switch serviceType {
 	case ServiceType(Walking):
-		return "walking"
+		return "پیاده روی"
 	case ServiceType(Watching):
-		return "watching"
+		return "نگهداری"
 	}
 	return ""
 }

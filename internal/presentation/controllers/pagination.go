@@ -1,5 +1,7 @@
 package controllers
 
+import "hona/backend/internal/application/dto/general"
+
 func GetOffsetLimit(page, pageSize, defaultPage, defaultPageSize int) (int, int) {
 	if page <= 0 {
 		page = defaultPage
@@ -9,6 +11,44 @@ func GetOffsetLimit(page, pageSize, defaultPage, defaultPageSize int) (int, int)
 	}
 
 	return (page - 1) * pageSize, pageSize
+}
+
+// FilterParams represents a filter with Field, Op, and Value
+type FilterParams struct {
+	Field string
+	Op    string
+	Value any
+}
+
+// SortParams represents a sort with Field and Dir
+type SortParams struct {
+	Field string
+	Dir   string
+}
+
+// ToFilters converts FilterParams to general.Filter DTO
+func ToFilters(filters []FilterParams) []general.Filter {
+	result := make([]general.Filter, len(filters))
+	for i, f := range filters {
+		result[i] = general.Filter{
+			Field: f.Field,
+			Op:    f.Op,
+			Value: f.Value,
+		}
+	}
+	return result
+}
+
+// ToSorts converts SortParams to general.Sort DTO
+func ToSorts(sorts []SortParams) []general.Sort {
+	result := make([]general.Sort, len(sorts))
+	for i, s := range sorts {
+		result[i] = general.Sort{
+			Field: s.Field,
+			Dir:   s.Dir,
+		}
+	}
+	return result
 }
 
 type PaginationMeta struct {

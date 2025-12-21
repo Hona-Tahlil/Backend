@@ -27,9 +27,9 @@ func fmtTime(min int) string {
 }
 
 func GetAllSlots() []Slot {
-	slots := make([]Slot, 0, TotalSlots)
+	slots := make([]Slot, TotalSlots)
 	for i := 1; i <= TotalSlots; i++ {
-		slots = append(slots, Slot(i))
+		slots[i-1] = Slot(i)
 	}
 	return slots
 }

@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"hona/backend/bootstrap"
 	"hona/backend/internal/presentation/routes"
 	"hona/backend/wire"
@@ -21,6 +22,7 @@ func main() {
 	gin.SetMode(gin.ReleaseMode)
 
 	ginEngine := gin.Default()
+	ginEngine.RedirectTrailingSlash = true
 
 	app, err := wire.InitializeApplication(bootstrap.Run())
 	if err != nil {
@@ -36,7 +38,7 @@ func main() {
 
 	go func() {
 		log.Println("Server Running ...")
-		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			log.Fatalf("listen: %s\n", err)
 		}
 	}()
@@ -53,5 +55,3 @@ func main() {
 	}
 	log.Println("Server exiting")
 }
-
-// TODO: use len and index instead of append everywhere!

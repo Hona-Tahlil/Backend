@@ -61,3 +61,13 @@ type SkillsResponse struct {
 	PetKinds []pet.PetKindResponse            `json:"pet_kinds"`
 	Services []servicedto.ServiceInfoResponse `json:"services"`
 }
+
+type PetSitterInfoResponse struct {
+	ID        uint     `json:"id"`
+	FirstName string   `json:"first_name"`
+	LastName  string   `json:"last_name"`
+	Province  string   `json:"province"`
+	City      string   `json:"city"`
+	Services  []string `json:"services"`
+	PetKinds  []string `json:"pet_kinds"`
+}

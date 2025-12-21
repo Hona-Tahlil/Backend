@@ -26,10 +26,15 @@ type PetSitterService interface {
 	GetPetsitterStatus(userID uint) (*petsitter.PetSitterStatusResponse, error)
 	FindPetSitterByID(id uint) (*entities.PetSitter, error)
 	GetAllPetSitters(page, count int) (*petsitter.PetSittersListResponse, error)
-	GetPetsitterServicesResponse(Services []enums.ServiceType) []entities.Service
+	GetPetsitterServicesResponse(Services []enums.ServiceType, petSitterID uint) []entities.Service
 	CheckPetSitterStatus(pss enums.PetSitterStatus) error
 	CheckPetSitterStep(currentStep enums.OnboardingStep, requiredStep enums.OnboardingStep) error
 	SubmitPersonalInfo(petSitterInfo petsitter.SubmitPersonalInfoRequest) error
+	GetCalendarSlotsResponse(calendarSlots []entities.CalendarSlot) []calendarslot.CalendarSlotInfoResponse
+	GetFreeMap(calendarSlots []entities.CalendarSlot) map[string]map[interface{}]bool
+	FindServiceByID(id uint) (*entities.Service, error)
+	GetServiceResponse(serviceEntity *entities.Service) servicedto.ServiceInfoResponse
+	SearchPetSitters(info petsitter.SearchPetSittersRequest) ([]*petsitter.PetSitterInfoResponse, int64, error)
 	GetPetSitterDetails(info petsitter.GetPetSitterDetailsRequest) (*petsitter.PetSitterDetailsResponse, error)
 	ChangePetSitterStatus(info petsitter.ChangePetSitterStatusRequest) error
 }

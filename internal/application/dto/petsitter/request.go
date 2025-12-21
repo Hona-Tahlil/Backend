@@ -1,6 +1,7 @@
 package petsitter
 
 import (
+	"hona/backend/internal/application/dto/general"
 	"hona/backend/internal/domain/enums"
 	"mime/multipart"
 	"time"
@@ -55,4 +56,20 @@ type GetPetSitterDetailsRequest struct {
 type ChangePetSitterStatusRequest struct {
 	PetSitterUserID uint
 	Status          enums.PetSitterStatus
+}
+
+type GetPetSitterDetailsRequest struct {
+	PetSitterUserID uint
+}
+
+type ChangePetSitterStatusRequest struct {
+	PetSitterUserID uint
+	Status          enums.PetSitterStatus
+}
+
+type SearchPetSittersRequest struct {
+	Offset  int
+	Limit   int
+	Filters []general.Filter
+	Sorts   []general.Sort
 }

@@ -25,14 +25,14 @@ var successMessages = bootstrap.Run().Constants.SuccessMessages
 
 func (uc *UserPetController) AddPet(ctx *gin.Context) {
 	type AddPetParams struct {
-		Name      string          `json:"name" validate:"required,min=1,max=100"`
-		Kind      enums.PetKind   `json:"kind" validate:"required,min=1,max=18"`
-		Species   enums.Species   `json:"species" validate:"required,min=1,max=67"`
-		BirthDate *time.Time      `json:"birthDate"`
-		IsAdult   bool            `json:"isAdult" validate:"omitempty"`
-		Gender    enums.PetGender `json:"gender" validate:"omitempty,min=1,max=3"`
-		Weight    *float32        `json:"weight" validate:"omitempty,min=0.1,max=500"`
-		AboutPet  *string         `json:"aboutPet" validate:"omitempty,max=10000"`
+		Name      string     `form:"name" validate:"required,min=1,max=100"`
+		Kind      uint       `form:"kind" validate:"required,min=1,max=18"`
+		Species   uint       `form:"species" validate:"required,min=1,max=67"`
+		BirthDate *time.Time `form:"birthDate"`
+		IsAdult   bool       `form:"isAdult" validate:"omitempty"`
+		Gender    uint       `form:"gender" validate:"omitempty,min=1,max=3"`
+		Weight    *float32   `form:"weight" validate:"omitempty,min=0.1,max=500"`
+		AboutPet  *string    `form:"aboutPet" validate:"omitempty,max=10000"`
 	}
 	file, err := ctx.FormFile(bootstrap.Run().Env.Storage.Buckets.PetProfilePic)
 	if err != nil {
@@ -43,11 +43,11 @@ func (uc *UserPetController) AddPet(ctx *gin.Context) {
 	AddPetInfo := pet.AddPetRequest{
 		UserID:     UserID,
 		Name:       params.Name,
-		Kind:       params.Kind,
-		Species:    params.Species,
+		Kind:       enums.PetKind(params.Kind),
+		Species:    enums.Species(params.Species),
 		BirthDate:  params.BirthDate,
 		IsAdult:    params.IsAdult,
-		Gender:     params.Gender,
+		Gender:     enums.PetGender(params.Gender),
 		Weight:     params.Weight,
 		AboutPet:   params.AboutPet,
 		ProfilePic: file,
@@ -65,29 +65,31 @@ func (uc *UserPetController) AddPet(ctx *gin.Context) {
 
 func (uc *UserPetController) UpdatePet(ctx *gin.Context) {
 	type UpdatePetParams struct {
-		ID        uint            `json:"id" validate:"required"`
-		Name      string          `json:"name" validate:"required,min=1,max=100"`
-		Kind      enums.PetKind   `json:"kind" validate:"required,min=1,max=18"`
-		Species   enums.Species   `json:"species" validate:"required,min=1,max=67"`
-		BirthDate *time.Time      `json:"birthDate" validate:"omitempty,datetime"`
-		IsAdult   bool            `json:"isAdult" validate:"omitempty"`
-		Gender    enums.PetGender `json:"gender" validate:"omitempty,min=1,max=3"`
-		Weight    *float32        `json:"weight" validate:"omitempty,min=0.1,max=500"`
-		AboutPet  *string         `json:"aboutPet" validate:"omitempty,max=10000"`
+		ID        uint       `form:"id" validate:"required"`
+		Name      string     `form:"name" validate:"required,min=1,max=100"`
+		Kind      uint       `form:"kind" validate:"required,min=1,max=18"`
+		Species   uint       `form:"species" validate:"required,min=1,max=67"`
+		BirthDate *time.Time `form:"birthDate" validate:"omitempty,datetime"`
+		IsAdult   bool       `form:"isAdult" validate:"omitempty"`
+		Gender    uint       `form:"gender" validate:"omitempty,min=1,max=3"`
+		Weight    *float32   `form:"weight" validate:"omitempty,min=0.1,max=500"`
+		AboutPet  *string    `form:"aboutPet" validate:"omitempty,max=10000"`
 	}
 	file, err := ctx.FormFile(bootstrap.Run().Env.Storage.Buckets.PetProfilePic)
 	if err != nil {
 		file = nil
 	}
 	params := controllers.Receive[UpdatePetParams](ctx)
+	UserID := controllers.GetID(ctx)
 	UpdatePetInfo := pet.UpdatePetRequest{
+		UserID:     UserID,
 		ID:         params.ID,
 		Name:       params.Name,
-		Kind:       params.Kind,
-		Species:    params.Species,
+		Kind:       enums.PetKind(params.Kind),
+		Species:    enums.Species(params.Species),
 		BirthDate:  params.BirthDate,
 		IsAdult:    params.IsAdult,
-		Gender:     params.Gender,
+		Gender:     enums.PetGender(params.Gender),
 		Weight:     params.Weight,
 		AboutPet:   params.AboutPet,
 		ProfilePic: file,
@@ -109,8 +111,10 @@ func (uc *UserPetController) RemovePet(ctx *gin.Context) {
 		ID uint `uri:"id"`
 	}
 	params := controllers.Receive[RemovePetParams](ctx)
+	UserID := controllers.GetID(ctx)
 	RemovePetInfo := pet.RemovePetRequest{
-		ID: params.ID,
+		UserID: UserID,
+		ID:     params.ID,
 	}
 	err := uc.petService.RemovePet(RemovePetInfo)
 	if err != nil {

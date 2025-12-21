@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"fmt"
 	"hona/backend/bootstrap"
 	"net/http"
 
@@ -33,10 +32,10 @@ func Respond[T Message | []Message](ctx *gin.Context, statusCode int, messages T
 		if msg.Text == "" {
 			msg.Text = http.StatusText(statusCode)
 		}
-		var translatedParams []string
-		for _, param := range msg.Params {
+		translatedParams := make([]string, len(msg.Params))
+		for i, param := range msg.Params {
 			p, _ := translator.T(param)
-			translatedParams = append(translatedParams, p)
+			translatedParams[i] = p
 		}
 		message, _ := translator.T(msg.Text, translatedParams...)
 		ctx.JSON(statusCode, singleMessageResponse{
@@ -55,7 +54,6 @@ func Respond[T Message | []Message](ctx *gin.Context, statusCode int, messages T
 			translatedTag, _ := translator.T(ms.Text, translatedFieldValue)
 			mms.Messages[ms.Params[0]] = translatedTag
 		}
-		fmt.Println("111")
 		ctx.JSON(statusCode, mms)
 	}
 }
