@@ -11,7 +11,7 @@ type UserRepository interface {
 	CreateUser(user *entities.User) error
 	SaveUser(user *entities.User) error
 	FindUserByID(userID uint) (*entities.User, error)
-	GetRoleUsersByID(roleID uint, options *postgres.QueryOptions) ([]entities.User, error)
+	GetRoleUsersByID(roleID uint, options *postgres.QueryOptions) ([]entities.User, int64, error)
 	PreloadPetSitter(user *entities.User) error
 	PreloadFields(user *entities.User, fields []string) error
 	PreloadAddress(user *entities.User) error

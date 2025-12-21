@@ -15,7 +15,7 @@ type UserService interface {
 	FindUserByID(id uint) (*entities.User, error)
 	RefreshTokens(refreshTokenInfo rbac.RefreshTokenRequest) (*rbac.RefreshTokenResponse, string, int, error)
 	GetRolesResponse(user *entities.User) []rbac.RoleResponse
-	GetRoleUsersByID(roleID uint, options *postgres.QueryOptions) ([]entities.User, error)
+	GetRoleUsersByID(roleID uint, options *postgres.QueryOptions) ([]entities.User, int64, error)
 	GetUserInfosResponse(users []entities.User) []rbac.UserInfoResponse
 	Register(registerInfo user.RegisterRequest) error
 	ResetPassword(resetPasswordInfo user.ResetPasswordRequest) error

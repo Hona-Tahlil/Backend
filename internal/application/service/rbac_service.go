@@ -57,7 +57,7 @@ func (rs *RBACService) ListRolesWithUsers(info rbac.ListRolesWithUsersRequest) (
 	}
 	r := make([]rbac.RoleWithUsersResponse, len(roles))
 	for i, role := range roles {
-		res, err := rs.getRoleWithUsers(&role, info.Limit, info.Offset)
+		res, _, err := rs.getRoleWithUsers(&role, info.Limit, info.Offset)
 		if err != nil {
 			return nil, err
 		}
@@ -67,24 +67,24 @@ func (rs *RBACService) ListRolesWithUsers(info rbac.ListRolesWithUsersRequest) (
 	return r, nil
 }
 
-func (rs *RBACService) getRoleWithUsers(role *entities.Role, limit, offset int) (*rbac.RoleWithUsersResponse, error) {
+func (rs *RBACService) getRoleWithUsers(role *entities.Role, limit, offset int) (*rbac.RoleWithUsersResponse, int64, error) {
 	options := postgres.NewQueryOptions().
 		WithPagination(limit, offset)
 
 	rbacRepo := rs.unitOfWork.Factory().RBACRepository()
-	users, err := rs.userService.GetRoleUsersByID(role.ID, options)
+	users, total, err := rs.userService.GetRoleUsersByID(role.ID, options)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
 	if err := rbacRepo.PreloadRolePermissions(role); err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
 	return &rbac.RoleWithUsersResponse{
 		Role:  *rs.GetRoleResponse(*role),
 		Users: rs.userService.GetUserInfosResponse(users),
-	}, nil
+	}, total, nil
 }
 
 func (rs *RBACService) findRoleByID(roleID uint) (*entities.Role, error) {
@@ -142,19 +142,19 @@ func (rs *RBACService) findPermissionByID(permissionID uint) (*entities.Permissi
 	return foundPermission, nil
 }
 
-func (rs *RBACService) GetRoleWithUsersByID(info rbac.GetRoleWithUsersByIDRequest) (*rbac.RoleWithUsersResponse, error) {
+func (rs *RBACService) GetRoleWithUsersByID(info rbac.GetRoleWithUsersByIDRequest) (*rbac.RoleWithUsersResponse, int64, error) {
 	role, err := rs.findRoleByID(info.ID)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
 	return rs.getRoleWithUsers(role, info.Limit, info.Offset)
 }
 
-func (rs *RBACService) GetRoleWithUsersByType(info rbac.GetRoleWithUsersByTypeRequest) (*rbac.RoleWithUsersResponse, error) {
+func (rs *RBACService) GetRoleWithUsersByType(info rbac.GetRoleWithUsersByTypeRequest) (*rbac.RoleWithUsersResponse, int64, error) {
 	role, err := rs.findRoleByType(info.Type)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
 	return rs.getRoleWithUsers(role, info.Limit, info.Offset)

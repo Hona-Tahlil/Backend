@@ -107,13 +107,13 @@ func (us *UserService) GetUserInfosResponse(users []entities.User) []rbac.UserIn
 	return r
 }
 
-func (us *UserService) GetRoleUsersByID(roleID uint, options *postgres.QueryOptions) ([]entities.User, error) {
+func (us *UserService) GetRoleUsersByID(roleID uint, options *postgres.QueryOptions) ([]entities.User, int64, error) {
 	userRepo := us.unitOfWork.Factory().UserRepository()
-	users, err := userRepo.GetRoleUsersByID(roleID, options)
+	users, total, err := userRepo.GetRoleUsersByID(roleID, options)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
-	return users, nil
+	return users, total, nil
 }
 
 func (us *UserService) FindVerifiedUserByEmail(email string) (*entities.User, error) {

@@ -4,7 +4,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func ApplyModifiers(db *gorm.DB, options QueryOptions) *gorm.DB {
+func ApplyModifiers(db *gorm.DB, options QueryOptions) (*gorm.DB, int64) {
 	var total int64
 	if options.HasFilters() {
 		filterModifier := NewFilterModifier(options.Filters.Filters)
@@ -21,7 +21,7 @@ func ApplyModifiers(db *gorm.DB, options QueryOptions) *gorm.DB {
 		paginationModifier := NewPaginationModifier(options.Pagination.Offset, options.Pagination.Limit)
 		db = paginationModifier.Apply(db)
 	}
-	return db
+	return db, total
 }
 
 // func applyModifiers(db *gorm.DB, modifiers ...QueryModifier) *gorm.DB {

@@ -56,13 +56,13 @@ func (ac *AdminRBACController) GetRoleWithUsersByID(ctx *gin.Context) {
 		Limit:  limit,
 		Offset: offset,
 	}
-	res, err := ac.rbacService.GetRoleWithUsersByID(GetRoleWithUsersByIDInfo)
+	res, total, err := ac.rbacService.GetRoleWithUsersByID(GetRoleWithUsersByIDInfo)
 	if err != nil {
 		panic(err)
 	}
 
 	msg := controllers.Message{}
-	controllers.Respond(ctx, 200, msg, *res)
+	controllers.Respond(ctx, 200, msg, controllers.NewPaginatedResponse(*res, total, offset, limit))
 }
 
 func (ac *AdminRBACController) GetRoleWithUsersByType(ctx *gin.Context) {
@@ -79,13 +79,13 @@ func (ac *AdminRBACController) GetRoleWithUsersByType(ctx *gin.Context) {
 		Limit:  limit,
 		Offset: offset,
 	}
-	res, err := ac.rbacService.GetRoleWithUsersByType(GetRoleWithUsersByTypeInfo)
+	res, total, err := ac.rbacService.GetRoleWithUsersByType(GetRoleWithUsersByTypeInfo)
 	if err != nil {
 		panic(err)
 	}
 
 	msg := controllers.Message{}
-	controllers.Respond(ctx, 200, msg, *res)
+	controllers.Respond(ctx, 200, msg, controllers.NewPaginatedResponse(*res, total, offset, limit))
 }
 
 func (ac *AdminRBACController) GetRoleByID(ctx *gin.Context) {
