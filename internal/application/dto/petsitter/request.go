@@ -49,7 +49,14 @@ type SubmitSkillsRequest struct {
 	Services []enums.ServiceType
 }
 
+type GetPetSitterDetailsRequest struct {
+	PetSitterUserID uint
+}
 
+type ChangePetSitterStatusRequest struct {
+	PetSitterUserID uint
+	Status          enums.PetSitterStatus
+}
 
 type SearchPetSittersRequest struct {
 	Offset  int

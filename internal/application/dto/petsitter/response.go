@@ -1,6 +1,8 @@
 package petsitter
 
 import (
+	"hona/backend/internal/application/dto/pet"
+	"hona/backend/internal/application/dto/servicedto"
 	"hona/backend/internal/domain/enums"
 )
 
@@ -46,6 +48,18 @@ type PetSittersListResponse struct {
 	Page       int                         `json:"page"`
 	Count      int                         `json:"count"`
 	PetSitters []PetSitterListItemResponse `json:"pet_sitters"`
+}
+
+type PetSitterDetailsResponse struct {
+	PersonalInfo PersonalInfoResponse `json:"personalInfo"`
+	Documents    DocumentResponse     `json:"documents"`
+	Skills       SkillsResponse       `json:"skills"`
+}
+
+type SkillsResponse struct {
+	Bio      string                           `json:"bio"`
+	PetKinds []pet.PetKindResponse            `json:"pet_kinds"`
+	Services []servicedto.ServiceInfoResponse `json:"services"`
 }
 
 type PetSitterInfoResponse struct {

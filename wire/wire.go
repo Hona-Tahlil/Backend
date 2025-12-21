@@ -76,6 +76,7 @@ var GeneralControllersProviderSet = wire.NewSet(
 
 var AdminControllersProviderSet = wire.NewSet(
 	admin.NewAdminRBACController,
+	admin.NewAdminPetSitterController,
 	wire.Struct(new(AdminControllers), "*"),
 )
 
@@ -131,7 +132,8 @@ type GeneralControllers struct {
 }
 
 type AdminControllers struct {
-	AdminRBACController *admin.AdminRBACController
+	AdminRBACController      *admin.AdminRBACController
+	AdminPetSitterController *admin.AdminPetSitterController
 }
 
 type UserControllers struct {
