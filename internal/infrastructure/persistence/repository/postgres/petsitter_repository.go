@@ -20,7 +20,8 @@ func NewPetSitterRepository(db *gorm.DB) *PetSitterRepository {
 func (pr *PetSitterRepository) FindPetSitterByUserID(id uint) (*entities.PetSitter, error) {
 	var foundPetsitter entities.PetSitter
 
-	if result := pr.db.First(&foundPetsitter, "userID = ?", id); result.Error != nil {
+	// if result := pr.db.First(&foundPetsitter, "userID = ?", id); result.Error != nil {
+	if result := pr.db.Where("user_id = ?", id).First(&foundPetsitter); result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
 			return nil, nil
 		}

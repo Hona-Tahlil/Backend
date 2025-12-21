@@ -6,12 +6,14 @@ import (
 )
 
 type PetBasicDataResponse struct {
-	ID          uint   `json:"id"`
-	Name        string `json:"name"`
-	Kind        string `json:"kind"`
-	Species     string `json:"species"`
-	Gender      string `json:"gender"`
-	PictureLink string `json:"pictureLink"`
+	ID          uint       `json:"id"`
+	Name        string     `json:"name"`
+	Kind        string     `json:"kind"`
+	Species     string     `json:"species"`
+	Gender      string     `json:"gender"`
+	PictureLink string     `json:"pictureLink"`
+	BirthDate   *time.Time `json:"birthDate"`
+	IsAdult     bool       `json:"isAdult"`
 }
 
 type PetFullDataResponse struct {

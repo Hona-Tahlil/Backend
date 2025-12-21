@@ -255,11 +255,13 @@ func (us *UserService) Register(registerInfo user.RegisterRequest) error {
 	if err != nil {
 		return err
 	}
-	err = us.unitOfWork.WithTransaction(func(rf ports.RepositoryFactory) error {
-		err = rf.UserRepository().DeleteUserByEmail(registerInfo.Email)
+
+	registrationErr := us.unitOfWork.WithTransaction(func(rf ports.RepositoryFactory) error {
+		err := rf.UserRepository().DeleteUserByEmail(registerInfo.Email)
 		if err != nil {
 			return err
 		}
+
 		newUser := &entities.User{
 			FirstName:       registerInfo.FirstName,
 			LastName:        registerInfo.LastName,
@@ -272,7 +274,7 @@ func (us *UserService) Register(registerInfo user.RegisterRequest) error {
 			return err
 		}
 
-		err = us.SendVerificationEmail(user.SendVerificationEmailRequest{Email: newUser.Email})
+		err = us.SendVerificationEmail(user.SendVerificationEmailRequest{Email: newUser.Email, FirstName: newUser.FirstName, LastName: newUser.LastName})
 		if err != nil {
 			return err
 		}
@@ -280,7 +282,7 @@ func (us *UserService) Register(registerInfo user.RegisterRequest) error {
 		return nil
 	})
 
-	return err
+	return registrationErr
 }
 func (us *UserService) CreateFPLink(token string, email string) string {
 	baseURL := bootstrap.Run().Env.URLs.BaseURL
@@ -391,21 +393,21 @@ func (us *UserService) VerifyEmail(info user.VerifyEmailRequest) error {
 }
 
 func (us *UserService) SendVerificationEmail(info user.SendVerificationEmailRequest) error {
-	user, err := us.FindUserByEmail(info.Email)
-	if err != nil {
-		return err
-	}
+	// user, err := us.FindUserByEmail(info.Email)
+	// if err != nil {
+	// 	return err
+	// }
 	token, err := us.generateRandomToken()
 	if err != nil {
 		return err
 	}
-	redisKey := bootstrap.Run().Constants.RedisKey.GenerateMLKey(user.Email)
+	redisKey := bootstrap.Run().Constants.RedisKey.GenerateMLKey(info.Email)
 	err = us.userCacheRepository.Set(context.Background(), redisKey, token, time.Duration(bootstrap.Run().Env.EmailVerification.ExpireMinutes))
 	if err != nil {
 		return err
 	}
 
-	link := us.CreateMagicLink(token, user.Email)
+	link := us.CreateMagicLink(token, info.Email)
 	data := struct {
 		FirstName    string
 		LastName     string
@@ -413,13 +415,13 @@ func (us *UserService) SendVerificationEmail(info user.SendVerificationEmailRequ
 		ExpiryMinute int
 		Year         int
 	}{
-		FirstName:    user.FirstName,
-		LastName:     user.LastName,
+		FirstName:    info.FirstName,
+		LastName:     info.LastName,
 		MagicLink:    link,
 		ExpiryMinute: bootstrap.Run().Env.EmailVerification.ExpireMinutes,
 		Year:         time.Now().Year(),
 	}
-	us.emailService.SendEmail(user.Email, "Email Verification", bootstrap.Run().Constants.TemplatesPath.EmailVerification, data)
+	us.emailService.SendEmail(info.Email, "Email Verification", bootstrap.Run().Constants.TemplatesPath.EmailVerification, data)
 
 	return nil
 }

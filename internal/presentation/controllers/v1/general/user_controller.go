@@ -122,7 +122,10 @@ func (gc *GeneralUserController) ForgotPassword(ctx *gin.Context) {
 	if err := gc.userService.ForgotPassword(forgotPasswordInfo); err != nil {
 		panic(err)
 	}
-	msg := controllers.Message{}
+	msg := controllers.Message{
+		Text:   "success.forgotPassword",
+		Params: []string{},
+	}
 	controllers.Respond(ctx, 200, msg, nil)
 }
 
@@ -141,7 +144,10 @@ func (gc *GeneralUserController) ResetPassword(ctx *gin.Context) {
 	if err := gc.userService.ResetPassword(resetPasswordInfo); err != nil {
 		panic(err)
 	}
-	msg := controllers.Message{}
+	msg := controllers.Message{
+		Text:   "success.resetPassword",
+		Params: []string{},
+	}
 	controllers.Respond(ctx, 200, msg, nil)
 }
 

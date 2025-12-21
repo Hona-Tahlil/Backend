@@ -19,7 +19,6 @@ func NewGeneralSearchController(petSitterService *service.PetSitterService) *Gen
 	}
 }
 
-
 func (gc *GeneralSearchController) SearchPetSitters(ctx *gin.Context) {
 	type Filter struct {
 		Field string `json:"field" validate:"required"`
@@ -76,6 +75,5 @@ func (gc *GeneralSearchController) SearchPetSitters(ctx *gin.Context) {
 		Text:   "success.petSitterSearch",
 		Params: []string{},
 	}
-
 	controllers.Respond(ctx, 200, msg, data)
 }
