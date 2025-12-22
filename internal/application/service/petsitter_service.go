@@ -387,6 +387,97 @@ func (ps *PetSitterService) GetPetsitterStatus(userID uint) (*petsitter.PetSitte
 	}, nil
 }
 
+func (ps *PetSitterService) GetPetKinds(info petsitter.GetPetKindsRequest) ([]pet.PetKindResponse, error) {
+	foundPetSitter, err := ps.GetPetSitterByUserID(info.UserID)
+	if err != nil {
+		return nil, err
+	}
+	return ps.buildPetKindsResponse(foundPetSitter.PetKinds), nil
+}
+
+func (ps *PetSitterService) UpdatePetKinds(info petsitter.UpdatePetKindsRequest) error {
+	foundPetSitter, err := ps.GetPetSitterByUserID(info.UserID)
+	if err != nil {
+		return err
+	}
+	foundPetSitter.PetKinds = info.PetKinds
+	petSitterRepo := ps.unitOfWork.Factory().PetSitterRepository()
+	return petSitterRepo.UpdatePetSitter(foundPetSitter)
+}
+
+func (ps *PetSitterService) GetServices(info petsitter.GetServicesRequest) ([]servicedto.ServiceInfoResponse, error) {
+	foundPetSitter, err := ps.GetPetSitterByUserID(info.UserID)
+	if err != nil {
+		return nil, err
+	}
+	if err := ps.PreloadFields(foundPetSitter, []string{"Services"}); err != nil {
+		return nil, err
+	}
+	return ps.GetServicesResponse(foundPetSitter)
+}
+
+func (ps *PetSitterService) CreateService(info petsitter.CreateServiceRequest) (servicedto.ServiceInfoResponse, error) {
+	foundPetSitter, err := ps.GetPetSitterByUserID(info.UserID)
+	if err != nil {
+		return servicedto.ServiceInfoResponse{}, err
+	}
+	service := entities.Service{
+		PetSitterID: foundPetSitter.ID,
+		Type:        info.Type,
+		Price:       info.Price,
+		Description: info.Description,
+	}
+	petSitterRepo := ps.unitOfWork.Factory().PetSitterRepository()
+	if err := petSitterRepo.CreateService(&service); err != nil {
+		return servicedto.ServiceInfoResponse{}, err
+	}
+	return ps.GetServiceResponse(&service), nil
+}
+
+func (ps *PetSitterService) UpdateService(info petsitter.UpdateServiceRequest) (servicedto.ServiceInfoResponse, error) {
+	foundPetSitter, err := ps.GetPetSitterByUserID(info.UserID)
+	if err != nil {
+		return servicedto.ServiceInfoResponse{}, err
+	}
+	petSitterRepo := ps.unitOfWork.Factory().PetSitterRepository()
+	foundService, err := petSitterRepo.FindServiceByID(info.ID)
+	if err != nil {
+		return servicedto.ServiceInfoResponse{}, err
+	}
+	if foundService == nil {
+		return servicedto.ServiceInfoResponse{}, exceptions.NewNotFoundError(bootstrap.Run().Constants.ErrorFields.Service)
+	}
+	if foundService.PetSitterID != foundPetSitter.ID {
+		return servicedto.ServiceInfoResponse{}, exceptions.NewAccessDeniedError("can't update other's services")
+	}
+	foundService.Type = info.Type
+	foundService.Price = info.Price
+	foundService.Description = info.Description
+	if err := petSitterRepo.UpdateService(foundService); err != nil {
+		return servicedto.ServiceInfoResponse{}, err
+	}
+	return ps.GetServiceResponse(foundService), nil
+}
+
+func (ps *PetSitterService) DeleteService(info petsitter.DeleteServiceRequest) error {
+	foundPetSitter, err := ps.GetPetSitterByUserID(info.UserID)
+	if err != nil {
+		return err
+	}
+	petSitterRepo := ps.unitOfWork.Factory().PetSitterRepository()
+	foundService, err := petSitterRepo.FindServiceByID(info.ID)
+	if err != nil {
+		return err
+	}
+	if foundService == nil {
+		return exceptions.NewNotFoundError(bootstrap.Run().Constants.ErrorFields.Service)
+	}
+	if foundService.PetSitterID != foundPetSitter.ID {
+		return exceptions.NewAccessDeniedError("can't delete other's services")
+	}
+	return petSitterRepo.DeleteService(foundService)
+}
+
 func (ps *PetSitterService) getStorageKey(userID uint) string {
 	return "file-" + fmt.Sprint(userID)
 }
@@ -752,13 +843,7 @@ func (ps *PetSitterService) GetPetSitterDetails(info petsitter.GetPetSitterDetai
 	if err != nil {
 		return nil, err
 	}
-	petKinds := make([]pet.PetKindResponse, 0)
-	for _, pk := range foundPetSitter.PetKinds {
-		petKinds = append(petKinds, pet.PetKindResponse{
-			Num:  pk,
-			Name: pk.String(),
-		})
-	}
+	petKinds := ps.buildPetKindsResponse(foundPetSitter.PetKinds)
 	documents := ps.GetDocumentsInfo(foundPetSitter)
 
 	return &petsitter.PetSitterDetailsResponse{
@@ -773,6 +858,17 @@ func (ps *PetSitterService) GetPetSitterDetails(info petsitter.GetPetSitterDetai
 		OnboardingStep: foundPetSitter.OnboardingStep,
 		CreatedAt:      foundPetSitter.CreatedAt.String(),
 	}, nil
+}
+
+func (ps *PetSitterService) buildPetKindsResponse(petKinds []enums.PetKind) []pet.PetKindResponse {
+	res := make([]pet.PetKindResponse, len(petKinds))
+	for i, pk := range petKinds {
+		res[i] = pet.PetKindResponse{
+			Num:  pk,
+			Name: pk.String(),
+		}
+	}
+	return res
 }
 
 func (ps *PetSitterService) ChangePetSitterStatus(info petsitter.ChangePetSitterStatusRequest) error {

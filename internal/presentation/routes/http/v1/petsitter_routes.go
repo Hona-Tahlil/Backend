@@ -37,5 +37,19 @@ func SetUpPetSitterRoutes(v1 *gin.RouterGroup, app *wire.Application) {
 			requests.PUT("/cancel", app.Controllers.PetSitterControllers.PetSitterRequestController.CancelRequest)
 			requests.PUT("/respond", app.Controllers.PetSitterControllers.PetSitterRequestController.RespondToRequest)
 		}
+
+		petKinds := petsitter.Group("/pet-kinds")
+		{
+			petKinds.GET("/", app.Controllers.PetSitterControllers.PetSitterSkillsController.GetPetKinds)
+			petKinds.PUT("/", app.Controllers.PetSitterControllers.PetSitterSkillsController.UpdatePetKinds)
+		}
+
+		services := petsitter.Group("/services")
+		{
+			services.GET("/", app.Controllers.PetSitterControllers.PetSitterSkillsController.GetServices)
+			services.POST("/", app.Controllers.PetSitterControllers.PetSitterSkillsController.CreateService)
+			services.PUT("/", app.Controllers.PetSitterControllers.PetSitterSkillsController.UpdateService)
+			services.DELETE("/:serviceID", app.Controllers.PetSitterControllers.PetSitterSkillsController.DeleteService)
+		}
 	}
 }
