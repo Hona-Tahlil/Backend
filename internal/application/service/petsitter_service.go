@@ -88,9 +88,7 @@ func (ps *PetSitterService) GetPetSitterByUserID(id uint) (*entities.PetSitter, 
 	if user.PetSitter == nil {
 		return nil, exceptions.NewNotFoundError(bootstrap.Run().Constants.ErrorFields.PetSitter)
 	}
-	if user.PetSitter.Status != enums.PSS_Active {
-		return nil, exceptions.NewNotFoundError(bootstrap.Run().Constants.ErrorFields.PetSitter)
-	}
+
 	return user.PetSitter, nil
 }
 
