@@ -34,3 +34,14 @@ type RequestFullDataResponse struct {
 	TransferID         *uint                                   `json:"transferID"`
 	UpdatedAt          time.Time                               `json:"updatedAt"`
 }
+
+type RequestListItemResponse struct {
+	RequestID          uint                           `json:"requestID"`
+	PetSitterUserID    uint                           `json:"petSitterUserID"`
+	PetSitterFirstName string                         `json:"petSitterFirstName"`
+	PetSitterLastName  string                         `json:"petSitterLastName"`
+	Service            servicedto.ServiceInfoResponse `json:"service"`
+	TotalPrice         uint                           `json:"totalPrice"`
+	Status             string                         `json:"status"`
+	UpdatedAt          time.Time                      `json:"updatedAt"`
+}

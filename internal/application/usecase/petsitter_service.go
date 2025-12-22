@@ -35,6 +35,7 @@ type PetSitterService interface {
 	FindServiceByID(id uint) (*entities.Service, error)
 	GetServiceResponse(serviceEntity *entities.Service) servicedto.ServiceInfoResponse
 	SearchPetSitters(info petsitter.SearchPetSittersRequest) ([]*petsitter.PetSitterInfoResponse, int64, error)
+	SearchPetSittersForAdmin(info petsitter.AdminSearchPetSittersRequest) ([]petsitter.PetSitterListItemResponse, int64, error)
 	GetPetSitterDetails(info petsitter.GetPetSitterDetailsRequest) (*petsitter.PetSitterDetailsResponse, error)
 	ChangePetSitterStatus(info petsitter.ChangePetSitterStatusRequest) error
 }

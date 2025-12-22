@@ -2,7 +2,6 @@ package postgres
 
 import (
 	"hona/backend/internal/domain/entities"
-	domainpostgres "hona/backend/internal/domain/ports/postgres"
 
 	"gorm.io/gorm"
 )
@@ -52,7 +51,7 @@ func (pr *PetSitterRepository) UpdatePetSitter(petSitter *entities.PetSitter) er
 	return pr.db.Save(petSitter).Error
 }
 
-func (pr *PetSitterRepository) SearchPetSitters(options *domainpostgres.QueryOptions) ([]*entities.PetSitter, int64, error) {
+func (pr *PetSitterRepository) SearchPetSitters(options *QueryOptions) ([]*entities.PetSitter, int64, error) {
 	var petSitters []*entities.PetSitter
 	var total int64
 	query := pr.db.Model(&entities.PetSitter{})

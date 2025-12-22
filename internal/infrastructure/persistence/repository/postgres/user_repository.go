@@ -16,28 +16,6 @@ func NewUserRepository(db *gorm.DB) *UserRepository {
 	}
 }
 
-// type UserRepository struct {
-// 	*BaseRepository
-// }
-
-// func NewUserRepository(db *gorm.DB) *UserRepository {
-// 	return &UserRepository{
-// 		BaseRepository: NewBaseRepository(db),
-// 	}
-// }
-
-// func (up *UserRepository) GetUsers(queryoptins dsl.ParsedQuery) ([]entities.User, error) {
-// 	var users []entities.User
-
-// 	dbQuery := applyQueryOptions(up.db., queryoptins)
-
-// 	if err := dbQuery.FindAll(&users); err != nil {
-// 		return nil, err
-// 	}
-// 	return users, nil
-
-// }
-
 func (up *UserRepository) FindUserByEmail(email string) (*entities.User, error) {
 	var foundUser entities.User
 
@@ -74,22 +52,24 @@ func (up *UserRepository) SaveUser(user *entities.User) error {
 	return up.db.Save(user).Error
 }
 
-func (up *UserRepository) GetRoleUsersByID(roleID uint, limit, offset int) ([]entities.User, error) {
+func (up *UserRepository) GetRoleUsersByID(roleID uint, options *QueryOptions) ([]entities.User, int64, error) {
 	var users []entities.User
 
-	err := up.db.
+	baseQuery := up.db.Model(&entities.User{}).
 		Joins("JOIN user_roles ur ON ur.user_id = users.id").
-		Where("ur.role_id = ?", roleID).
-		Preload("Roles").
-		Limit(limit).
-		Offset(offset).
+		Where("ur.role_id = ?", roleID)
+
+	newDB, total := ApplyModifiers(baseQuery, *options)
+
+	err := newDB.
+		Preload("Roles.Permissions").
 		Find(&users).Error
 
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
-	return users, nil
+	return users, total, nil
 }
 func (up *UserRepository) PreloadPetSitter(user *entities.User) error {
 	return up.db.Preload("PetSitter").First(user, user.ID).Error

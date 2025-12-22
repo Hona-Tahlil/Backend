@@ -12,6 +12,12 @@ type Constants struct {
 	RedisKey        RedisKey
 	EntityConstants EntityConstants
 	TemplatesPath   TemplatesPath
+	Pagination      Pagination
+}
+
+type Pagination struct {
+	DefaultPage     int
+	DefaultPageSize int
 }
 
 type EntityConstants struct {
@@ -235,6 +241,10 @@ func NewConstants() *Constants {
 			RequestAccepted:        "request_accepted.html",
 			RequestDeclined:        "request_declined.html",
 			RequestEdited:          "request_edited.html",
+		},
+		Pagination: Pagination{
+			DefaultPage:     1,
+			DefaultPageSize: 10,
 		},
 	}
 }

@@ -15,6 +15,7 @@ import (
 	domainmail "hona/backend/internal/domain/mail"
 	"hona/backend/internal/domain/ports"
 	domainredis "hona/backend/internal/domain/ports/redis"
+	"hona/backend/internal/infrastructure/persistence/repository/postgres"
 	"regexp"
 	"time"
 
@@ -148,13 +149,13 @@ func (us *UserService) GetUserInfoResponse(userEntity *entities.User) (*rbac.Use
 	}, nil
 }
 
-func (us *UserService) GetRoleUsersByID(roleID uint, limit, offset int) ([]entities.User, error) {
+func (us *UserService) GetRoleUsersByID(roleID uint, options *postgres.QueryOptions) ([]entities.User, int64, error) {
 	userRepo := us.unitOfWork.Factory().UserRepository()
-	users, err := userRepo.GetRoleUsersByID(roleID, limit, offset)
+	users, total, err := userRepo.GetRoleUsersByID(roleID, options)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
-	return users, nil
+	return users, total, nil
 }
 
 func (us *UserService) FindVerifiedUserByEmail(email string) (*entities.User, error) {
