@@ -247,5 +247,3 @@ func (rc *UserRequestController) SearchRequests(ctx *gin.Context) {
 	msg := controllers.Message{}
 	controllers.Respond(ctx, 200, msg, data)
 }
-
-// TODO: View Requests With Different Filters -> Accepted - Pending - Rejected - Canceled - ... / Different Sorts / Pagination

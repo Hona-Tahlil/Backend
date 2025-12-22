@@ -25,7 +25,8 @@ type Storage struct {
 }
 
 type Buckets struct {
-	PetProfilePic string
+	PetProfilePic  string
+	UserProfilePic string
 }
 
 type TokenExpires struct {
@@ -85,7 +86,8 @@ func NewEnv() *Env {
 			AccessKey: os.Getenv("STORAGE_ACCESS_KEY"),
 			SecretKey: os.Getenv("STORAGE_SECRET_KEY"),
 			Buckets: Buckets{
-				PetProfilePic: os.Getenv("STORAGE_PET_PROFILE_PIC_BUCKET"),
+				PetProfilePic:  os.Getenv("STORAGE_PET_PROFILE_PIC_BUCKET"),
+				UserProfilePic: os.Getenv("STORAGE_USER_PROFILE_PIC_BUCKET"),
 			},
 		},
 		PrimaryRedis: Redis{

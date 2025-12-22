@@ -91,8 +91,6 @@ func (pc *PetSitterRequestController) SearchRequests(ctx *gin.Context) {
 	controllers.Respond(ctx, 200, msg, data)
 }
 
-// TODO: View Requests With Different Filters -> Accepted - Pending - Rejected - Canceled - ... / Different Sorts / Pagination
-
 func (pc *PetSitterRequestController) CancelRequest(ctx *gin.Context) {
 	type Params struct {
 		RequestID uint `json:"requestID" validate:"required"`

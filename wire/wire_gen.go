@@ -40,9 +40,9 @@ func InitializeApplication(container *bootstrap.Config) (*Application, error) {
 	userCacheRepository := redis.NewUserCacheRepository(redisDatabase)
 	emailService := mail.NewEmailService()
 	addressService := service.NewAddressService(unitOfWork)
-	userService := service.NewUserService(jwtService, unitOfWork, userCacheRepository, emailService, addressService)
-	generalUserController := general.NewGeneralUserController(userService)
 	s3Storage := storage.NewS3Storage()
+	userService := service.NewUserService(jwtService, unitOfWork, userCacheRepository, emailService, addressService, s3Storage)
+	generalUserController := general.NewGeneralUserController(userService)
 	petService := service.NewPetService(unitOfWork, s3Storage, userService)
 	generalPetController := general.NewGeneralPetController(petService)
 	generalProvinceController := general.NewGeneralProvinceController(addressService)
@@ -74,10 +74,12 @@ func InitializeApplication(container *bootstrap.Config) (*Application, error) {
 	userRequestController := user.NewUserRequestController(requestService)
 	commentService := service.NewCommentService(unitOfWork, userService, requestService)
 	userCommentController := user.NewUserCommentController(commentService)
+	userProfileController := user.NewUserProfileController(userService)
 	userControllers := &UserControllers{
 		UserPetController:     userPetController,
 		UserRequestController: userRequestController,
 		UserCommentController: userCommentController,
+		UserProfileController: userProfileController,
 	}
 	petSitterRegisterController := petsitter.NewPetSitterRegisterController(petSitterService)
 	petSitterRequestController := petsitter.NewPetSitterRequestController(requestService)
@@ -126,7 +128,7 @@ var GeneralControllersProviderSet = wire.NewSet(general.NewGeneralUserController
 
 var AdminControllersProviderSet = wire.NewSet(admin.NewAdminRBACController, admin.NewAdminPetSitterController, wire.Struct(new(AdminControllers), "*"))
 
-var UserControllersProviderSet = wire.NewSet(user.NewUserPetController, user.NewUserRequestController, user.NewUserCommentController, wire.Struct(new(UserControllers), "*"))
+var UserControllersProviderSet = wire.NewSet(user.NewUserPetController, user.NewUserRequestController, user.NewUserCommentController, user.NewUserProfileController, wire.Struct(new(UserControllers), "*"))
 
 var PetSitterControllersProviderSet = wire.NewSet(petsitter.NewPetSitterRegisterController, petsitter.NewPetSitterRequestController, wire.Struct(new(PetSitterControllers), "*"))
 
@@ -165,6 +167,7 @@ type UserControllers struct {
 	UserPetController     *user.UserPetController
 	UserRequestController *user.UserRequestController
 	UserCommentController *user.UserCommentController
+	UserProfileController *user.UserProfileController
 }
 
 type PetSitterControllers struct {

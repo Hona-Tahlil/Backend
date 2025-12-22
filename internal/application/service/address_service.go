@@ -100,6 +100,30 @@ func (as *AddressService) CreateAddressEntity(addressInfo address.AddressInfo) (
 	return address, nil
 }
 
+func (as *AddressService) UpdateAddressEntity(addressEntity *entities.Address, addressInfo address.AddressInfo) (*entities.Address, error) {
+	if addressEntity == nil {
+		return nil, exceptions.NewNotFoundError(bootstrap.Run().Constants.ErrorFields.Address)
+	}
+	createdAddress, err := as.CreateAddressEntity(addressInfo)
+	if err != nil {
+		return nil, err
+	}
+
+	addressEntity.Province = createdAddress.Province
+	addressEntity.City = createdAddress.City
+	addressEntity.StreetAddress = createdAddress.StreetAddress
+	addressEntity.HouseNumber = createdAddress.HouseNumber
+	addressEntity.Unit = createdAddress.Unit
+	addressEntity.PostalCode = createdAddress.PostalCode
+
+	addressRepo := as.unitOfWork.Factory().AddressRepository()
+	if err := addressRepo.Update(addressEntity); err != nil {
+		return nil, err
+	}
+
+	return addressEntity, nil
+}
+
 func (as *AddressService) GetAllProvincesResponse() ([]provincecity.ProvinceResponse, error) {
 	provinces := enums.GetAllProvinces()
 
