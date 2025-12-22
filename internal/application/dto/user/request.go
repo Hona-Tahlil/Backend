@@ -1,6 +1,7 @@
 package user
 
 import (
+	"hona/backend/internal/application/dto/address"
 	"hona/backend/internal/domain/enums"
 	"mime/multipart"
 	"time"
@@ -43,17 +44,12 @@ type GetProfileRequest struct {
 }
 
 type UpdateProfileRequest struct {
-	UserID        uint
-	FirstName     string
-	LastName      string
-	Phone         string
-	Gender        enums.Gender
-	BirthDate     *time.Time
-	Province      enums.Province
-	City          enums.City
-	StreetAddress string
-	HouseNumber   uint
-	Unit          uint
-	PostalCode    *string
-	ProfilePic    *multipart.FileHeader
+	UserID      uint
+	FirstName   string
+	LastName    string
+	Phone       *string
+	Gender      enums.Gender
+	BirthDate   *time.Time
+	AddressInfo *address.AddressInfo
+	ProfilePic  *multipart.FileHeader
 }

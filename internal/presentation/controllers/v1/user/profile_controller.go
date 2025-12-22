@@ -2,6 +2,7 @@ package user
 
 import (
 	"hona/backend/bootstrap"
+	"hona/backend/internal/application/dto/address"
 	"hona/backend/internal/application/dto/user"
 	"hona/backend/internal/application/usecase"
 	"hona/backend/internal/domain/enums"
@@ -37,18 +38,21 @@ func (pc *UserProfileController) GetProfile(ctx *gin.Context) {
 }
 
 func (pc *UserProfileController) UpdateProfile(ctx *gin.Context) {
-	type UpdateProfileParams struct {
-		FirstName     string         `form:"firstName" validate:"required"`
-		LastName      string         `form:"lastName" validate:"required"`
-		Phone         string         `form:"phone" validate:"required"`
-		Gender        enums.Gender   `form:"gender" validate:"required"`
-		BirthDate     *time.Time     `form:"birthDate" validate:"required"`
-		Province      enums.Province `form:"province" validate:"required"`
-		City          enums.City     `form:"city" validate:"required"`
-		StreetAddress string         `form:"streetAddress" validate:"required"`
-		HouseNumber   uint           `form:"houseNumber" validate:"required"`
-		Unit          uint           `form:"unit" validate:"required"`
+	type AddressInfo struct {
+		ProvinceName  enums.Province `form:"provinceName" binding:"required"`
+		CityName      enums.City     `form:"cityName" binding:"required"`
+		StreetAddress string         `form:"streetAddress" binding:"required"`
+		HouseNumber   uint           `form:"houseNumber" binding:"required"`
+		Unit          uint           `form:"unit" binding:"required"`
 		PostalCode    *string        `form:"postalCode"`
+	}
+	type UpdateProfileParams struct {
+		FirstName   string       `form:"firstName" validate:"required"`
+		LastName    string       `form:"lastName" validate:"required"`
+		Phone       *string      `form:"phone"`
+		Gender      enums.Gender `form:"gender" validate:"required"`
+		BirthDate   *time.Time   `form:"birthDate" validate:"required"`
+		AddressInfo *AddressInfo `form:"addressInfo" validate:"omitempty"`
 	}
 
 	file, err := ctx.FormFile(bootstrap.Run().Env.Storage.Buckets.UserProfilePic)
@@ -61,19 +65,14 @@ func (pc *UserProfileController) UpdateProfile(ctx *gin.Context) {
 	params := controllers.Receive[UpdateProfileParams](ctx)
 	UserID := controllers.GetID(ctx)
 	info := user.UpdateProfileRequest{
-		UserID:        UserID,
-		FirstName:     params.FirstName,
-		LastName:      params.LastName,
-		Phone:         params.Phone,
-		Gender:        params.Gender,
-		BirthDate:     params.BirthDate,
-		Province:      params.Province,
-		City:          params.City,
-		StreetAddress: params.StreetAddress,
-		HouseNumber:   params.HouseNumber,
-		Unit:          params.Unit,
-		PostalCode:    params.PostalCode,
-		ProfilePic:    file,
+		UserID:      UserID,
+		FirstName:   params.FirstName,
+		LastName:    params.LastName,
+		Phone:       params.Phone,
+		Gender:      params.Gender,
+		BirthDate:   params.BirthDate,
+		AddressInfo: (*address.AddressInfo)(params.AddressInfo),
+		ProfilePic:  file,
 	}
 
 	if err := pc.userService.UpdateProfile(info); err != nil {

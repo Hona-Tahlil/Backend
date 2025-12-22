@@ -185,9 +185,10 @@ func (us *UserService) UpdateProfile(info user.UpdateProfileRequest) error {
 			return err
 		}
 
-		addressInfo := us.buildAddressInfo(info)
-		if err := us.persistUserAddress(foundUser, addressInfo); err != nil {
-			return err
+		if info.AddressInfo != nil {
+			if err := us.persistUserAddress(foundUser, *info.AddressInfo); err != nil {
+				return err
+			}
 		}
 
 		if err := us.updateProfilePicture(foundUser, info.ProfilePic); err != nil {
@@ -198,17 +199,6 @@ func (us *UserService) UpdateProfile(info user.UpdateProfileRequest) error {
 
 		return userRepo.SaveUser(foundUser)
 	})
-}
-
-func (us *UserService) buildAddressInfo(info user.UpdateProfileRequest) address.AddressInfo {
-	return address.AddressInfo{
-		ProvinceName:  info.Province,
-		CityName:      info.City,
-		StreetAddress: info.StreetAddress,
-		HouseNumber:   info.HouseNumber,
-		Unit:          info.Unit,
-		PostalCode:    info.PostalCode,
-	}
 }
 
 func (us *UserService) persistUserAddress(foundUser *entities.User, addressInfo address.AddressInfo) error {
@@ -244,7 +234,7 @@ func (us *UserService) updateProfilePicture(foundUser *entities.User, file *mult
 func (us *UserService) applyProfileFields(foundUser *entities.User, info user.UpdateProfileRequest) {
 	foundUser.FirstName = info.FirstName
 	foundUser.LastName = info.LastName
-	foundUser.Phone = &info.Phone
+	foundUser.Phone = info.Phone
 	foundUser.Gender = info.Gender
 	foundUser.BirthDate = info.BirthDate
 }
