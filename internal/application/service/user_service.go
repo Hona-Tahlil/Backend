@@ -185,8 +185,9 @@ func (us *UserService) UpdateProfile(info user.UpdateProfileRequest) error {
 			return err
 		}
 
-		if info.AddressInfo != nil {
-			if err := us.persistUserAddress(foundUser, *info.AddressInfo); err != nil {
+		if info.Province != 0 && info.City != 0 && info.HouseNumber != 0 && info.StreetAddress != "" && info.Unit != 0 {
+			addressInfo := us.buildAddressInfo(info)
+			if err := us.persistUserAddress(foundUser, addressInfo); err != nil {
 				return err
 			}
 		}
@@ -199,6 +200,17 @@ func (us *UserService) UpdateProfile(info user.UpdateProfileRequest) error {
 
 		return userRepo.SaveUser(foundUser)
 	})
+}
+
+func (us *UserService) buildAddressInfo(info user.UpdateProfileRequest) address.AddressInfo {
+	return address.AddressInfo{
+		ProvinceName:  info.Province,
+		CityName:      info.City,
+		StreetAddress: info.StreetAddress,
+		HouseNumber:   info.HouseNumber,
+		Unit:          info.Unit,
+		PostalCode:    info.PostalCode,
+	}
 }
 
 func (us *UserService) persistUserAddress(foundUser *entities.User, addressInfo address.AddressInfo) error {
