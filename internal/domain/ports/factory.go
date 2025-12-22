@@ -10,4 +10,7 @@ type RepositoryFactory interface {
 	RequestRepository() domainpostgres.RequestRepository
 	PetSitterRepository() domainpostgres.PetSitterRepository
 	CommentRepository() domainpostgres.CommentRepository
+	WalletRepository() domainpostgres.WalletRepository
+	TransferRepository() domainpostgres.TransferRepository
+	TransactionRepository() domainpostgres.TransactionRepository
 }

@@ -53,6 +53,11 @@ type CancelRequestRequest struct {
 	UserID    uint
 }
 
+type PayRequestRequest struct {
+	RequestID uint
+	UserID    uint
+}
+
 type GetRequestFullDataRequest struct {
 	RequestID uint
 }

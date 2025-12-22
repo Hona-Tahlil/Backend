@@ -72,6 +72,7 @@ type ErrorFields struct {
 	CalendarSlot string
 	Service      string
 	Comment      string
+	Wallet       string
 }
 
 type ErrorTags struct {
@@ -107,6 +108,7 @@ type ErrorTags struct {
 	DuplicateName          string
 	CalendarConflict       string
 	OldInfo                string
+	InsufficientBalance    string
 }
 
 type JWTKeysPath struct {
@@ -169,6 +171,7 @@ func NewConstants() *Constants {
 			Request:      "request",
 			CalendarSlot: "calendarSlot",
 			Service:      "service",
+			Wallet:       "wallet",
 		},
 		ErrorTags: ErrorTags{
 			AlreadyRegistered:      "errors.alreadyRegistered",
@@ -203,6 +206,7 @@ func NewConstants() *Constants {
 			DuplicateName:          "errors.duplicateName",
 			CalendarConflict:       "errors.calendarConflict",
 			OldInfo:                "errors.oldInfo",
+			InsufficientBalance:    "errors.insufficientBalance",
 		},
 		JWTConstants: JWTConstants{
 			AccessTokenType:  "access",
