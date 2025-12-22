@@ -362,7 +362,7 @@ func (ps *PetSitterService) SubmitSkills(SkillsInfo petsitter.SubmitSkillsReques
 	services := ps.GetPetsitterServicesResponse(SkillsInfo.Services, foundPetSitter.ID)
 	foundPetSitter.Bio = &SkillsInfo.Bio
 	foundPetSitter.Services = services
-	foundPetSitter.PetKinds = append(foundPetSitter.PetKinds, SkillsInfo.PetKinds...)
+	foundPetSitter.PetKinds = append(foundPetSitter.PetKinds, entities.PetKinds(SkillsInfo.PetKinds)...)
 	foundPetSitter.OnboardingStep = enums.OBS_Done
 	foundPetSitter.Status = enums.PSS_InReview
 
@@ -392,7 +392,7 @@ func (ps *PetSitterService) GetPetKinds(info petsitter.GetPetKindsRequest) ([]pe
 	if err != nil {
 		return nil, err
 	}
-	return ps.buildPetKindsResponse(foundPetSitter.PetKinds), nil
+	return ps.buildPetKindsResponse([]enums.PetKind(foundPetSitter.PetKinds)), nil
 }
 
 func (ps *PetSitterService) UpdatePetKinds(info petsitter.UpdatePetKindsRequest) error {
@@ -400,7 +400,7 @@ func (ps *PetSitterService) UpdatePetKinds(info petsitter.UpdatePetKindsRequest)
 	if err != nil {
 		return err
 	}
-	foundPetSitter.PetKinds = info.PetKinds
+	foundPetSitter.PetKinds = entities.PetKinds(info.PetKinds)
 	petSitterRepo := ps.unitOfWork.Factory().PetSitterRepository()
 	return petSitterRepo.UpdatePetSitter(foundPetSitter)
 }
@@ -843,7 +843,7 @@ func (ps *PetSitterService) GetPetSitterDetails(info petsitter.GetPetSitterDetai
 	if err != nil {
 		return nil, err
 	}
-	petKinds := ps.buildPetKindsResponse(foundPetSitter.PetKinds)
+	petKinds := ps.buildPetKindsResponse([]enums.PetKind(foundPetSitter.PetKinds))
 	documents := ps.GetDocumentsInfo(foundPetSitter)
 
 	return &petsitter.PetSitterDetailsResponse{

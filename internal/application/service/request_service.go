@@ -694,7 +694,7 @@ func (rs *RequestService) validateRequestPets(user *entities.User, petSitter *en
 		return nil, err
 	}
 
-	if err := rs.petSitterService.ValidatePets(pets, petSitter.PetKinds); err != nil {
+	if err := rs.petSitterService.ValidatePets(pets, []enums.PetKind(petSitter.PetKinds)); err != nil {
 		return nil, err
 	}
 
