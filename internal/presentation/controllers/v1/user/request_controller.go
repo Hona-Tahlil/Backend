@@ -157,25 +157,6 @@ func (rc *UserRequestController) CancelRequest(ctx *gin.Context) {
 	controllers.Respond(ctx, 200, msg, nil)
 }
 
-func (rc *UserRequestController) PayRequest(ctx *gin.Context) {
-	type Params struct {
-		RequestID uint `json:"requestID" validate:"required"`
-	}
-	params := controllers.Receive[Params](ctx)
-	UserID := controllers.GetID(ctx)
-
-	info := request.PayRequestRequest{
-		RequestID: params.RequestID,
-		UserID:    UserID,
-	}
-
-	if err := rc.requestService.PayRequest(info); err != nil {
-		panic(err)
-	}
-	msg := controllers.Message{}
-	controllers.Respond(ctx, 200, msg, nil)
-}
-
 func (rc *UserRequestController) GetRequestFullData(ctx *gin.Context) {
 	type Params struct {
 		RequestID uint `uri:"requestID" validate:"required"`
@@ -247,5 +228,3 @@ func (rc *UserRequestController) SearchRequests(ctx *gin.Context) {
 	msg := controllers.Message{}
 	controllers.Respond(ctx, 200, msg, data)
 }
-
-// TODO: View Requests With Different Filters -> Accepted - Pending - Rejected - Canceled - ... / Different Sorts / Pagination

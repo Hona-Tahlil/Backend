@@ -13,6 +13,7 @@ type AddressService interface {
 	GetUserAddressesInfo(id uint) ([]address.AddressInfoResponse, error)
 	GetUserAddressInfo(addressEntity *entities.Address) address.AddressInfoResponse
 	CreateAddressEntity(addressInfo address.AddressInfo) (*entities.Address, error)
+	UpdateAddressEntity(addressEntity *entities.Address, addressInfo address.AddressInfo) (*entities.Address, error)
 	GetAllProvincesResponse() ([]provincecity.ProvinceResponse, error)
 	GetCitiesByProvinceName(info provincecity.GetProvinceCitiesRequest) ([]provincecity.CityResponse, error)
 	FindRequestAddressByID(requestID uint) (*entities.Address, error)

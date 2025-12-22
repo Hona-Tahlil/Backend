@@ -37,4 +37,11 @@ func SetUpUserRoutes(v1 *gin.RouterGroup, app *wire.Application) {
 		comments.DELETE("/:id", app.Controllers.UserControllers.UserCommentController.DeleteComment)
 		comments.GET("/petsitters/:petSitterID", app.Controllers.UserControllers.UserCommentController.GetAllPetSitterComments)
 	}
+
+	profile := v1.Group("/profile")
+	profile.Use(app.Middlewares.AuthMiddleware.AuthRequired)
+	{
+		profile.GET("/", app.Controllers.UserControllers.UserProfileController.GetProfile)
+		profile.PUT("/", app.Controllers.UserControllers.UserProfileController.UpdateProfile)
+	}
 }
