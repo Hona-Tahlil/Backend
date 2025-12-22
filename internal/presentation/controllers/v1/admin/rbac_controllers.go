@@ -23,9 +23,8 @@ var successMessages = bootstrap.Run().Constants.SuccessMessages
 
 func (ac *AdminRBACController) ListRolesWithUsers(ctx *gin.Context) {
 	type ListRolesWithUsersParams struct {
-		Page  int `form:"page" validate:"min=0"`
-		Count int `form:"count" validate:"min=0,max=100"`
-
+		Page  int `form:"page" validate:"min=1"`
+		Count int `form:"count" validate:"min=10,max=100"`
 	}
 	params := controllers.Receive[ListRolesWithUsersParams](ctx)
 	ListRolesWithUsersInfo := rbac.ListRolesWithUsersRequest{
@@ -44,8 +43,8 @@ func (ac *AdminRBACController) ListRolesWithUsers(ctx *gin.Context) {
 func (ac *AdminRBACController) GetRoleWithUsersByID(ctx *gin.Context) {
 	type GetRoleWithUsersByIDParams struct {
 		ID    uint `uri:"id"`
-		Page  int  `form:"page" validate:"min=0"`
-		Count int  `form:"count" validate:"min=0,max=100"`
+		Page  int  `form:"page" validate:"min=1"`
+		Count int  `form:"count" validate:"min=10,max=100"`
 	}
 	params := controllers.Receive[GetRoleWithUsersByIDParams](ctx)
 
@@ -66,8 +65,8 @@ func (ac *AdminRBACController) GetRoleWithUsersByID(ctx *gin.Context) {
 func (ac *AdminRBACController) GetRoleWithUsersByType(ctx *gin.Context) {
 	type GetRoleWithUsersByTypeParams struct {
 		Type  string `uri:"type"`
-		Page  int    `form:"page" validate:"min=0"`
-		Count int    `form:"count" validate:"min=0,max=100"`
+		Page  int    `form:"page" validate:"min=1"`
+		Count int    `form:"count" validate:"min=10,max=100"`
 	}
 	params := controllers.Receive[GetRoleWithUsersByTypeParams](ctx)
 
@@ -365,5 +364,3 @@ func (ac *AdminRBACController) GetPermissionRoles(ctx *gin.Context) {
 	msg := controllers.Message{}
 	controllers.Respond(ctx, 200, msg, res)
 }
-
-

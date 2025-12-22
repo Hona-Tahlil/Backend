@@ -36,6 +36,7 @@ func NewUserService(jwtService domainjwt.JWTService, unitOfWork ports.UnitOfWork
 }
 
 func (us *UserService) GetRolesResponse(user *entities.User) []rbac.RoleResponse {
+	us.PreloadFields(user, []string{"Roles.Permissions"})
 	r := make([]rbac.RoleResponse, len(user.Roles))
 	for j, role := range user.Roles {
 		p := make([]rbac.PermissionResponse, len(role.Permissions))
