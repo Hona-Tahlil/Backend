@@ -44,3 +44,15 @@ func (f *RepositoryFactory) RequestRepository() domainpostgres.RequestRepository
 func (f *RepositoryFactory) PetSitterRepository() domainpostgres.PetSitterRepository {
 	return postgres.NewPetSitterRepository(f.db)
 }
+
+func (f *RepositoryFactory) WalletRepository() domainpostgres.WalletRepository {
+	return postgres.NewWalletRepository(f.db)
+}
+
+func (f *RepositoryFactory) TransferRepository() domainpostgres.TransferRepository {
+	return postgres.NewTransferRepository(f.db)
+}
+
+func (f *RepositoryFactory) TransactionRepository() domainpostgres.TransactionRepository {
+	return postgres.NewTransactionRepository(f.db)
+}

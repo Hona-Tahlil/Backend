@@ -8,6 +8,7 @@ import (
 	"hona/backend/internal/domain/enums"
 	"hona/backend/internal/domain/exceptions"
 	"hona/backend/internal/domain/ports"
+	domainpostgres "hona/backend/internal/domain/ports/postgres"
 	"hona/backend/internal/infrastructure/communication/mail"
 	"hona/backend/internal/infrastructure/persistence/repository/postgres"
 	"log"
@@ -323,6 +324,124 @@ func (rs *RequestService) CancelRequest(info request.CancelRequestRequest) error
 		rs.SendPetSitterRequestCancelEmail(foundRequest.UserID, petSitter.UserID)
 	}
 	requestRepo := rs.unitOfWork.Factory().RequestRepository()
+	return requestRepo.EditRequest(foundRequest)
+}
+
+func (rs *RequestService) PayRequest(info request.PayRequestRequest) error {
+	return rs.unitOfWork.WithTransaction(func(rf ports.RepositoryFactory) error {
+		requestRepo := rf.RequestRepository()
+		walletRepo := rf.WalletRepository()
+		transferRepo := rf.TransferRepository()
+
+		foundRequest, err := rs.loadPayableRequest(requestRepo, info)
+		if err != nil {
+			return err
+		}
+
+		petSitter, err := rs.petSitterService.GetPetSitterByID(foundRequest.PetSitterID)
+		if err != nil {
+			return err
+		}
+
+		senderWallet, receiverWallet, err := rs.loadTransferWallets(walletRepo, foundRequest.UserID, petSitter.UserID)
+		if err != nil {
+			return err
+		}
+
+		if err := rs.ensureSufficientBalance(senderWallet, foundRequest.TotalPrice); err != nil {
+			return err
+		}
+
+		transfer, err := rs.createTransfer(transferRepo, senderWallet.ID, receiverWallet.ID, foundRequest.TotalPrice)
+		if err != nil {
+			return err
+		}
+
+		if err := rs.applyWalletTransfer(walletRepo, senderWallet, receiverWallet, foundRequest.TotalPrice); err != nil {
+			return err
+		}
+
+		return rs.markRequestPaid(requestRepo, foundRequest, transfer.ID)
+	})
+}
+
+func (rs *RequestService) loadPayableRequest(requestRepo domainpostgres.RequestRepository, info request.PayRequestRequest) (*entities.Request, error) {
+	foundRequest, err := requestRepo.GetRequestByID(info.RequestID)
+	if err != nil {
+		return nil, err
+	}
+	if foundRequest == nil {
+		return nil, exceptions.NewNotFoundError(bootstrap.Run().Constants.ErrorFields.Request)
+	}
+	if foundRequest.UserID != info.UserID {
+		return nil, exceptions.NewAccessDeniedError(bootstrap.Run().Constants.ErrorTags.ForbiddenStatus)
+	}
+	if foundRequest.Status != enums.Accepted {
+		return nil, exceptions.NewAccessDeniedError(bootstrap.Run().Constants.ErrorTags.ForbiddenStatus)
+	}
+
+	return foundRequest, nil
+}
+
+func (rs *RequestService) loadTransferWallets(walletRepo domainpostgres.WalletRepository, senderUserID, receiverUserID uint) (*entities.Wallet, *entities.Wallet, error) {
+	senderWallet, err := walletRepo.FindWalletByUserID(senderUserID)
+	if err != nil {
+		return nil, nil, err
+	}
+	if senderWallet == nil {
+		return nil, nil, exceptions.NewNotFoundError(bootstrap.Run().Constants.ErrorFields.Wallet)
+	}
+
+	receiverWallet, err := walletRepo.FindWalletByUserID(receiverUserID)
+	if err != nil {
+		return nil, nil, err
+	}
+	if receiverWallet == nil {
+		return nil, nil, exceptions.NewNotFoundError(bootstrap.Run().Constants.ErrorFields.Wallet)
+	}
+
+	return senderWallet, receiverWallet, nil
+}
+
+func (rs *RequestService) ensureSufficientBalance(wallet *entities.Wallet, amount uint) error {
+	if wallet.Balance >= amount {
+		return nil
+	}
+
+	var ve exceptions.ValidationErrors
+	ve.AddError(bootstrap.Run().Constants.ErrorFields.Wallet, bootstrap.Run().Constants.ErrorTags.InsufficientBalance)
+	return &ve
+}
+
+func (rs *RequestService) createTransfer(transferRepo domainpostgres.TransferRepository, senderWalletID, receiverWalletID, amount uint) (*entities.Transfer, error) {
+	transfer := &entities.Transfer{
+		ReceiverWalletID: receiverWalletID,
+		SenderWalletID:   senderWalletID,
+		Amount:           amount,
+	}
+	if err := transferRepo.CreateTransfer(transfer); err != nil {
+		return nil, err
+	}
+
+	return transfer, nil
+}
+
+func (rs *RequestService) applyWalletTransfer(walletRepo domainpostgres.WalletRepository, senderWallet, receiverWallet *entities.Wallet, amount uint) error {
+	senderWallet.Balance -= amount
+	receiverWallet.Balance += amount
+	if err := walletRepo.SaveWallet(senderWallet); err != nil {
+		return err
+	}
+	if err := walletRepo.SaveWallet(receiverWallet); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (rs *RequestService) markRequestPaid(requestRepo domainpostgres.RequestRepository, foundRequest *entities.Request, transferID uint) error {
+	foundRequest.Status = enums.Paid
+	foundRequest.TransferID = &transferID
 	return requestRepo.EditRequest(foundRequest)
 }
 

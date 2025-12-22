@@ -25,6 +25,7 @@ func SetUpUserRoutes(v1 *gin.RouterGroup, app *wire.Application) {
 		requests.POST("/search", app.Controllers.UserControllers.UserRequestController.SearchRequests)
 		requests.PUT("/", app.Controllers.UserControllers.UserRequestController.EditRequest)
 		requests.PUT("/cancel", app.Controllers.UserControllers.UserRequestController.CancelRequest)
+		requests.PUT("/pay", app.Controllers.UserControllers.UserRequestController.PayRequest)
 		requests.GET("/:requestID", app.Controllers.UserControllers.UserRequestController.GetRequestFullData)
 	}
 
