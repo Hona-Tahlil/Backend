@@ -5,14 +5,16 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"hona/backend/bootstrap"
+	"hona/backend/internal/application/dto/address"
 	"hona/backend/internal/application/dto/rbac"
 	"hona/backend/internal/application/dto/user"
+	"hona/backend/internal/application/usecase"
 	"hona/backend/internal/domain/entities"
 	"hona/backend/internal/domain/exceptions"
 	domainjwt "hona/backend/internal/domain/jwt"
+	domainmail "hona/backend/internal/domain/mail"
 	"hona/backend/internal/domain/ports"
 	domainredis "hona/backend/internal/domain/ports/redis"
-	"hona/backend/internal/infrastructure/communication/mail"
 	"hona/backend/internal/infrastructure/persistence/repository/postgres"
 	"regexp"
 	"time"
@@ -24,19 +26,22 @@ type UserService struct {
 	jwtService          domainjwt.JWTService
 	unitOfWork          ports.UnitOfWork
 	userCacheRepository domainredis.UserCacheRepository
-	emailService        *mail.EmailService
+	emailService        domainmail.Mail
+	addressService      usecase.AddressService
 }
 
-func NewUserService(jwtService domainjwt.JWTService, unitOfWork ports.UnitOfWork, userCacheRepository domainredis.UserCacheRepository, emailService *mail.EmailService) *UserService {
+func NewUserService(jwtService domainjwt.JWTService, unitOfWork ports.UnitOfWork, userCacheRepository domainredis.UserCacheRepository, emailService domainmail.Mail, addressService usecase.AddressService) *UserService {
 	return &UserService{
 		unitOfWork:          unitOfWork,
 		userCacheRepository: userCacheRepository,
 		emailService:        emailService,
 		jwtService:          jwtService,
+		addressService:      addressService,
 	}
 }
 
 func (us *UserService) GetRolesResponse(user *entities.User) []rbac.RoleResponse {
+	us.PreloadFields(user, []string{"Roles.Permissions"})
 	r := make([]rbac.RoleResponse, len(user.Roles))
 	for j, role := range user.Roles {
 		p := make([]rbac.PermissionResponse, len(role.Permissions))
@@ -97,14 +102,51 @@ func (us *UserService) Login(loginInfo user.LoginRequest) (*user.LoginResponse, 
 	}, refreshToken, expireTime, nil
 }
 
-func (us *UserService) GetUserInfosResponse(users []entities.User) []rbac.UserInfoResponse {
-	r := make([]rbac.UserInfoResponse, len(users))
+func (us *UserService) GetUserInfosResponse(users []entities.User) ([]rbac.UserResponse, error) {
+	r := make([]rbac.UserResponse, len(users))
 	for i, user := range users {
-		r[i] = rbac.UserInfoResponse{
-			Email: user.Email,
+		data, err := us.GetUserInfoResponse(&user)
+		if err != nil {
+			return nil, err
 		}
+		r[i] = *data
 	}
-	return r
+	return r, nil
+}
+
+func (us *UserService) GetUserInfoResponse(userEntity *entities.User) (*rbac.UserResponse, error) {
+	var addressInfo *address.AddressInfoResponse
+	if err := us.PreloadFields(userEntity, []string{"Address", "Wallet", "Pets", "Roles.Permissions"}); err != nil {
+		return nil, err
+	}
+	if userEntity.Address != nil {
+		address := us.addressService.GetUserAddressInfo(userEntity.Address)
+		addressInfo = &address
+	}
+
+	walletResponse := rbac.WalletResponse{
+		ID:             userEntity.Wallet.ID,
+		Balance:        userEntity.Wallet.Balance,
+		PendingBalance: userEntity.Wallet.PendingBalance,
+		PaymentInfo:    userEntity.Wallet.PaymentInfo,
+		UserID:         userEntity.Wallet.UserID,
+	}
+
+	return &rbac.UserResponse{
+		ID:              userEntity.ID,
+		Email:           userEntity.Email,
+		IsEmailVerified: userEntity.IsEmailVerified,
+		FirstName:       userEntity.FirstName,
+		LastName:        userEntity.LastName,
+		Address:         addressInfo,
+		Phone:           userEntity.Phone,
+		IsPhoneVerified: userEntity.IsPhoneVerified,
+		Gender:          userEntity.Gender.String(),
+		BirthDate:       userEntity.BirthDate,
+		PictureLink:     nil, // TODO: to be completed
+		Wallet:          walletResponse,
+		Roles:           us.GetRolesResponse(userEntity),
+	}, nil
 }
 
 func (us *UserService) GetRoleUsersByID(roleID uint, options *postgres.QueryOptions) ([]entities.User, int64, error) {

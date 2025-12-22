@@ -4,7 +4,6 @@ import (
 	"hona/backend/bootstrap"
 	"hona/backend/internal/application/dto/address"
 	"hona/backend/internal/application/dto/provincecity"
-	"hona/backend/internal/application/usecase"
 	"hona/backend/internal/domain/entities"
 	"hona/backend/internal/domain/enums"
 	"hona/backend/internal/domain/exceptions"
@@ -12,14 +11,12 @@ import (
 )
 
 type AddressService struct {
-	unitOfWork  ports.UnitOfWork
-	userService usecase.UserService
+	unitOfWork ports.UnitOfWork
 }
 
-func NewAddressService(unitOfWork ports.UnitOfWork, userService usecase.UserService) *AddressService {
+func NewAddressService(unitOfWork ports.UnitOfWork) *AddressService {
 	return &AddressService{
-		unitOfWork:  unitOfWork,
-		userService: userService,
+		unitOfWork: unitOfWork,
 	}
 }
 

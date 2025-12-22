@@ -2,6 +2,7 @@ package petsitter
 
 import (
 	"hona/backend/internal/application/dto/pet"
+	"hona/backend/internal/application/dto/rbac"
 	"hona/backend/internal/application/dto/servicedto"
 	"hona/backend/internal/domain/enums"
 )
@@ -51,9 +52,12 @@ type PetSittersListResponse struct {
 }
 
 type PetSitterDetailsResponse struct {
-	PersonalInfo PersonalInfoResponse `json:"personalInfo"`
-	Documents    DocumentResponse     `json:"documents"`
-	Skills       SkillsResponse       `json:"skills"`
+	PersonalInfo   rbac.UserResponse     `json:"personalInfo"`
+	Documents      DocumentResponse      `json:"documents"`
+	Skills         SkillsResponse        `json:"skills"`
+	Status         enums.PetSitterStatus `json:"status"`
+	OnboardingStep enums.OnboardingStep  `json:"onboarding_step"`
+	CreatedAt      string                `json:"created_at"`
 }
 
 type SkillsResponse struct {

@@ -50,6 +50,10 @@ func (rs *RequestService) CreateRequest(info request.CreateRequestRequest) error
 		return err
 	}
 
+	if petSitter.Status != enums.PSS_Active {
+		return exceptions.NewNotFoundError(bootstrap.Run().Constants.ErrorFields.PetSitter)
+	}
+
 	err = rs.petSitterService.PreloadFields(petSitter, []string{"Schedule", "Services"})
 	if err != nil {
 		return err
@@ -155,6 +159,10 @@ func (rs *RequestService) GetCreateRequestInfo(info request.GetCreateRequestInfo
 	petSitter, err := rs.petSitterService.GetPetSitterByUserID(info.PetSitterUserID)
 	if err != nil {
 		return nil, err
+	}
+
+	if petSitter.Status != enums.PSS_Active {
+		return nil, exceptions.NewNotFoundError(bootstrap.Run().Constants.ErrorFields.PetSitter)
 	}
 
 	err = rs.petSitterService.PreloadFields(petSitter, []string{"Schedule", "Services"})

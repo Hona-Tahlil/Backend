@@ -81,9 +81,14 @@ func (rs *RBACService) getRoleWithUsers(role *entities.Role, limit, offset int) 
 		return nil, 0, err
 	}
 
+	usersData, err := rs.userService.GetUserInfosResponse(users)
+	if err != nil {
+		return nil, 0, err
+	}
+
 	return &rbac.RoleWithUsersResponse{
 		Role:  *rs.GetRoleResponse(*role),
-		Users: rs.userService.GetUserInfosResponse(users),
+		Users: usersData,
 	}, total, nil
 }
 
