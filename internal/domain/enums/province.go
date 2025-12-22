@@ -37,7 +37,7 @@ const (
 )
 
 func (p Province) String() string {
-	if int(p) >= len(FarsiNames) || p < 1 {
+	if int(p) > len(FarsiNames) || p < 1 {
 		return "ProvinceUnknown"
 	}
 	return FarsiNames[p]
@@ -45,6 +45,7 @@ func (p Province) String() string {
 
 func GetAllProvinces() []Province {
 	provinces := make([]Province, 31)
+
 	for i := Alborz; i < 32; i++ {
 		provinces[i-1] = i
 	}
