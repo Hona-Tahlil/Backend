@@ -723,7 +723,10 @@ func (ps *PetSitterService) GetPetSitterDetails(info petsitter.GetPetSitterDetai
 			Services: services,
 			PetKinds: petKinds,
 		},
-		Documents: documents,
+		Documents:      documents,
+		Status:         foundPetSitter.Status,
+		OnboardingStep: foundPetSitter.OnboardingStep,
+		CreatedAt:      foundPetSitter.CreatedAt.String(),
 	}, nil
 }
 

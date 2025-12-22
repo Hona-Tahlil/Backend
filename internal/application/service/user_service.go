@@ -115,7 +115,7 @@ func (us *UserService) GetUserInfosResponse(users []entities.User) ([]rbac.UserR
 
 func (us *UserService) GetUserInfoResponse(userEntity *entities.User) (*rbac.UserResponse, error) {
 	var addressInfo *address.AddressInfoResponse
-	if err := us.PreloadFields(userEntity, []string{"Address", "Wallet", "Pets"}); err != nil {
+	if err := us.PreloadFields(userEntity, []string{"Address", "Wallet", "Pets", "Roles.Permissions"}); err != nil {
 		return nil, err
 	}
 	if userEntity.Address != nil {
