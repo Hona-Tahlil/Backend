@@ -55,12 +55,14 @@ func (up *UserRepository) SaveUser(user *entities.User) error {
 func (up *UserRepository) GetRoleUsersByID(roleID uint, options *QueryOptions) ([]entities.User, int64, error) {
 	var users []entities.User
 
-	newDB, total := ApplyModifiers(up.db, *options)
+	baseQuery := up.db.Model(&entities.User{}).
+		Joins("JOIN user_roles ur ON ur.user_id = users.id").
+		Where("ur.role_id = ?", roleID)
+
+	newDB, total := ApplyModifiers(baseQuery, *options)
 
 	err := newDB.
-		Joins("JOIN user_roles ur ON ur.user_id = users.id").
-		Where("ur.role_id = ?", roleID).
-		Preload("Roles").
+		Preload("Roles.Permissions").
 		Find(&users).Error
 
 	if err != nil {
