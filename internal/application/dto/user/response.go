@@ -10,7 +10,5 @@ type LoginResponse struct {
 }
 
 type MLData struct {
-	Token      string `json:"ml"`
+	Token string `json:"ml"`
 }
-
-

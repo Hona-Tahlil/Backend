@@ -164,7 +164,6 @@ func (ps *PetSitterService) AutoUpdateSlots(petSitter *entities.PetSitter, calen
 	ps.removeEmptySitterSlots(petSitter)
 	petSitterRepo := ps.unitOfWork.Factory().PetSitterRepository()
 	return petSitterRepo.UpdatePetSitter(petSitter)
-	return petSitterRepo.UpdatePetSitter(petSitter)
 }
 
 func (ps *PetSitterService) removeEmptySitterSlots(petSitter *entities.PetSitter) {
@@ -695,7 +694,12 @@ func (ps *PetSitterService) GetPetSitterDetails(info petsitter.GetPetSitterDetai
 		return nil, err
 	}
 
-	personalInfo, err := ps.GetPersonalInfo(info.PetSitterUserID)
+	foundUser, err := ps.userService.FindUserByID(foundPetSitter.UserID)
+	if err != nil {
+		return nil, err
+	}
+
+	personalInfo, err := ps.userService.GetUserInfoResponse(foundUser)
 	if err != nil {
 		return nil, err
 	}
@@ -710,10 +714,8 @@ func (ps *PetSitterService) GetPetSitterDetails(info petsitter.GetPetSitterDetai
 			Name: pk.String(),
 		})
 	}
-	documents, err := ps.GetDocuments(info.PetSitterUserID)
-	if err != nil {
-		return nil, err
-	}
+	documents := ps.GetDocumentsInfo(foundPetSitter)
+
 	return &petsitter.PetSitterDetailsResponse{
 		PersonalInfo: *personalInfo,
 		Skills: petsitter.SkillsResponse{
@@ -721,7 +723,7 @@ func (ps *PetSitterService) GetPetSitterDetails(info petsitter.GetPetSitterDetai
 			Services: services,
 			PetKinds: petKinds,
 		},
-		Documents: *documents,
+		Documents: documents,
 	}, nil
 }
 
@@ -745,4 +747,27 @@ func (ps *PetSitterService) ChangePetSitterStatus(info petsitter.ChangePetSitter
 
 	petSitterRepo := ps.unitOfWork.Factory().PetSitterRepository()
 	return petSitterRepo.UpdatePetSitter(foundPetSitter)
+}
+
+func (ps *PetSitterService) GetDocumentsInfo(petSitter *entities.PetSitter) petsitter.DocumentResponse {
+	var CertificateFiles []string
+	if petSitter.CertificateKeys != nil {
+		CertificateFiles = make([]string, len(petSitter.CertificateKeys))
+		for i, certKey := range petSitter.CertificateKeys {
+			certificateURL, _ := ps.storage.GetPresignedURL(enums.PetSitterFile, certKey, 2)
+			CertificateFiles[i] = certificateURL
+		}
+	}
+	var Files []string
+	if petSitter.FileKeys != nil {
+		Files = make([]string, len(petSitter.FileKeys))
+		for i, fileKey := range petSitter.FileKeys {
+			fileURL, _ := ps.storage.GetPresignedURL(enums.PetSitterFile, fileKey, 2)
+			Files[i] = fileURL
+		}
+	}
+	return petsitter.DocumentResponse{
+		CertificateFiles: CertificateFiles,
+		Files:            Files,
+	}
 }
