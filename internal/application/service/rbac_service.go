@@ -1,4 +1,3 @@
-
 package service
 
 import (
@@ -81,9 +80,14 @@ func (rs *RBACService) getRoleWithUsers(role *entities.Role, limit, offset int) 
 		return nil, err
 	}
 
+	usersData, err := rs.userService.GetUserInfosResponse(users)
+	if err != nil {
+		return nil, err
+	}
+
 	return &rbac.RoleWithUsersResponse{
 		Role:  *rs.GetRoleResponse(*role),
-		Users: rs.userService.GetUserInfosResponse(users),
+		Users: usersData,
 	}, nil
 }
 

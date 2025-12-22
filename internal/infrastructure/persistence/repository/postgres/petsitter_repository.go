@@ -78,7 +78,6 @@ func (pr *PetSitterRepository) SearchPetSitters(options *domainpostgres.QueryOpt
 	return petSitters, total, nil
 }
 
-
 func (pr *PetSitterRepository) FindPetSitterByID(id uint) (*entities.PetSitter, error) {
 	var petSitter entities.PetSitter
 	result := pr.db.First(&petSitter, id)
