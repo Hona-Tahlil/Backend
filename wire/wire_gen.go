@@ -83,9 +83,11 @@ func InitializeApplication(container *bootstrap.Config) (*Application, error) {
 	}
 	petSitterRegisterController := petsitter.NewPetSitterRegisterController(petSitterService)
 	petSitterRequestController := petsitter.NewPetSitterRequestController(requestService)
+	petSitterSkillsController := petsitter.NewPetSitterSkillsController(petSitterService)
 	petSitterControllers := &PetSitterControllers{
 		PetSitterRegisterController: petSitterRegisterController,
 		PetSitterRequestController:  petSitterRequestController,
+		PetSitterSkillsController:   petSitterSkillsController,
 	}
 	controllers := &Controllers{
 		GeneralControllers:   generalControllers,
@@ -130,7 +132,7 @@ var AdminControllersProviderSet = wire.NewSet(admin.NewAdminRBACController, admi
 
 var UserControllersProviderSet = wire.NewSet(user.NewUserPetController, user.NewUserRequestController, user.NewUserCommentController, user.NewUserProfileController, wire.Struct(new(UserControllers), "*"))
 
-var PetSitterControllersProviderSet = wire.NewSet(petsitter.NewPetSitterRegisterController, petsitter.NewPetSitterRequestController, wire.Struct(new(PetSitterControllers), "*"))
+var PetSitterControllersProviderSet = wire.NewSet(petsitter.NewPetSitterRegisterController, petsitter.NewPetSitterRequestController, petsitter.NewPetSitterSkillsController, wire.Struct(new(PetSitterControllers), "*"))
 
 var ControllersProviderSet = wire.NewSet(wire.Struct(new(Controllers), "*"))
 
@@ -173,6 +175,7 @@ type UserControllers struct {
 type PetSitterControllers struct {
 	PetSitterRegisterController *petsitter.PetSitterRegisterController
 	PetSitterRequestController  *petsitter.PetSitterRequestController
+	PetSitterSkillsController   *petsitter.PetSitterSkillsController
 }
 
 type Controllers struct {

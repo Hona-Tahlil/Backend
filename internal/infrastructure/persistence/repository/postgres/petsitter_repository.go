@@ -115,3 +115,15 @@ func (pr *PetSitterRepository) FindServiceByID(id uint) (*entities.Service, erro
 	}
 	return &foundService, nil
 }
+
+func (pr *PetSitterRepository) CreateService(service *entities.Service) error {
+	return pr.db.Create(service).Error
+}
+
+func (pr *PetSitterRepository) UpdateService(service *entities.Service) error {
+	return pr.db.Save(service).Error
+}
+
+func (pr *PetSitterRepository) DeleteService(service *entities.Service) error {
+	return pr.db.Delete(service).Error
+}

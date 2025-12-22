@@ -15,5 +15,8 @@ type PetSitterRepository interface {
 	UpdatePetSitter(petSitter *entities.PetSitter) error
 	FindPetSitterByID(id uint) (*entities.PetSitter, error)
 	FindServiceByID(id uint) (*entities.Service, error)
+	CreateService(service *entities.Service) error
+	UpdateService(service *entities.Service) error
+	DeleteService(service *entities.Service) error
 	SearchPetSitters(options *postgres.QueryOptions) ([]*entities.PetSitter, int64, error)
 }

@@ -2,6 +2,7 @@ package usecase
 
 import (
 	calendarslot "hona/backend/internal/application/dto/calendar_slot"
+	"hona/backend/internal/application/dto/pet"
 	"hona/backend/internal/application/dto/petsitter"
 	"hona/backend/internal/application/dto/servicedto"
 	"hona/backend/internal/domain/entities"
@@ -24,6 +25,12 @@ type PetSitterService interface {
 	GetDocuments(userID uint) (*petsitter.DocumentResponse, error)
 	SubmitSkills(SkillsInfo petsitter.SubmitSkillsRequest) error
 	GetPetsitterStatus(userID uint) (*petsitter.PetSitterStatusResponse, error)
+	GetPetKinds(info petsitter.GetPetKindsRequest) ([]pet.PetKindResponse, error)
+	UpdatePetKinds(info petsitter.UpdatePetKindsRequest) error
+	GetServices(info petsitter.GetServicesRequest) ([]servicedto.ServiceInfoResponse, error)
+	CreateService(info petsitter.CreateServiceRequest) (servicedto.ServiceInfoResponse, error)
+	UpdateService(info petsitter.UpdateServiceRequest) (servicedto.ServiceInfoResponse, error)
+	DeleteService(info petsitter.DeleteServiceRequest) error
 	FindPetSitterByID(id uint) (*entities.PetSitter, error)
 	GetAllPetSitters(page, count int) (*petsitter.PetSittersListResponse, error)
 	GetPetsitterServicesResponse(Services []enums.ServiceType, petSitterID uint) []entities.Service
