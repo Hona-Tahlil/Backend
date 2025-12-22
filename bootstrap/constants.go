@@ -243,7 +243,7 @@ func NewConstants() *Constants {
 			RequestEdited:          "request_edited.html",
 		},
 		Pagination: Pagination{
-			DefaultPage:     0,
+			DefaultPage:     1,
 			DefaultPageSize: 10,
 		},
 	}
