@@ -724,7 +724,7 @@ func (ps *PetSitterService) SearchPetSittersForAdmin(info petsitter.AdminSearchP
 			PhoneNumber:    phoneNumber,
 			Status:         psr.Status,
 			OnboardingStep: psr.OnboardingStep,
-			CreatedAt:      psr.CreatedAt.Format("2006-01-02 15:04:05"),
+			CreatedAt:      psr.CreatedAt.String(),
 		}
 	}
 
