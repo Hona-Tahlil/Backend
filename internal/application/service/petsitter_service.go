@@ -16,6 +16,8 @@ import (
 	"hona/backend/internal/domain/ports"
 	domainstorage "hona/backend/internal/domain/storage"
 	"hona/backend/internal/infrastructure/persistence/repository/postgres"
+	"sort"
+	"time"
 
 	"github.com/samber/lo"
 )
@@ -34,6 +36,62 @@ func NewPetSitterService(unitOfWork ports.UnitOfWork, storage domainstorage.Stor
 		userService:    userService,
 		addressService: addressService,
 	}
+}
+
+func (ps *PetSitterService) GetCalendarSlots(info calendarslot.GetCalendarSlotsRequest) ([]calendarslot.CalendarSlotInfoResponse, error) {
+	petSitter, err := ps.GetPetSitterByUserID(info.UserID)
+	if err != nil {
+		return nil, err
+	}
+	if err := ps.PreloadFields(petSitter, []string{"Schedule"}); err != nil {
+		return nil, err
+	}
+	if petSitter.Schedule == nil {
+		return []calendarslot.CalendarSlotInfoResponse{}, nil
+	}
+
+	start := time.Now()
+	end := start.AddDate(0, 0, 30)
+	filtered := make([]entities.CalendarSlot, 0, len(petSitter.Schedule))
+	for _, slot := range petSitter.Schedule {
+		if slot.Date.Before(start) || slot.Date.After(end) {
+			continue
+		}
+		filtered = append(filtered, slot)
+	}
+
+	sort.Slice(filtered, func(i, j int) bool {
+		return filtered[i].Date.Before(filtered[j].Date)
+	})
+
+	return ps.GetCalendarSlotsResponse(filtered), nil
+}
+
+func (ps *PetSitterService) UpdateFreeCalendarSlots(info calendarslot.UpdateFreeCalendarSlotsRequest) error {
+	if len(info.Add) == 0 && len(info.Remove) == 0 {
+		var ve exceptions.ValidationErrors
+		ve.AddError(bootstrap.Run().Constants.ErrorFields.CalendarSlot, bootstrap.Run().Constants.ErrorTags.UnacceptableInput)
+		return &ve
+	}
+
+	petSitter, err := ps.GetPetSitterByUserID(info.UserID)
+	if err != nil {
+		return err
+	}
+	if err := ps.PreloadFields(petSitter, []string{"Schedule"}); err != nil {
+		return err
+	}
+
+	addSlots := ps.makeFreeCalendarSlots(info.Add)
+	removeSlots := ps.makeFreeCalendarSlots(info.Remove)
+	updatedSchedule, err := applyFreeSlotPatch(petSitter.Schedule, addSlots, removeSlots)
+	if err != nil {
+		return err
+	}
+
+	petSitter.Schedule = updatedSchedule
+	petSitterRepo := ps.unitOfWork.Factory().PetSitterRepository()
+	return petSitterRepo.ReplaceSchedule(petSitter, petSitter.Schedule)
 }
 
 func (ps *PetSitterService) GetPetSitterFreeSlotsResponse(petSitter *entities.PetSitter) ([]calendarslot.CalendarSlotInfoResponse, error) {
@@ -163,7 +221,7 @@ func (ps *PetSitterService) AutoUpdateSlots(petSitter *entities.PetSitter, calen
 	petSitter.Schedule = append(petSitter.Schedule, newSlots...)
 	ps.removeEmptySitterSlots(petSitter)
 	petSitterRepo := ps.unitOfWork.Factory().PetSitterRepository()
-	return petSitterRepo.UpdatePetSitter(petSitter)
+	return petSitterRepo.ReplaceSchedule(petSitter, petSitter.Schedule)
 }
 
 func (ps *PetSitterService) removeEmptySitterSlots(petSitter *entities.PetSitter) {
@@ -677,13 +735,154 @@ func (ps *PetSitterService) GetCalendarSlotsResponse(calendarSlots []entities.Ca
 
 	for i, slot := range calendarSlots {
 		r[i] = calendarslot.CalendarSlotInfoResponse{
-			ID:    slot.ID,
-			Date:  slot.Date,
-			Slots: slot.Slots,
+			ID:     slot.ID,
+			Date:   slot.Date,
+			Slots:  []enums.Slot(slot.Slots),
+			Status: slot.Status,
 		}
 	}
 
 	return r
+}
+
+func (ps *PetSitterService) makeFreeCalendarSlots(slots []calendarslot.CalendarSlotRequest) []entities.CalendarSlot {
+	result := make([]entities.CalendarSlot, len(slots))
+	for i, slot := range slots {
+		result[i] = entities.CalendarSlot{
+			Date:   slot.Date,
+			Slots:  entities.Slots(slot.Slots),
+			Status: enums.Free,
+		}
+	}
+	return result
+}
+
+func applyFreeSlotPatch(schedule []entities.CalendarSlot, addSlots []entities.CalendarSlot, removeSlots []entities.CalendarSlot) ([]entities.CalendarSlot, error) {
+	freeSlots, bookedSlots, dateByKey := buildSlotMaps(schedule)
+
+	if err := applyFreeSlotAdds(addSlots, freeSlots, bookedSlots, dateByKey); err != nil {
+		return nil, err
+	}
+	if err := applyFreeSlotRemovals(removeSlots, freeSlots, bookedSlots, dateByKey); err != nil {
+		return nil, err
+	}
+
+	return rebuildSchedule(schedule, freeSlots, dateByKey), nil
+}
+
+func buildSlotMaps(schedule []entities.CalendarSlot) (map[string]map[enums.Slot]bool, map[string]map[enums.Slot]bool, map[string]time.Time) {
+	freeSlots := make(map[string]map[enums.Slot]bool)
+	bookedSlots := make(map[string]map[enums.Slot]bool)
+	dateByKey := make(map[string]time.Time)
+
+	for _, slot := range schedule {
+		dateKey := slot.Date.Format("2006-01-02")
+		if _, exists := dateByKey[dateKey]; !exists {
+			dateByKey[dateKey] = slot.Date
+		}
+		switch slot.Status {
+		case enums.Booked:
+			addSlotsToMap(bookedSlots, dateKey, []enums.Slot(slot.Slots))
+		case enums.Free:
+			addSlotsToMap(freeSlots, dateKey, []enums.Slot(slot.Slots))
+		}
+	}
+
+	return freeSlots, bookedSlots, dateByKey
+}
+
+func addSlotsToMap(target map[string]map[enums.Slot]bool, dateKey string, slots []enums.Slot) {
+	if _, exists := target[dateKey]; !exists {
+		target[dateKey] = make(map[enums.Slot]bool)
+	}
+	for _, s := range slots {
+		target[dateKey][s] = true
+	}
+}
+
+func applyFreeSlotAdds(addSlots []entities.CalendarSlot, freeSlots map[string]map[enums.Slot]bool, bookedSlots map[string]map[enums.Slot]bool, dateByKey map[string]time.Time) error {
+	for _, slot := range addSlots {
+		dateKey := slot.Date.Format("2006-01-02")
+		dateByKey[dateKey] = slot.Date
+		if hasBookedConflict(bookedSlots, dateKey, []enums.Slot(slot.Slots)) {
+			var ce exceptions.ConflictErrors
+			ce.Add(bootstrap.Run().Constants.ErrorFields.CalendarSlot, bootstrap.Run().Constants.ErrorTags.CalendarConflict)
+			return &ce
+		}
+		addSlotsToMap(freeSlots, dateKey, []enums.Slot(slot.Slots))
+	}
+	return nil
+}
+
+func applyFreeSlotRemovals(removeSlots []entities.CalendarSlot, freeSlots map[string]map[enums.Slot]bool, bookedSlots map[string]map[enums.Slot]bool, dateByKey map[string]time.Time) error {
+	for _, slot := range removeSlots {
+		dateKey := slot.Date.Format("2006-01-02")
+		dateByKey[dateKey] = slot.Date
+		if hasBookedConflict(bookedSlots, dateKey, []enums.Slot(slot.Slots)) {
+			var ce exceptions.ConflictErrors
+			ce.Add(bootstrap.Run().Constants.ErrorFields.CalendarSlot, bootstrap.Run().Constants.ErrorTags.CalendarConflict)
+			return &ce
+		}
+		daySlots, exists := freeSlots[dateKey]
+		for _, s := range []enums.Slot(slot.Slots) {
+			if !exists || !daySlots[s] {
+				var ve exceptions.ValidationErrors
+				ve.AddError(bootstrap.Run().Constants.ErrorFields.CalendarSlot, bootstrap.Run().Constants.ErrorTags.UnacceptableInput)
+				return &ve
+			}
+			delete(daySlots, s)
+		}
+		if len(daySlots) == 0 {
+			delete(freeSlots, dateKey)
+		}
+	}
+	return nil
+}
+
+func hasBookedConflict(bookedSlots map[string]map[enums.Slot]bool, dateKey string, slots []enums.Slot) bool {
+	day, exists := bookedSlots[dateKey]
+	if !exists {
+		return false
+	}
+	for _, s := range slots {
+		if day[s] {
+			return true
+		}
+	}
+	return false
+}
+
+func rebuildSchedule(schedule []entities.CalendarSlot, freeSlots map[string]map[enums.Slot]bool, dateByKey map[string]time.Time) []entities.CalendarSlot {
+	updated := make([]entities.CalendarSlot, 0, len(schedule))
+	for _, slot := range schedule {
+		if slot.Status == enums.Booked {
+			updated = append(updated, slot)
+		}
+	}
+
+	for dateKey, slotsMap := range freeSlots {
+		if len(slotsMap) == 0 {
+			continue
+		}
+		slots := make([]enums.Slot, 0, len(slotsMap))
+		for s := range slotsMap {
+			slots = append(slots, s)
+		}
+		sort.Slice(slots, func(i, j int) bool {
+			return slots[i] < slots[j]
+		})
+		updated = append(updated, entities.CalendarSlot{
+			Date:   dateByKey[dateKey],
+			Slots:  entities.Slots(slots),
+			Status: enums.Free,
+		})
+	}
+
+	sort.Slice(updated, func(i, j int) bool {
+		return updated[i].Date.Before(updated[j].Date)
+	})
+
+	return updated
 }
 
 func (ps *PetSitterService) GetFreeMap(calendarSlots []entities.CalendarSlot) map[string]map[interface{}]bool {

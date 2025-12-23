@@ -51,6 +51,10 @@ func (pr *PetSitterRepository) UpdatePetSitter(petSitter *entities.PetSitter) er
 	return pr.db.Save(petSitter).Error
 }
 
+func (pr *PetSitterRepository) ReplaceSchedule(petSitter *entities.PetSitter, schedule []entities.CalendarSlot) error {
+	return pr.db.Model(petSitter).Association("Schedule").Replace(schedule)
+}
+
 func (pr *PetSitterRepository) SearchPetSitters(options *QueryOptions) ([]*entities.PetSitter, int64, error) {
 	var petSitters []*entities.PetSitter
 	var total int64

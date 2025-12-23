@@ -13,6 +13,7 @@ type PetSitterRepository interface {
 	GetPetSittersCount() (int64, error)
 	PreloadFields(petSitter *entities.PetSitter, fields []string) error
 	UpdatePetSitter(petSitter *entities.PetSitter) error
+	ReplaceSchedule(petSitter *entities.PetSitter, schedule []entities.CalendarSlot) error
 	FindPetSitterByID(id uint) (*entities.PetSitter, error)
 	FindServiceByID(id uint) (*entities.Service, error)
 	CreateService(service *entities.Service) error

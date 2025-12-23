@@ -94,6 +94,7 @@ func (s *DatabaseSeeder) ClearAll() {
 	log.Println("🗑️  Clearing all tables...")
 
 	s.db.Migrator().DropTable(
+		"user_roles",
 		&entities.User{},
 		&entities.Role{},
 		&entities.Permission{},

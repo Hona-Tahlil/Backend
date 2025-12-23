@@ -84,10 +84,12 @@ func InitializeApplication(container *bootstrap.Config) (*Application, error) {
 	petSitterRegisterController := petsitter.NewPetSitterRegisterController(petSitterService)
 	petSitterRequestController := petsitter.NewPetSitterRequestController(requestService)
 	petSitterSkillsController := petsitter.NewPetSitterSkillsController(petSitterService)
+	petSitterCalendarController := petsitter.NewPetSitterCalendarController(petSitterService)
 	petSitterControllers := &PetSitterControllers{
 		PetSitterRegisterController: petSitterRegisterController,
 		PetSitterRequestController:  petSitterRequestController,
 		PetSitterSkillsController:   petSitterSkillsController,
+		PetSitterCalendarController: petSitterCalendarController,
 	}
 	controllers := &Controllers{
 		GeneralControllers:   generalControllers,
@@ -132,7 +134,7 @@ var AdminControllersProviderSet = wire.NewSet(admin.NewAdminRBACController, admi
 
 var UserControllersProviderSet = wire.NewSet(user.NewUserPetController, user.NewUserRequestController, user.NewUserCommentController, user.NewUserProfileController, wire.Struct(new(UserControllers), "*"))
 
-var PetSitterControllersProviderSet = wire.NewSet(petsitter.NewPetSitterRegisterController, petsitter.NewPetSitterRequestController, petsitter.NewPetSitterSkillsController, wire.Struct(new(PetSitterControllers), "*"))
+var PetSitterControllersProviderSet = wire.NewSet(petsitter.NewPetSitterRegisterController, petsitter.NewPetSitterRequestController, petsitter.NewPetSitterSkillsController, petsitter.NewPetSitterCalendarController, wire.Struct(new(PetSitterControllers), "*"))
 
 var ControllersProviderSet = wire.NewSet(wire.Struct(new(Controllers), "*"))
 
@@ -176,6 +178,7 @@ type PetSitterControllers struct {
 	PetSitterRegisterController *petsitter.PetSitterRegisterController
 	PetSitterRequestController  *petsitter.PetSitterRequestController
 	PetSitterSkillsController   *petsitter.PetSitterSkillsController
+	PetSitterCalendarController *petsitter.PetSitterCalendarController
 }
 
 type Controllers struct {

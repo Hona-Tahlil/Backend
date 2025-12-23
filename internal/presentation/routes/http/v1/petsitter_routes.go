@@ -51,5 +51,11 @@ func SetUpPetSitterRoutes(v1 *gin.RouterGroup, app *wire.Application) {
 			services.PUT("/", app.Controllers.PetSitterControllers.PetSitterSkillsController.UpdateService)
 			services.DELETE("/:serviceID", app.Controllers.PetSitterControllers.PetSitterSkillsController.DeleteService)
 		}
+
+		calendar := petsitter.Group("/calendar")
+		{
+			calendar.GET("/", app.Controllers.PetSitterControllers.PetSitterCalendarController.GetCalendarSlots)
+			calendar.PATCH("/", app.Controllers.PetSitterControllers.PetSitterCalendarController.UpdateFreeCalendarSlots)
+		}
 	}
 }

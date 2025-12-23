@@ -10,6 +10,8 @@ import (
 )
 
 type PetSitterService interface {
+	GetCalendarSlots(info calendarslot.GetCalendarSlotsRequest) ([]calendarslot.CalendarSlotInfoResponse, error)
+	UpdateFreeCalendarSlots(info calendarslot.UpdateFreeCalendarSlotsRequest) error
 	GetPetSitterFreeSlotsResponse(petSitter *entities.PetSitter) ([]calendarslot.CalendarSlotInfoResponse, error)
 	GetServicesResponse(petSitter *entities.PetSitter) ([]servicedto.ServiceInfoResponse, error)
 	GetAvailableServicesResponse(petSitter *entities.PetSitter) ([]servicedto.ServiceInfoResponse, error)
