@@ -2,6 +2,7 @@ package seeder
 
 import (
 	"fmt"
+	"hona/backend/bootstrap"
 	"hona/backend/internal/domain/entities"
 	"hona/backend/internal/domain/enums"
 	"log"
@@ -27,6 +28,10 @@ func (s *UserSeeder) Seed(count int) error {
 	if s.db.First(&entities.User{}).Error == nil {
 		log.Println("✓ Users already seeded, skipping...")
 		return nil
+	}
+	defaultProfileKey := bootstrap.Run().Env.Storage.DefaultUserProfileKey
+	if defaultProfileKey == "" {
+		return fmt.Errorf("default user profile key is empty")
 	}
 
 	for i := 0; i < count; i++ {
@@ -57,6 +62,7 @@ func (s *UserSeeder) Seed(count int) error {
 
 		genders := []enums.Gender{enums.Male, enums.Female}
 		gender := genders[rand.Intn(len(genders))]
+		pictureKey := defaultProfileKey
 
 		user := entities.User{
 			Email:           email,
@@ -68,7 +74,7 @@ func (s *UserSeeder) Seed(count int) error {
 			IsPhoneVerified: i%3 == 0,
 			Gender:          gender,
 			BirthDate:       birthDate,
-			PictureLink:     nil,
+			PictureLink:     &pictureKey,
 		}
 
 		users = append(users, user)

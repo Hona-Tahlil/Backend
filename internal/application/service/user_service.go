@@ -19,6 +19,7 @@ import (
 	domainredis "hona/backend/internal/domain/ports/redis"
 	domainstorage "hona/backend/internal/domain/storage"
 	"hona/backend/internal/infrastructure/persistence/repository/postgres"
+	"log"
 	"regexp"
 	"time"
 
@@ -279,18 +280,42 @@ func (us *UserService) buildProfileResponse(userEntity *entities.User) (*user.Pr
 }
 
 func (us *UserService) getUserPictureLink(userEntity *entities.User) (*string, error) {
-	if userEntity.PictureLink == nil || *userEntity.PictureLink == "" {
+	key := us.getUserPictureKey(userEntity)
+	if key == "" {
 		return nil, nil
 	}
-	link, err := us.storage.GetPresignedURL(enums.UserProfilePic, *userEntity.PictureLink, time.Minute*15)
-	if err != nil {
-		return nil, err
+
+	link, err := us.storage.GetPresignedURL(enums.UserProfilePic, key, time.Minute*15)
+	if err == nil {
+		return &link, nil
 	}
-	return &link, nil
+	log.Println(err)
+
+	defaultKey := us.getDefaultUserProfileKey()
+	if defaultKey == "" || defaultKey == key {
+		return nil, nil
+	}
+	fallbackLink, fallbackErr := us.storage.GetPresignedURL(enums.UserProfilePic, defaultKey, time.Minute*15)
+	if fallbackErr != nil {
+		log.Println(fallbackErr)
+		return nil, nil
+	}
+	return &fallbackLink, nil
 }
 
 func (us *UserService) getUserProfileKey(userID uint) string {
 	return fmt.Sprintf("user-profile-%d", userID)
+}
+
+func (us *UserService) getUserPictureKey(userEntity *entities.User) string {
+	if userEntity.PictureLink != nil && *userEntity.PictureLink != "" {
+		return *userEntity.PictureLink
+	}
+	return us.getDefaultUserProfileKey()
+}
+
+func (us *UserService) getDefaultUserProfileKey() string {
+	return bootstrap.Run().Env.Storage.DefaultUserProfileKey
 }
 
 func (us *UserService) GetRoleUsersByID(roleID uint, options *postgres.QueryOptions) ([]entities.User, int64, error) {
