@@ -10,6 +10,8 @@ services:
       - "${DB_HOST_PORT}:${DB_PORT}"
     volumes:
       - pgdata:/var/lib/postgresql/data
+    networks:
+      - web
 
   rdb:
     image: redis:latest
@@ -27,6 +29,8 @@ services:
         reservations:
           cpus: "0.1"
           memory: 64M
+    networks:
+      - web
 
   app:
     build:
