@@ -60,6 +60,20 @@ type PetSitterDetailsResponse struct {
 	CreatedAt      string                `json:"created_at"`
 }
 
+type PetSitterProfileResponse struct {
+	ID          uint                             `json:"id"`
+	UserID      uint                             `json:"user_id"`
+	FirstName   string                           `json:"first_name"`
+	LastName    string                           `json:"last_name"`
+	PictureLink *string                          `json:"picture_link"`
+	Province    string                           `json:"province"`
+	City        string                           `json:"city"`
+	Bio         string                           `json:"bio"`
+	Services    []servicedto.ServiceInfoResponse `json:"services"`
+	PetKinds    []pet.PetKindResponse            `json:"pet_kinds"`
+	CreatedAt   string                           `json:"created_at"`
+}
+
 type SkillsResponse struct {
 	Bio      string                           `json:"bio"`
 	PetKinds []pet.PetKindResponse            `json:"pet_kinds"`

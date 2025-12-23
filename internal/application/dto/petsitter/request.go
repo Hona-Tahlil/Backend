@@ -86,6 +86,10 @@ type GetPetSitterDetailsRequest struct {
 	PetSitterUserID uint
 }
 
+type GetPetSitterProfileRequest struct {
+	PetSitterID uint
+}
+
 type ChangePetSitterStatusRequest struct {
 	PetSitterUserID uint
 	Status          enums.PetSitterStatus

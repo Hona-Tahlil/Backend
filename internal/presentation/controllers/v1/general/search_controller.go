@@ -77,3 +77,21 @@ func (gc *GeneralSearchController) SearchPetSitters(ctx *gin.Context) {
 	}
 	controllers.Respond(ctx, 200, msg, data)
 }
+
+func (gc *GeneralSearchController) GetPetSitterProfile(ctx *gin.Context) {
+	type Params struct {
+		PetSitterID uint `uri:"petSitterID" validate:"required"`
+	}
+	params := controllers.Receive[Params](ctx)
+
+	req := petsitter.GetPetSitterProfileRequest{
+		PetSitterID: params.PetSitterID,
+	}
+	res, err := gc.petSitterService.GetPetSitterProfile(req)
+	if err != nil {
+		panic(err)
+	}
+
+	msg := controllers.Message{}
+	controllers.Respond(ctx, 200, msg, *res)
+}
