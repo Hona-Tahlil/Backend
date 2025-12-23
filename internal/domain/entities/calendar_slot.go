@@ -9,8 +9,9 @@ import (
 
 type CalendarSlot struct {
 	gorm.Model
-	Date   time.Time            `gorm:"not null"`
-	Slots  []enums.Slot         `gorm:"type:integer[]"`
-	Status enums.CalendarStatus `gorm:"index"`
-	Refer  uint                 `gorm:"index"`
+	Date        time.Time            `gorm:"not null"`
+	Slots       Slots                `gorm:"type:integer[]"`
+	Status      enums.CalendarStatus `gorm:"index"`
+	PetSitterID *uint                `gorm:"index"`
+	RequestID   *uint                `gorm:"index"`
 }

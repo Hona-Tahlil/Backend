@@ -14,7 +14,7 @@ type PetSitter struct {
 	Requests        []Request      `gorm:"foreignKey:PetSitterID"`
 	Services        []Service      `gorm:"foreignKey:PetSitterID"`
 	PetKinds        PetKinds       `gorm:"type:integer[]"`
-	Schedule        []CalendarSlot `gorm:"foreignKey:Refer"`
+	Schedule        []CalendarSlot `gorm:"foreignKey:PetSitterID"`
 	Comments        []Comment      `gorm:"foreignKey:PetSitterID"`
 	Bio             *string
 	Status          enums.PetSitterStatus `gorm:"type:integer;index"`

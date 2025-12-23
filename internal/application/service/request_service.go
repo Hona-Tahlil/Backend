@@ -745,7 +745,7 @@ func (rs *RequestService) makeCalendarSlots(calendarSlots []request.RequestCalen
 	for i, slot := range calendarSlots {
 		calendarSlot := &entities.CalendarSlot{
 			Date:   slot.Date,
-			Slots:  slot.Slots,
+			Slots:  entities.Slots(slot.Slots),
 			Status: enums.Booked,
 		}
 		slots[i] = *calendarSlot
