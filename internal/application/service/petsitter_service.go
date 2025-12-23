@@ -1059,6 +1059,57 @@ func (ps *PetSitterService) GetPetSitterDetails(info petsitter.GetPetSitterDetai
 	}, nil
 }
 
+func (ps *PetSitterService) GetPetSitterProfile(info petsitter.GetPetSitterProfileRequest) (*petsitter.PetSitterProfileResponse, error) {
+	foundPetSitter, err := ps.GetPetSitterByID(info.PetSitterID)
+	if err != nil {
+		return nil, err
+	}
+	if err := ps.PreloadFields(foundPetSitter, []string{"Services"}); err != nil {
+		return nil, err
+	}
+
+	foundUser, err := ps.userService.FindUserByID(foundPetSitter.UserID)
+	if err != nil {
+		return nil, err
+	}
+	if err := ps.userService.PreloadFields(foundUser, []string{"Address"}); err != nil {
+		return nil, err
+	}
+
+	services, err := ps.GetServicesResponse(foundPetSitter)
+	if err != nil {
+		return nil, err
+	}
+
+	province := ""
+	city := ""
+	if foundUser.Address != nil {
+		province = foundUser.Address.Province.String()
+		city = foundUser.Address.City.String()
+	}
+
+	bio := ""
+	if foundPetSitter.Bio != nil {
+		bio = *foundPetSitter.Bio
+	}
+
+	petKinds := ps.buildPetKindsResponse([]enums.PetKind(foundPetSitter.PetKinds))
+
+	return &petsitter.PetSitterProfileResponse{
+		ID:          foundPetSitter.ID,
+		UserID:      foundPetSitter.UserID,
+		FirstName:   foundUser.FirstName,
+		LastName:    foundUser.LastName,
+		PictureLink: foundUser.PictureLink,
+		Province:    province,
+		City:        city,
+		Bio:         bio,
+		Services:    services,
+		PetKinds:    petKinds,
+		CreatedAt:   foundPetSitter.CreatedAt.String(),
+	}, nil
+}
+
 func (ps *PetSitterService) buildPetKindsResponse(petKinds []enums.PetKind) []pet.PetKindResponse {
 	res := make([]pet.PetKindResponse, len(petKinds))
 	for i, pk := range petKinds {
