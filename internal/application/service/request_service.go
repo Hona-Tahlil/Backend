@@ -21,6 +21,7 @@ type RequestService struct {
 	addressService   usecase.AddressService
 	petService       usecase.PetService
 	petSitterService usecase.PetSitterService
+	walletService    usecase.WalletService
 	unitOfWork       ports.UnitOfWork
 	emailService     *mail.EmailService
 }
@@ -30,6 +31,7 @@ type RequestServiceDeps struct {
 	AddressService   usecase.AddressService
 	PetService       usecase.PetService
 	PetSitterService usecase.PetSitterService
+	WalletService    usecase.WalletService
 	UnitOfWork       ports.UnitOfWork
 	EmailService     *mail.EmailService
 }
@@ -41,6 +43,7 @@ func NewRequestService(deps RequestServiceDeps) *RequestService {
 		addressService:   deps.AddressService,
 		petService:       deps.PetService,
 		petSitterService: deps.PetSitterService,
+		walletService:    deps.WalletService,
 		emailService:     deps.EmailService,
 	}
 }
@@ -330,7 +333,6 @@ func (rs *RequestService) CancelRequest(info request.CancelRequestRequest) error
 func (rs *RequestService) PayRequest(info request.PayRequestRequest) error {
 	return rs.unitOfWork.WithTransaction(func(rf ports.RepositoryFactory) error {
 		requestRepo := rf.RequestRepository()
-		walletRepo := rf.WalletRepository()
 		transferRepo := rf.TransferRepository()
 
 		foundRequest, err := rs.loadPayableRequest(requestRepo, info)
@@ -343,21 +345,13 @@ func (rs *RequestService) PayRequest(info request.PayRequestRequest) error {
 			return err
 		}
 
-		senderWallet, receiverWallet, err := rs.loadTransferWallets(walletRepo, foundRequest.UserID, petSitter.UserID)
+		senderWallet, receiverWallet, err := rs.walletService.TransferInTransaction(rf, foundRequest.UserID, petSitter.UserID, foundRequest.TotalPrice)
 		if err != nil {
-			return err
-		}
-
-		if err := rs.ensureSufficientBalance(senderWallet, foundRequest.TotalPrice); err != nil {
 			return err
 		}
 
 		transfer, err := rs.createTransfer(transferRepo, senderWallet.ID, receiverWallet.ID, foundRequest.TotalPrice)
 		if err != nil {
-			return err
-		}
-
-		if err := rs.applyWalletTransfer(walletRepo, senderWallet, receiverWallet, foundRequest.TotalPrice); err != nil {
 			return err
 		}
 
@@ -383,36 +377,6 @@ func (rs *RequestService) loadPayableRequest(requestRepo domainpostgres.RequestR
 	return foundRequest, nil
 }
 
-func (rs *RequestService) loadTransferWallets(walletRepo domainpostgres.WalletRepository, senderUserID, receiverUserID uint) (*entities.Wallet, *entities.Wallet, error) {
-	senderWallet, err := walletRepo.FindWalletByUserID(senderUserID)
-	if err != nil {
-		return nil, nil, err
-	}
-	if senderWallet == nil {
-		return nil, nil, exceptions.NewNotFoundError(bootstrap.Run().Constants.ErrorFields.Wallet)
-	}
-
-	receiverWallet, err := walletRepo.FindWalletByUserID(receiverUserID)
-	if err != nil {
-		return nil, nil, err
-	}
-	if receiverWallet == nil {
-		return nil, nil, exceptions.NewNotFoundError(bootstrap.Run().Constants.ErrorFields.Wallet)
-	}
-
-	return senderWallet, receiverWallet, nil
-}
-
-func (rs *RequestService) ensureSufficientBalance(wallet *entities.Wallet, amount uint) error {
-	if wallet.Balance >= amount {
-		return nil
-	}
-
-	var ve exceptions.ValidationErrors
-	ve.AddError(bootstrap.Run().Constants.ErrorFields.Wallet, bootstrap.Run().Constants.ErrorTags.InsufficientBalance)
-	return &ve
-}
-
 func (rs *RequestService) createTransfer(transferRepo domainpostgres.TransferRepository, senderWalletID, receiverWalletID, amount uint) (*entities.Transfer, error) {
 	transfer := &entities.Transfer{
 		ReceiverWalletID: receiverWalletID,
@@ -424,19 +388,6 @@ func (rs *RequestService) createTransfer(transferRepo domainpostgres.TransferRep
 	}
 
 	return transfer, nil
-}
-
-func (rs *RequestService) applyWalletTransfer(walletRepo domainpostgres.WalletRepository, senderWallet, receiverWallet *entities.Wallet, amount uint) error {
-	senderWallet.Balance -= amount
-	receiverWallet.Balance += amount
-	if err := walletRepo.SaveWallet(senderWallet); err != nil {
-		return err
-	}
-	if err := walletRepo.SaveWallet(receiverWallet); err != nil {
-		return err
-	}
-
-	return nil
 }
 
 func (rs *RequestService) markRequestPaid(requestRepo domainpostgres.RequestRepository, foundRequest *entities.Request, transferID uint) error {
