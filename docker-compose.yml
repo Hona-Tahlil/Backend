@@ -45,7 +45,7 @@ services:
       DB_NAME: ${DB_NAME}
       DB_PORT: ${DB_PORT}
     expose:
-      - 8080
+      - "8080"
     networks:
       - web
 
