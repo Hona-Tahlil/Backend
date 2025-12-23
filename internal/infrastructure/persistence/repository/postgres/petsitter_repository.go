@@ -58,7 +58,8 @@ func (pr *PetSitterRepository) ReplaceSchedule(petSitter *entities.PetSitter, sc
 func (pr *PetSitterRepository) SearchPetSitters(options *QueryOptions) ([]*entities.PetSitter, int64, error) {
 	var petSitters []*entities.PetSitter
 	var total int64
-	query := pr.db.Model(&entities.PetSitter{})
+	query := pr.db.Model(&entities.PetSitter{}).
+		Joins("JOIN users ON users.id = pet_sitters.user_id")
 	if options.Filters != nil {
 		filterModifier := NewFilterModifier(options.Filters.Filters)
 		query = filterModifier.Apply(query)
