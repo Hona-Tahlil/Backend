@@ -48,6 +48,9 @@ func SetUpUserRoutes(v1 *gin.RouterGroup, app *wire.Application) {
 	wallet := v1.Group("/wallet")
 	wallet.Use(app.Middlewares.AuthMiddleware.AuthRequired)
 	{
+		wallet.GET("/", app.Controllers.UserControllers.UserWalletController.GetWallet)
+		wallet.GET("/transfers", app.Controllers.UserControllers.UserWalletController.ListTransfers)
+		wallet.GET("/transactions", app.Controllers.UserControllers.UserWalletController.ListTransactions)
 		wallet.PUT("/top-up", app.Controllers.UserControllers.UserWalletController.TopUp)
 	}
 }
