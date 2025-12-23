@@ -18,10 +18,11 @@ type Env struct {
 }
 
 type Storage struct {
-	Buckets   Buckets
-	Endpoint  string
-	AccessKey string
-	SecretKey string
+	Buckets              Buckets
+	Endpoint             string
+	AccessKey            string
+	SecretKey            string
+	DefaultPetProfileKey string
 }
 
 type Buckets struct {
@@ -89,6 +90,7 @@ func NewEnv() *Env {
 				PetProfilePic:  os.Getenv("STORAGE_PET_PROFILE_PIC_BUCKET"),
 				UserProfilePic: os.Getenv("STORAGE_USER_PROFILE_PIC_BUCKET"),
 			},
+			DefaultPetProfileKey: os.Getenv("STORAGE_PET_DEFAULT_PROFILE_KEY"),
 		},
 		PrimaryRedis: Redis{
 			Port:      os.Getenv("RDB_PORT"),
