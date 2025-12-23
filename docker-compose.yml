@@ -44,9 +44,15 @@ services:
       DB_PASSWORD: ${DB_PASSWORD}
       DB_NAME: ${DB_NAME}
       DB_PORT: ${DB_PORT}
-    ports:
-      - "${SERVER_PORT}:8080"
+    expose:
+      - 8080
+    networks:
+      - web
 
 volumes:
   pgdata:
   rdb_data:
+
+networks:
+  web:
+    external: true
