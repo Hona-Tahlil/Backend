@@ -31,9 +31,9 @@ func (s *DatabaseSeeder) SeedAll() error {
 		return err
 	}
 
-	if err := s.SeedServices(30); err != nil {
-		return err
-	}
+	// if err := s.SeedServices(30); err != nil {
+	// 	return err
+	// }
 
 	log.Println("✅ Database seeding completed!")
 	return nil

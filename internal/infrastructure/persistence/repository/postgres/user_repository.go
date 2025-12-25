@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"hona/backend/internal/domain/entities"
+	"log"
 
 	"gorm.io/gorm"
 )
@@ -96,7 +97,13 @@ func (up *UserRepository) PreloadPetSitter(user *entities.User) error {
 }
 
 func (up *UserRepository) PreloadAddress(user *entities.User) error {
-	return up.db.Preload("Address").First(user, user.ID).Error
+	// For polymorphic relationships, we need to preload with the correct conditions
+	err := up.db.Preload("Address", "type = ? AND refer = ?", "User", user.ID).First(user, user.ID).Error
+	if err != nil {
+		log.Println("Error preloading address:", err)
+		return err
+	}
+	return nil
 }
 
 func (up *UserRepository) PreloadFields(user *entities.User, fields []string) error {

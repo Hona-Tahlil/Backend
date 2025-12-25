@@ -12,6 +12,6 @@ type Service struct {
 	RequestID   *uint             `gorm:"index"`
 	Type        enums.ServiceType `gorm:"index"`
 	Price       uint              `gorm:"index"`
-	Description *string
-	Kind        string `gorm:"index;default=petSitter"` // petSitter or request
+	Description *string           `gorm:"type:text"`
+	Kind        string            `gorm:"index;default=petSitter"` // petSitter or request
 }

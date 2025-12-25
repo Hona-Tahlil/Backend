@@ -45,13 +45,14 @@ func (s *PetSitterSeeder) Seed(count int) error {
 			bio = &bioText
 		}
 
-		// statuses := enums.GetAllPetSitterStatus()
-		status := enums.PSS_Draft
+		statuses := enums.GetAllPetSitterStatus()
+		status := statuses[0]
 
 		petSitter := entities.PetSitter{
 			UserID: userID,
 			Bio:    bio,
 			Status: status,
+			OnboardingStep: enums.OBS_Documents,
 		}
 
 		petSitters = append(petSitters, petSitter)

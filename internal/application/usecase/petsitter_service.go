@@ -6,6 +6,8 @@ import (
 	"hona/backend/internal/application/dto/servicedto"
 	"hona/backend/internal/domain/entities"
 	"hona/backend/internal/domain/enums"
+
+	"github.com/lib/pq"
 )
 
 type PetSitterService interface {
@@ -15,7 +17,7 @@ type PetSitterService interface {
 	GetPetSitterByID(id uint) (*entities.PetSitter, error)
 	GetPetSitterByUserID(id uint) (*entities.PetSitter, error)
 	PreloadFields(petSitter *entities.PetSitter, fields []string) error
-	ValidatePets(pets []entities.Pet, petKinds []enums.PetKind) error
+	ValidatePets(pets []entities.Pet, petKinds pq.Int32Array) error
 	ValidateService(services []entities.Service, serviceID uint) (*entities.Service, error)
 	AutoUpdateSlots(petSitter *entities.PetSitter, calendarSlots []entities.CalendarSlot, accept bool) error
 	CreateSignupSession(PetsitterInfo petsitter.GetPetSitterRequest) (*petsitter.PetSitterStatusResponse, error)

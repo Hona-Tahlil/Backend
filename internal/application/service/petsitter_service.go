@@ -16,7 +16,9 @@ import (
 	"hona/backend/internal/domain/ports"
 	domainpostgres "hona/backend/internal/domain/ports/postgres"
 	domainstorage "hona/backend/internal/domain/storage"
+	"log"
 
+	"github.com/lib/pq"
 	"github.com/samber/lo"
 )
 
@@ -110,11 +112,11 @@ func (ps *PetSitterService) PreloadFields(petSitter *entities.PetSitter, fields 
 	return ps.unitOfWork.Factory().PetSitterRepository().PreloadFields(petSitter, fields)
 }
 
-func (ps *PetSitterService) ValidatePets(pets []entities.Pet, petKinds []enums.PetKind) error {
+func (ps *PetSitterService) ValidatePets(pets []entities.Pet, petKinds pq.Int32Array) error {
 	for _, pet := range pets {
 		flag := false
 		for _, kind := range petKinds {
-			if kind == pet.Kind {
+			if kind == int32(pet.Kind) {
 				flag = true
 				break
 			}
@@ -165,7 +167,6 @@ func (ps *PetSitterService) AutoUpdateSlots(petSitter *entities.PetSitter, calen
 	petSitter.Schedule = append(petSitter.Schedule, newSlots...)
 	ps.removeEmptySitterSlots(petSitter)
 	petSitterRepo := ps.unitOfWork.Factory().PetSitterRepository()
-	return petSitterRepo.UpdatePetSitter(petSitter)
 	return petSitterRepo.UpdatePetSitter(petSitter)
 }
 
@@ -229,34 +230,61 @@ func (ps *PetSitterService) GetPersonalInfo(userID uint) (*petsitter.PersonalInf
 	userRepo := ps.unitOfWork.Factory().UserRepository()
 	err = userRepo.PreloadPetSitter(foundUser)
 	if err != nil {
-		return nil, err
+		return nil, exceptions.NewNotFoundError(bootstrap.Run().Constants.ErrorFields.PetSitter)
 	}
 	err = userRepo.PreloadAddress(foundUser)
-	if err != nil {
-		return nil, err
+	if err != nil && foundUser.Address != nil {
+		return nil, exceptions.NewNotFoundError(bootstrap.Run().Constants.ErrorFields.Address)
 	}
 	err = ps.CheckPetSitterStatus(foundUser.PetSitter.Status)
 	if err != nil {
 		return nil, err
 	}
-	err = ps.CheckPetSitterStep(foundUser.PetSitter.OnboardingStep, enums.OBS_Documents)
+	err = ps.CheckPetSitterStep(foundUser.PetSitter.OnboardingStep, enums.OBS_Profile)
 	if err != nil {
 		return nil, err
+	}
+	type Address struct {
+		Province      enums.Province
+		City          enums.City
+		StreetAddress string
+		HouseNumber   uint
+		Unit          uint
+	}
+	address := &Address{}
+	if foundUser.Address == nil {
+		address.Province = 0
+		address.City = 0
+		address.StreetAddress = ""
+		address.HouseNumber = 0
+		address.Unit = 0
+	}
+	if foundUser.Address != nil {
+		address.Province = foundUser.Address.Province
+		address.City = foundUser.Address.City
+		address.StreetAddress = foundUser.Address.StreetAddress
+		address.HouseNumber = foundUser.Address.HouseNumber
+		address.Unit = foundUser.Address.Unit
+	}
+	phoneNumber := ""
+	if foundUser.Phone != nil {
+		phoneNumber = *foundUser.Phone
 	}
 	r := &petsitter.PersonalInfoResponse{
 		FirstName:      foundUser.FirstName,
 		LastName:       foundUser.LastName,
 		Email:          foundUser.Email,
-		PhoneNumber:    *foundUser.Phone,
+		PhoneNumber:    phoneNumber,
 		Gender:         foundUser.Gender,
-		Province:       foundUser.Address.Province,
-		City:           foundUser.Address.City,
-		Address:        foundUser.Address.StreetAddress,
-		HouseNumber:    foundUser.Address.HouseNumber,
-		Unit:           foundUser.Address.Unit,
+		Province:       address.Province,
+		City:           address.City,
+		Address:        address.StreetAddress,
+		HouseNumber:    address.HouseNumber,
+		Unit:           address.Unit,
 		Status:         foundUser.PetSitter.Status,
 		OnboardingStep: foundUser.PetSitter.OnboardingStep,
 	}
+	log.Println("Personal Info Response:", r)
 	return r, nil
 
 }
@@ -302,7 +330,6 @@ func (ps *PetSitterService) UploadDocuments(info petsitter.UploadDocumentsReques
 	foundPetSitter.OnboardingStep = enums.OBS_Documents
 	foundPetSitter.Status = enums.PSS_Draft
 	petSitterRepo := ps.unitOfWork.Factory().PetSitterRepository()
-	err = petSitterRepo.UpdatePetSitter(foundPetSitter)
 	err = petSitterRepo.UpdatePetSitter(foundPetSitter)
 	if err != nil {
 		return err
@@ -350,10 +377,10 @@ func (ps *PetSitterService) SubmitSkills(SkillsInfo petsitter.SubmitSkillsReques
 	if err != nil {
 		return exceptions.NewNotFoundError(bootstrap.Run().Constants.ErrorFields.PetSitter)
 	}
-	err = petSitterRepo.PreloadServices(foundPetSitter)
-	if err != nil {
-		return err
-	}
+	// err = petSitterRepo.PreloadServices(foundPetSitter)
+	// if err != nil {
+	// 	return err
+	// }
 	err = ps.CheckPetSitterStep(foundPetSitter.OnboardingStep, enums.OBS_Done)
 	if err != nil {
 		return err
@@ -365,17 +392,24 @@ func (ps *PetSitterService) SubmitSkills(SkillsInfo petsitter.SubmitSkillsReques
 	services := ps.GetPetsitterServicesResponse(SkillsInfo.Services, foundPetSitter.ID)
 	foundPetSitter.Bio = &SkillsInfo.Bio
 	foundPetSitter.Services = services
-	foundPetSitter.PetKinds = append(foundPetSitter.PetKinds, SkillsInfo.PetKinds...)
+	// Initialize PetKinds using the custom PetKindsJSON type
+	foundPetSitter.PetKinds = mapPetKinds(SkillsInfo.PetKinds)
 	foundPetSitter.OnboardingStep = enums.OBS_Done
 	foundPetSitter.Status = enums.PSS_InReview
 
-	err = petSitterRepo.UpdatePetSitter(foundPetSitter)
 	err = petSitterRepo.UpdatePetSitter(foundPetSitter)
 	if err != nil {
 		return err
 	}
 	return nil
 
+}
+func mapPetKinds(kinds []enums.PetKind) pq.Int32Array {
+	result := make(pq.Int32Array, len(kinds))
+	for i, k := range kinds {
+		result[i] = int32(k)
+	}
+	return result
 }
 
 func (ps *PetSitterService) GetPetsitterStatus(userID uint) (*petsitter.PetSitterStatusResponse, error) {
@@ -411,12 +445,13 @@ func (ps *PetSitterService) FindPetSitterByID(id uint) (*entities.PetSitter, err
 }
 
 func (ps *PetSitterService) GetPetsitterServicesResponse(Services []enums.ServiceType, petSitterID uint) []entities.Service {
-	r := make([]entities.Service, len(Services))
-	for i, service := range Services {
-		r[i] = entities.Service{
+	r := make([]entities.Service, 0)
+	for _, service := range Services {
+		r = append(r, entities.Service{
 			PetSitterID: petSitterID,
 			Type:        service,
-		}
+			Kind:        "PetSitter",
+		})
 	}
 	return r
 }
@@ -668,9 +703,11 @@ func (ps *PetSitterService) SearchPetSitters(info petsitter.SearchPetSittersRequ
 		for _, service := range petSitter.Services {
 			services = append(services, service.Type.String())
 		}
-		petkinds := make([]string, len(petSitter.PetKinds))
-		for _, petkind := range petSitter.PetKinds {
-			petkinds = append(petkinds, petkind.String())
+		petkinds := make([]string, 0)
+		if len(petSitter.PetKinds) > 0 {
+			for _, petkind := range petSitter.PetKinds {
+				petkinds = append(petkinds, enums.PetKind(petkind).String())
+			}
 		}
 		// service, err := ps.FindServiceByID(info.ServiceID)
 		res[i] = &petsitter.PetSitterInfoResponse{
@@ -706,11 +743,13 @@ func (ps *PetSitterService) GetPetSitterDetails(info petsitter.GetPetSitterDetai
 		return nil, err
 	}
 	petKinds := make([]pet.PetKindResponse, 0)
-	for _, pk := range foundPetSitter.PetKinds {
-		petKinds = append(petKinds, pet.PetKindResponse{
-			Num:  pk,
-			Name: pk.String(),
-		})
+	if len(foundPetSitter.PetKinds) > 0 {
+		for _, pk := range foundPetSitter.PetKinds {
+			petKinds = append(petKinds, pet.PetKindResponse{
+				Num:  enums.PetKind(pk),
+				Name: enums.PetKind(pk).String(),
+			})
+		}
 	}
 	documents, err := ps.GetDocuments(info.PetSitterUserID)
 	if err != nil {
