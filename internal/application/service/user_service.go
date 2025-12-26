@@ -174,6 +174,19 @@ func (us *UserService) GetProfile(info user.GetProfileRequest) (*user.ProfileRes
 	return us.buildProfileResponse(foundUser)
 }
 
+func (us *UserService) GetIdentity(info user.GetIdentityRequest) (*user.IdentityResponse, error) {
+	foundUser, err := us.FindUserByID(info.UserID)
+	if err != nil {
+		return nil, err
+	}
+
+	return &user.IdentityResponse{
+		Email:     foundUser.Email,
+		FirstName: foundUser.FirstName,
+		LastName:  foundUser.LastName,
+	}, nil
+}
+
 func (us *UserService) UpdateProfile(info user.UpdateProfileRequest) error {
 	return us.unitOfWork.WithTransaction(func(rf ports.RepositoryFactory) error {
 		userRepo := rf.UserRepository()
