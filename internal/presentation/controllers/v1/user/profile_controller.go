@@ -36,6 +36,20 @@ func (pc *UserProfileController) GetProfile(ctx *gin.Context) {
 	controllers.Respond(ctx, 200, msg, *res)
 }
 
+func (pc *UserProfileController) GetIdentity(ctx *gin.Context) {
+	UserID := controllers.GetID(ctx)
+	info := user.GetIdentityRequest{
+		UserID: UserID,
+	}
+	res, err := pc.userService.GetIdentity(info)
+	if err != nil {
+		panic(err)
+	}
+
+	msg := controllers.Message{}
+	controllers.Respond(ctx, 200, msg, *res)
+}
+
 func (pc *UserProfileController) UpdateProfile(ctx *gin.Context) {
 	type UpdateProfileParams struct {
 		FirstName     string         `form:"firstName" validate:"required"`

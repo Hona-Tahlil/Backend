@@ -42,6 +42,7 @@ func SetUpUserRoutes(v1 *gin.RouterGroup, app *wire.Application) {
 	profile.Use(app.Middlewares.AuthMiddleware.AuthRequired)
 	{
 		profile.GET("/", app.Controllers.UserControllers.UserProfileController.GetProfile)
+		profile.GET("/identity", app.Controllers.UserControllers.UserProfileController.GetIdentity)
 		profile.PUT("/", app.Controllers.UserControllers.UserProfileController.UpdateProfile)
 	}
 

@@ -42,6 +42,10 @@ type GetProfileRequest struct {
 	UserID uint
 }
 
+type GetIdentityRequest struct {
+	UserID uint
+}
+
 type UpdateProfileRequest struct {
 	UserID        uint
 	FirstName     string

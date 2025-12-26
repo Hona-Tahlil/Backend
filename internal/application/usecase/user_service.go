@@ -19,6 +19,7 @@ type UserService interface {
 	GetUserInfosResponse(users []entities.User) ([]rbac.UserResponse, error)
 	GetUserInfoResponse(userEntity *entities.User) (*rbac.UserResponse, error)
 	GetProfile(info user.GetProfileRequest) (*user.ProfileResponse, error)
+	GetIdentity(info user.GetIdentityRequest) (*user.IdentityResponse, error)
 	UpdateProfile(info user.UpdateProfileRequest) error
 	Register(registerInfo user.RegisterRequest) error
 	ResetPassword(resetPasswordInfo user.ResetPasswordRequest) error
