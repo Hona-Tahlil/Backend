@@ -1,8 +1,11 @@
 package postgres
 
 import (
+	"fmt"
+	"hona/backend/internal/application/dto/general"
 	"hona/backend/internal/domain/entities"
 
+	"github.com/lib/pq"
 	"gorm.io/gorm"
 )
 
@@ -55,32 +58,42 @@ func (pr *PetSitterRepository) ReplaceSchedule(petSitter *entities.PetSitter, sc
 	return pr.db.Model(petSitter).Association("Schedule").Replace(schedule)
 }
 
-func (pr *PetSitterRepository) SearchPetSitters(options *QueryOptions) ([]*entities.PetSitter, int64, error) {
-	var petSitters []*entities.PetSitter
-	var total int64
-	query := pr.db.Model(&entities.PetSitter{}).
-		Joins("JOIN users ON users.id = pet_sitters.user_id")
-	if options.Filters != nil {
-		filterModifier := NewFilterModifier(options.Filters.Filters)
-		query = filterModifier.Apply(query)
-	}
-	if err := query.Count(&total).Error; err != nil {
-		return nil, 0, err
-	}
-	if options.Sorting != nil {
-		sortModifier := NewSortModifier(options.Sorting.Sorts)
-		query = sortModifier.Apply(query)
-	}
-	if options.Pagination != nil {
-		paginationModifier := NewPaginationModifier(options.Pagination.Offset, options.Pagination.Limit)
-		query = paginationModifier.Apply(query)
-	}
-	if err := query.Find(&petSitters).Error; err != nil {
-		return nil, 0, err
-	}
+// func (pr *PetSitterRepository) SearchPetSitters(options *QueryOptions) ([]*entities.PetSitter, int64, error) {
+// 	var petSitters []*entities.PetSitter
+// 	var total int64
+// 	query := pr.db.Model(&entities.PetSitter{}).
+// 		Select("DISTINCT pet_sitters.*").
+// 		Joins("JOIN users ON users.id = pet_sitters.user_id").
+// 		Joins("LEFT JOIN services ON services.pet_sitter_id = pet_sitters.id AND services.kind = ?", "petSitter").
+// 		Joins("LEFT JOIN addresses ON addresses.refer = users.id AND addresses.type = ?", "User").
+// 		Joins("LEFT JOIN calendar_slots ON calendar_slots.refer = pet_sitters.id")
 
-	return petSitters, total, nil
-}
+// 	if options.Filters != nil {
+// 		filterModifier := NewFilterModifier(options.Filters.Filters)
+// 		query = filterModifier.Apply(query)
+// 	}
+// 	// if err := query.Count(&total).Error; err != nil {
+// 	// 	return nil, 0, err
+// 	// }
+// 	if err := query.Session(&gorm.Session{}).
+// 		Distinct("pet_sitters.id").
+// 		Count(&total).Error; err != nil {
+// 		return nil, 0, err
+// 	}
+// 	if options.Sorting != nil {
+// 		sortModifier := NewSortModifier(options.Sorting.Sorts)
+// 		query = sortModifier.Apply(query)
+// 	}
+// 	if options.Pagination != nil {
+// 		paginationModifier := NewPaginationModifier(options.Pagination.Offset, options.Pagination.Limit)
+// 		query = paginationModifier.Apply(query)
+// 	}
+// 	if err := query.Find(&petSitters).Error; err != nil {
+// 		return nil, 0, err
+// 	}
+
+// 	return petSitters, total, nil
+// }
 
 func (pr *PetSitterRepository) FindPetSitterByID(id uint) (*entities.PetSitter, error) {
 	var petSitter entities.PetSitter
@@ -131,4 +144,430 @@ func (pr *PetSitterRepository) UpdateService(service *entities.Service) error {
 
 func (pr *PetSitterRepository) DeleteService(service *entities.Service) error {
 	return pr.db.Delete(service).Error
+}
+
+// func (pr *PetSitterRepository) SearchPetSitters(options *QueryOptions) ([]*entities.PetSitter, int64, error) {
+// 	var (
+// 		petSitters []*entities.PetSitter
+// 		total      int64
+// 	)
+
+// 	fs := parsePetSitterSearchFilters(options)
+
+// 	// -------- base filtered query (بدون pagination) --------
+// 	base := pr.db.Model(&entities.PetSitter{}).
+// 		Joins("JOIN users ON users.id = pet_sitters.user_id").
+// 		Joins("LEFT JOIN addresses ON addresses.refer = users.id AND addresses.type = ?", "User")
+
+// 	// city
+// 	if fs.City != nil && *fs.City != "" {
+// 		base = base.Where("addresses.city = ?", *fs.City)
+// 	}
+
+// 	// petKinds OR
+// 	if len(fs.PetKindsAny) > 0 {
+// 		base = base.Where("pet_sitters.pet_kinds && ?", pq.Int64Array(intsToInt64(fs.PetKindsAny)))
+// 	}
+
+// 	// schedule EXISTS
+// 	if fs.Date != nil && fs.StartSlot != nil && fs.EndSlot != nil {
+// 		slots := makeSlotRange(*fs.StartSlot, *fs.EndSlot)
+// 		base = base.Where(`
+// 			EXISTS (
+// 				SELECT 1
+// 				FROM calendar_slots cs
+// 				WHERE cs.refer = pet_sitters.id
+// 				  AND DATE(cs.date) = DATE(?)
+// 				  AND cs.slots && ?
+// 			)
+// 		`, *fs.Date, pq.Int64Array(intsToInt64(slots)))
+// 	} else if fs.Date != nil {
+// 		base = base.Where(`
+// 			EXISTS (
+// 				SELECT 1
+// 				FROM calendar_slots cs
+// 				WHERE cs.refer = pet_sitters.id
+// 				  AND DATE(cs.date) = DATE(?)
+// 			)
+// 		`, *fs.Date)
+// 	}
+
+// 	// service price logic
+// 	if fs.ServiceType != nil {
+// 		base = base.Joins(
+// 			"LEFT JOIN services s ON s.pet_sitter_id = pet_sitters.id AND s.kind = ? AND s.type = ?",
+// 			"petSitter",
+// 			*fs.ServiceType,
+// 		)
+// 		if fs.MinPrice != nil {
+// 			base = base.Where("s.price >= ?", *fs.MinPrice)
+// 		}
+// 		if fs.MaxPrice != nil {
+// 			base = base.Where("s.price <= ?", *fs.MaxPrice)
+// 		}
+// 	} else if fs.MinPrice != nil || fs.MaxPrice != nil {
+// 		base = base.Where(`
+// 			EXISTS (
+// 				SELECT 1
+// 				FROM services sx
+// 				WHERE sx.pet_sitter_id = pet_sitters.id
+// 				  AND sx.kind = ?
+// 				  AND (? IS NULL OR sx.price >= ?)
+// 				  AND (? IS NULL OR sx.price <= ?)
+// 			)
+// 		`,
+// 			"petSitter",
+// 			fs.MinPrice, fs.MinPrice,
+// 			fs.MaxPrice, fs.MaxPrice,
+// 		)
+// 	}
+
+// 	// -------- count distinct --------
+// 	if err := base.Session(&gorm.Session{}).
+// 		Distinct("pet_sitters.id").
+// 		Count(&total).Error; err != nil {
+// 		return nil, 0, err
+// 	}
+
+// 	// -------- Step 1: get ordered/paged IDs (بدون DISTINCT، با GROUP BY) --------
+// 	idQuery := base.Session(&gorm.Session{}).
+// 		Select("pet_sitters.id").
+// 		Group("pet_sitters.id") // مهم: جلوگیری از duplicate و خراب شدن LIMIT
+
+// 	// sorting روی idQuery
+// 	if options != nil && options.Sorting != nil && len(options.Sorting.Sorts) > 0 {
+// 		var err error
+// 		idQuery, err = applyPetSitterUISort(idQuery, options.Sorting.Sorts, fs.ServiceType)
+// 		if err != nil {
+// 			return nil, 0, err
+// 		}
+// 	} else {
+// 		idQuery = idQuery.Order("pet_sitters.created_at DESC")
+// 	}
+
+// 	// pagination فقط روی idQuery 
+// 	if options != nil && options.Pagination != nil {
+// 		idQuery = idQuery.Offset(options.Pagination.Offset).Limit(options.Pagination.Limit)
+// 	}
+
+// 	var ids []uint
+// 	if err := idQuery.Scan(&ids).Error; err != nil {
+// 		return nil, 0, err
+// 	}
+// 	if len(ids) == 0 {
+// 		return []*entities.PetSitter{}, total, nil
+// 	}
+
+// 	// -------- Step 2: fetch full records + حفظ ترتیب همان ids --------
+// 	err := pr.db.Model(&entities.PetSitter{}).
+// 		Where("pet_sitters.id IN ?", ids).
+// 		Order(gorm.Expr("array_position(?, pet_sitters.id)", pq.Array(ids))).
+// 		Find(&petSitters).Error
+// 	if err != nil {
+// 		return nil, 0, err
+// 	}
+// 	return petSitters, total, nil
+// }
+
+func (pr *PetSitterRepository) SearchPetSitters(options *QueryOptions) ([]*entities.PetSitter, int64, error) {
+	var (
+		petSitters []*entities.PetSitter
+		total      int64
+	)
+
+	// 1) Parse known filters from []general.Filter
+	fs := parsePetSitterSearchFilters(options)
+
+	// 2) Base query (join user + address چون برای خروجی/فیلتر شهر لازم میشه)
+	q := pr.db.Model(&entities.PetSitter{}).
+		Joins("JOIN users ON users.id = pet_sitters.user_id").
+		Joins("LEFT JOIN addresses ON addresses.refer = users.id AND addresses.type = ?", "User")
+
+	// -----------------------
+	// Filters
+	// -----------------------
+
+	// city
+	if fs.City != nil && *fs.City != "" {
+		q = q.Where("addresses.city = ?", *fs.City)
+	}
+
+	// petKinds OR => overlap (&&)
+	if len(fs.PetKindsAny) > 0 {
+		q = q.Where("pet_sitters.pet_kinds && ?", pq.Int64Array(intsToInt64(fs.PetKindsAny)))
+	}
+
+	// schedule: date + slot range => EXISTS (بدون join)
+	if fs.Date != nil && fs.StartSlot != nil && fs.EndSlot != nil {
+		slots := makeSlotRange(*fs.StartSlot, *fs.EndSlot)
+		q = q.Where(`
+			EXISTS (
+				SELECT 1
+				FROM calendar_slots cs
+				WHERE cs.pet_sitter_id = pet_sitters.id
+				  AND DATE(cs.date) = DATE(?)
+				  AND cs.slots @> ?
+			)
+		`, *fs.Date, pq.Int64Array(intsToInt64(slots)))
+	} else if fs.Date != nil {
+		// اگر فقط date بود
+		q = q.Where(`
+			EXISTS (
+				SELECT 1
+				FROM calendar_slots cs
+				WHERE cs.pet_sitter_id = pet_sitters.id
+				  AND DATE(cs.date) = DATE(?)
+			)
+		`, *fs.Date)
+	}
+
+	// -----------------------
+	// Service price logic (key requirement)
+	// -----------------------
+	//
+	// If serviceType exists => price filters apply ONLY to that type
+	// else => price filters apply to ANY service (EXISTS)
+	//
+	// service can be NULL => sitter may have no services
+
+	if fs.ServiceType != nil {
+		// join only that type (nullable -> LEFT JOIN)
+		q = q.Joins(
+			"LEFT JOIN services s ON s.pet_sitter_id = pet_sitters.id AND s.kind = ? AND s.type = ?",
+			"petSitter",
+			*fs.ServiceType,
+		)
+		q = q.Where("s.id IS NOT NULL")
+		if fs.MinPrice != nil {
+			q = q.Where("s.price >= ?", *fs.MinPrice)
+		}
+		if fs.MaxPrice != nil {
+			q = q.Where("s.price <= ?", *fs.MaxPrice)
+		}
+	} else if fs.MinPrice != nil || fs.MaxPrice != nil {
+		where := `
+		EXISTS (
+			SELECT 1
+			FROM services sx
+			WHERE sx.pet_sitter_id = pet_sitters.id
+			  AND sx.kind = ?
+	`
+		args := []any{"petSitter"}
+
+		if fs.MinPrice != nil {
+			where += " AND sx.price >= ?"
+			args = append(args, *fs.MinPrice)
+		}
+		if fs.MaxPrice != nil {
+			where += " AND sx.price <= ?"
+			args = append(args, *fs.MaxPrice)
+		}
+
+		where += ")"
+		q = q.Where(where, args...)
+	}
+
+	// -----------------------
+	// Count DISTINCT
+	// -----------------------
+	if err := q.Session(&gorm.Session{}).
+		Distinct("pet_sitters.id").
+		Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	// -----------------------
+	// Sorting (UI style)
+	// -----------------------
+	if options != nil && options.Sorting != nil && len(options.Sorting.Sorts) > 0 {
+		var err error
+		q, err = applyPetSitterUISort(q, options.Sorting.Sorts, fs.ServiceType)
+		if err != nil {
+			return nil, 0, err
+		}
+	} else {
+		q = q.Order("pet_sitters.created_at DESC")
+	}
+
+	// -----------------------
+	// Pagination
+	// -----------------------
+	if options != nil && options.Pagination != nil {
+		q = q.Offset(options.Pagination.Offset).Limit(options.Pagination.Limit)
+	}
+
+	// -----------------------
+	// Fetch (Distinct to avoid duplicates)
+	// -----------------------
+	// To avoid "SELECT DISTINCT ON must match ORDER BY" error in PostgreSQL,
+	// we use a subquery approach: get ordered distinct IDs, then fetch full records
+	subquerySQL := pr.db.Model(&entities.PetSitter{}).
+		Select("pet_sitters.id").
+		Joins("JOIN users ON users.id = pet_sitters.user_id").
+		Joins("LEFT JOIN addresses ON addresses.refer = users.id AND addresses.type = ?", "User")
+
+	// Apply same filters to subquery
+	if fs.City != nil && *fs.City != "" {
+		subquerySQL = subquerySQL.Where("addresses.city = ?", *fs.City)
+	}
+	if len(fs.PetKindsAny) > 0 {
+		subquerySQL = subquerySQL.Where("pet_sitters.pet_kinds && ?", pq.Int64Array(intsToInt64(fs.PetKindsAny)))
+	}
+	if fs.Date != nil && fs.StartSlot != nil && fs.EndSlot != nil {
+		slots := makeSlotRange(*fs.StartSlot, *fs.EndSlot)
+		subquerySQL = subquerySQL.Where(`
+			EXISTS (
+				SELECT 1
+				FROM calendar_slots cs
+				WHERE cs.pet_sitter_id = pet_sitters.id
+				  AND DATE(cs.date) = DATE(?)
+				  AND cs.slots @> ?
+			)
+		`, *fs.Date, pq.Int64Array(intsToInt64(slots)))
+	} else if fs.Date != nil {
+		subquerySQL = subquerySQL.Where(`
+			EXISTS (
+				SELECT 1
+				FROM calendar_slots cs
+				WHERE cs.pet_sitter_id = pet_sitters.id
+				  AND DATE(cs.date) = DATE(?)
+			)
+		`, *fs.Date)
+	}
+
+	if fs.ServiceType != nil {
+		subquerySQL = subquerySQL.Joins(
+			"LEFT JOIN services s ON s.pet_sitter_id = pet_sitters.id AND s.kind = ? AND s.type = ?",
+			"petSitter",
+			*fs.ServiceType,
+		)
+		if fs.MinPrice != nil {
+			subquerySQL = subquerySQL.Where("s.price >= ?", *fs.MinPrice)
+		}
+		if fs.MaxPrice != nil {
+			subquerySQL = subquerySQL.Where("s.price <= ?", *fs.MaxPrice)
+		}
+	} else if fs.MinPrice != nil || fs.MaxPrice != nil {
+		where := `
+		EXISTS (
+			SELECT 1
+			FROM services sx
+			WHERE sx.pet_sitter_id = pet_sitters.id
+			  AND sx.kind = ?
+	`
+		args := []any{"petSitter"}
+
+		if fs.MinPrice != nil {
+			where += " AND sx.price >= ?"
+			args = append(args, *fs.MinPrice)
+		}
+		if fs.MaxPrice != nil {
+			where += " AND sx.price <= ?"
+			args = append(args, *fs.MaxPrice)
+		}
+
+		where += ")"
+		subquerySQL = subquerySQL.Where(where, args...)
+	}
+
+	// Apply sorting and pagination to the subquery
+	if options != nil && options.Sorting != nil && len(options.Sorting.Sorts) > 0 {
+		var err error
+		subquerySQL, err = applyPetSitterUISort(subquerySQL, options.Sorting.Sorts, fs.ServiceType)
+		if err != nil {
+			return nil, 0, err
+		}
+	} else {
+		subquerySQL = subquerySQL.Order("pet_sitters.created_at DESC")
+	}
+
+	if options != nil && options.Pagination != nil {
+		subquerySQL = subquerySQL.Offset(options.Pagination.Offset).Limit(options.Pagination.Limit)
+	}
+
+	// Fetch full records using the subquery for ordering and pagination
+	// 1) Get ordered ids (subquery already has filters + sort + pagination)
+	// 1) Get ordered distinct ids (subquery already has filters + sort + pagination)
+	var ids []uint
+	if err := subquerySQL.Pluck("pet_sitters.id", &ids).Error; err != nil {
+		return nil, 0, err
+	}
+	if len(ids) == 0 {
+		return []*entities.PetSitter{}, total, nil
+	}
+
+	// 2) Fetch full records and preserve exact order using CASE
+	caseSQL := "CASE pet_sitters.id "
+	caseArgs := make([]any, 0, len(ids))
+	for i, id := range ids {
+		caseSQL += "WHEN ? THEN " + fmt.Sprint(i) + " "
+		caseArgs = append(caseArgs, id)
+	}
+	caseSQL += "END"
+
+	if err := pr.db.Model(&entities.PetSitter{}).
+		Where("pet_sitters.id IN ?", ids).
+		Order(gorm.Expr(caseSQL, caseArgs...)).
+		Find(&petSitters).Error; err != nil {
+		return nil, 0, err
+	}
+
+	return petSitters, total, nil
+}
+// func uintsToInt64(ids []uint) []int64 {
+// 	out := make([]int64, len(ids))
+// 	for i, v := range ids {
+// 		out[i] = int64(v)
+// 	}
+// 	return out
+// }
+
+func applyPetSitterUISort(q *gorm.DB, sorts []general.Sort, serviceType *int) (*gorm.DB, error) {
+	// UI معمولاً یکی انتخاب می‌کند، ما هم فقط اولی را اعمال می‌کنیم
+	field := sorts[0].Field
+
+	switch field {
+	case "max_price":
+		if serviceType != nil {
+			// same-type price (NULLS LAST)
+			return q.Order("s.price DESC NULLS LAST"), nil
+		}
+		// no type => max over all services
+		return q.Order(`
+			(SELECT MAX(sx.price)
+			 FROM services sx
+			 WHERE sx.pet_sitter_id = pet_sitters.id
+			   AND sx.kind = 'petSitter') DESC NULLS LAST
+		`), nil
+
+	case "min_price":
+		if serviceType != nil {
+			return q.Order("s.price ASC NULLS LAST"), nil
+		}
+		return q.Order(`
+			(SELECT MIN(sx.price)
+			 FROM services sx
+			 WHERE sx.pet_sitter_id = pet_sitters.id
+			   AND sx.kind = 'petSitter') ASC NULLS LAST
+		`), nil
+
+	case "max_rate":
+		// avg rating (NULLS LAST)
+		return q.Order(`
+			(SELECT AVG(c.rating)::float8
+			 FROM comments c
+			 WHERE c.pet_sitter_id = pet_sitters.id) DESC NULLS LAST
+		`), nil
+
+	case "max_comments":
+		return q.Order(`
+			(SELECT COUNT(*)
+			 FROM comments c
+			 WHERE c.pet_sitter_id = pet_sitters.id) DESC NULLS LAST
+		`), nil
+
+	default:
+		// fallback
+		return q.Order("pet_sitters.created_at DESC"), nil
+	}
 }

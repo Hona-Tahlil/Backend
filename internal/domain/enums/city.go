@@ -347,13 +347,21 @@ func (c City) String() string {
 	return FarsiCityNames[c]
 }
 
+// func GetAllCities() []City {
+// 	cities := make([]City, 0, int(CityCount)-1)
+// 	for i := City(1); i < CityCount; i++ {
+// 		cities[i-1] = i
+// 	}
+// 	return cities
+// }
 func GetAllCities() []City {
-	cities := make([]City, 0, int(CityCount)-1)
+	cities := make([]City, int(CityCount)-1)
 	for i := City(1); i < CityCount; i++ {
 		cities[i-1] = i
 	}
 	return cities
 }
+
 
 var FarsiCityNames = map[City]string{
 	TabrizCity: "تبريز", MaraghehCity: "مراغه", MiyanehCity: "ميانه", ShabestarCity: "شبستر", MarandCity: "مرند", JolfaCity: "جلفا", SarabCity: "سراب", HadishahrCity: "هاديشهر", BonabCity: "بناب", TasujCity: "تسوج", AharCity: "اهر", HarsinCity: "هريس", HashtrudCity: "هشترود", MalekanCity: "ملكان", Bostan_AbadCity: "بستان آباد", VarzaqanCity: "ورزقان", OskuCity: "اسكو", MamqanCity: "ممقان", SofianCity: "صوفیان", IlkhchiCity: "ایلخچی", KhosrowshahrCity: "خسروشهر", BasmenjCity: "باسمنج", SahandCity: "سهند",

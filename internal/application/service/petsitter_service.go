@@ -6,6 +6,7 @@ import (
 	"hona/backend/bootstrap"
 	"hona/backend/internal/application/dto/address"
 	calendarslot "hona/backend/internal/application/dto/calendar_slot"
+	"hona/backend/internal/application/dto/general"
 	"hona/backend/internal/application/dto/pet"
 	"hona/backend/internal/application/dto/petsitter"
 	"hona/backend/internal/application/dto/servicedto"
@@ -926,8 +927,38 @@ func (ps *PetSitterService) GetServiceResponse(serviceEntity *entities.Service) 
 		Price:       serviceEntity.Price,
 	}
 }
-
-func (ps *PetSitterService) SearchPetSitters(info petsitter.SearchPetSittersRequest) ([]*petsitter.PetSitterInfoResponse, int64, error) {
+func extractServiceType(filters []general.Filter) (*enums.ServiceType, error) {
+	for _, f := range filters {
+		if f.Field != "serviceType" {
+			continue
+		}
+		// value may come as float64 (json), int, etc.
+		switch v := f.Value.(type) {
+		case float64:
+			st := enums.ServiceType(uint(v))
+			return &st, nil
+		case int:
+			st := enums.ServiceType(uint(v))
+			return &st, nil
+		case int32:
+			st := enums.ServiceType(uint(v))
+			return &st, nil
+		case int64:
+			st := enums.ServiceType(uint(v))
+			return &st, nil
+		case uint:
+			st := enums.ServiceType(v)
+			return &st, nil
+		case uint64:
+			st := enums.ServiceType(uint(v))
+			return &st, nil
+		default:
+			return nil, fmt.Errorf("invalid serviceType value type: %T", f.Value)
+		}
+	}
+	return nil, nil
+}
+func (ps *PetSitterService) SearchPetSitters(info petsitter.SearchPetSittersRequest) ([]*petsitter.SearchPetSitterInfoResponse, int64, error) {
 	var petSitters []*entities.PetSitter
 	var total int64
 	options := postgres.NewQueryOptions().
@@ -935,43 +966,96 @@ func (ps *PetSitterService) SearchPetSitters(info petsitter.SearchPetSittersRequ
 		WithSorting(info.Sorts).
 		WithFilters(info.Filters)
 
+	serviceType, errr := extractServiceType(info.Filters)
+	if errr != nil {
+		return nil, 0, errr
+	}
 	petSitterRepo := ps.unitOfWork.Factory().PetSitterRepository()
 	petSitters, total, err := petSitterRepo.SearchPetSitters(options)
 
 	if err != nil {
 		return nil, 0, err
 	}
-	res := make([]*petsitter.PetSitterInfoResponse, len(petSitters))
+	res := make([]*petsitter.SearchPetSitterInfoResponse, len(petSitters))
 	for i, petSitter := range petSitters {
 		user, err := ps.userService.FindUserByID(petSitter.UserID)
 		if err != nil {
 			return nil, 0, err
 		}
-		address, err := ps.addressService.FindAddressByID(user.Address.ID)
+
+		// Preload user address
+		if err := ps.userService.PreloadFields(user, []string{"Address"}); err != nil {
+			return nil, 0, err
+		}
+
+		// Handle nil address
+		var province, city string
+		if user.Address != nil {
+			province = user.Address.Province.String()
+			city = user.Address.City.String()
+		}
+
+		// Preload comments for rating calculation
+		err = petSitterRepo.PreloadFields(petSitter, []string{"Comments"})
 		if err != nil {
 			return nil, 0, err
 		}
-		err = petSitterRepo.PreloadServices(petSitter)
-		if err != nil {
+
+		var comments uint
+		var rate uint
+		comments = 0
+		for _, comment := range petSitter.Comments {
+			comments++
+			rate += comment.Rating
+		}
+		var averageRating float64
+		if comments > 0 {
+			averageRating = float64(rate) / float64(comments)
+		}
+
+		if err := petSitterRepo.PreloadServices(petSitter); err != nil {
 			return nil, 0, err
 		}
+
 		services := make([]string, len(petSitter.Services))
-		for _, service := range petSitter.Services {
-			services = append(services, service.Type.String())
+
+		var minPrice uint = 0
+		if serviceType != nil {
+			// ✅ min_price = price of selected serviceType (or 0 if not found)
+			for j, s := range petSitter.Services {
+				services[j] = s.Type.String()
+				if s.Type == *serviceType {
+					minPrice = s.Price
+				}
+			}
+			// اگر می‌خوای وقتی سرویس اون تایپ نبود، minPrice=0 بمونه (یا error/skip)
+		} else {
+			// ✅ min_price = minimum across all services (previous behavior)
+			for j, s := range petSitter.Services {
+				services[j] = s.Type.String()
+				if minPrice == 0 || s.Price < minPrice {
+					minPrice = s.Price
+				}
+			}
 		}
+
+		// Build petkinds slice correctly
 		petkinds := make([]string, len(petSitter.PetKinds))
-		for _, petkind := range petSitter.PetKinds {
-			petkinds = append(petkinds, petkind.String())
+		for j, petkind := range petSitter.PetKinds {
+			petkinds[j] = petkind.String()
 		}
-		// service, err := ps.FindServiceByID(info.ServiceID)
-		res[i] = &petsitter.PetSitterInfoResponse{
+
+		res[i] = &petsitter.SearchPetSitterInfoResponse{
 			ID:        petSitter.ID,
 			FirstName: user.FirstName,
 			LastName:  user.LastName,
-			Province:  address.Province.String(),
-			City:      address.City.String(),
+			Province:  province,
+			City:      city,
 			Services:  services,
 			PetKinds:  petkinds,
+			MinPrice:  minPrice,
+			Rate:      averageRating,
+			Comments:  comments,
 		}
 	}
 
