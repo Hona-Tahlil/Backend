@@ -36,7 +36,6 @@ func SetUpUserRoutes(v1 *gin.RouterGroup, app *wire.Application) {
 		comments.GET("/petsitters/:petSitterID", app.Controllers.UserControllers.UserCommentController.GetAllPetSitterComments)
 	}
 	chat := v1.Group("/chat")
-	chat.Use(app.Middlewares.WebsocketMiddleware.UpgradeToWebSocket)
 	{
 		//request
 		chat.POST("/room/:petSitterID", app.Controllers.UserControllers.UserChatController.CreateOrGetRoom)

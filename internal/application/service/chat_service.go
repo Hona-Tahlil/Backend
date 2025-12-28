@@ -8,6 +8,7 @@ import (
 	"hona/backend/internal/domain/exceptions"
 	"hona/backend/internal/domain/ports"
 	domainpostgres "hona/backend/internal/domain/ports/postgres"
+	"log"
 )
 
 type ChatService struct {
@@ -27,10 +28,12 @@ func (cs *ChatService) CreateOrGetRoom(info chat.CreateOrGetUserRoomRequest) (ch
 	if info.PetSitterID == info.UserID {
 		return chat.ChatRoomDetailsResponse{}, nil
 	}
+	log.Println("1")
 	room, err := chatRepo.GetUserAndPetSitterRoom(info.UserID, info.PetSitterID)
 	if err != nil {
 		return chat.ChatRoomDetailsResponse{}, err
 	}
+	log.Println("2")
 	if room == nil {
 		newRoom := &entities.ChatRoom{
 			UserID:      info.UserID,

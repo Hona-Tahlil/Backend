@@ -37,7 +37,6 @@ func SetUpPetSitterRoutes(v1 *gin.RouterGroup, app *wire.Application) {
 			requests.PUT("/respond", app.Controllers.PetSitterControllers.PetSitterRequestController.RespondToRequest)
 		}
 		chat := petsitter.Group("/chat")
-		chat.Use(app.Middlewares.WebsocketMiddleware.UpgradeToWebSocket)
 		{
 			//get by status
 			chat.POST("/room/:userID", app.Controllers.UserControllers.UserChatController.CreateOrGetRoom)
