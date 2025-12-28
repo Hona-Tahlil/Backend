@@ -162,6 +162,19 @@ func (ps *PetSitterService) GetPetSitterByID(id uint) (*entities.PetSitter, erro
 	return foundPetSitter, nil
 }
 
+func (ps *PetSitterService) UpdateRatingAndCommentsCount(petSitterID uint, rating float32, commentsCount uint) error {
+	foundPetSitter, err := ps.GetPetSitterByID(petSitterID)
+	if err != nil {
+		return err
+	}
+
+	foundPetSitter.Rating = rating
+	foundPetSitter.CommentsCount = commentsCount
+
+	petSitterRepo := ps.unitOfWork.Factory().PetSitterRepository()
+	return petSitterRepo.UpdatePetSitter(foundPetSitter)
+}
+
 func (ps *PetSitterService) PreloadFields(petSitter *entities.PetSitter, fields []string) error {
 	return ps.unitOfWork.Factory().PetSitterRepository().PreloadFields(petSitter, fields)
 }
