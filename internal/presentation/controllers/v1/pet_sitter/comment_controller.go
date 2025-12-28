@@ -1,18 +1,17 @@
 package petsitter
 
 import (
-	"hona/backend/internal/application/dto/comment"
-	"hona/backend/internal/application/service"
+	"hona/backend/internal/application/usecase"
 	"hona/backend/internal/presentation/controllers"
 
 	"github.com/gin-gonic/gin"
 )
 
 type PetSitterCommentController struct {
-	commentService *service.CommentService
+	commentService usecase.CommentService
 }
 
-func NewPetSitterCommentController(commentService *service.CommentService) *PetSitterCommentController {
+func NewPetSitterCommentController(commentService usecase.CommentService) *PetSitterCommentController {
 	return &PetSitterCommentController{
 		commentService: commentService,
 	}
@@ -20,12 +19,7 @@ func NewPetSitterCommentController(commentService *service.CommentService) *PetS
 
 func (cc *PetSitterCommentController) GetAllComments(ctx *gin.Context) {
 	UserID := controllers.GetID(ctx)
-
-	info := comment.GetAllPetSitterCommentsRequest{
-		PetSitterID: UserID,
-	}
-
-	res, err := cc.commentService.GetAllPetSitterComments(info)
+	res, err := cc.commentService.GetAllPetSitterCommentsForPetSitter(UserID)
 	if err != nil {
 		panic(err)
 	}
