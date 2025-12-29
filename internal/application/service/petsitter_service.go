@@ -958,59 +958,102 @@ func extractServiceType(filters []general.Filter) (*enums.ServiceType, error) {
 	}
 	return nil, nil
 }
+func extractMinPrice(filters []general.Filter) *uint {
+	if filters == nil {
+		return nil
+	}
+
+	for _, f := range filters {
+		if f.Field == "minPrice" {
+			if v, ok := toUint(f.Value); ok {
+				return &v
+			}
+		}
+	}
+	return nil
+}
+func extractMaxPrice(filters []general.Filter) *uint {
+	if filters == nil {
+		return nil
+	}
+
+	for _, f := range filters {
+		if f.Field == "maxPrice" {
+			if v, ok := toUint(f.Value); ok {
+				return &v
+			}
+		}
+	}
+	return nil
+}
+func toUint(value interface{}) (uint, bool) {
+	switch v := value.(type) {
+	case float64:
+		return uint(v), true
+	case int:
+		return uint(v), true
+	case int32:
+		return uint(v), true
+	case int64:
+		return uint(v), true
+	case uint:
+		return v, true
+	case uint64:
+		return uint(v), true
+	default:
+		return 0, false
+	}
+}
 func (ps *PetSitterService) SearchPetSitters(info petsitter.SearchPetSittersRequest) ([]*petsitter.SearchPetSitterInfoResponse, int64, error) {
-	var petSitters []*entities.PetSitter
-	var total int64
 	options := postgres.NewQueryOptions().
 		WithPagination(info.Limit, info.Offset).
 		WithSorting(info.Sorts).
 		WithFilters(info.Filters)
 
-	serviceType, errr := extractServiceType(info.Filters)
-	if errr != nil {
-		return nil, 0, errr
-	}
-	petSitterRepo := ps.unitOfWork.Factory().PetSitterRepository()
-	petSitters, total, err := petSitterRepo.SearchPetSitters(options)
-
+	serviceType, err := extractServiceType(info.Filters)
 	if err != nil {
 		return nil, 0, err
 	}
-	res := make([]*petsitter.SearchPetSitterInfoResponse, len(petSitters))
-	for i, petSitter := range petSitters {
+
+	minFilter := extractMinPrice(info.Filters)
+	maxFilter := extractMaxPrice(info.Filters)
+
+	petSitterRepo := ps.unitOfWork.Factory().PetSitterRepository()
+	petSitters, total, err := petSitterRepo.SearchPetSitters(options)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	res := make([]*petsitter.SearchPetSitterInfoResponse, 0, len(petSitters))
+
+	for _, petSitter := range petSitters {
 		user, err := ps.userService.FindUserByID(petSitter.UserID)
 		if err != nil {
 			return nil, 0, err
 		}
-
-		// Preload user address
 		if err := ps.userService.PreloadFields(user, []string{"Address"}); err != nil {
 			return nil, 0, err
 		}
 
-		// Handle nil address
 		var province, city string
 		if user.Address != nil {
 			province = user.Address.Province.String()
 			city = user.Address.City.String()
 		}
 
-		// Preload comments for rating calculation
-		err = petSitterRepo.PreloadFields(petSitter, []string{"Comments"})
-		if err != nil {
+		if err := petSitterRepo.PreloadFields(petSitter, []string{"Comments"}); err != nil {
 			return nil, 0, err
 		}
 
 		var comments uint
-		var rate uint
-		comments = 0
-		for _, comment := range petSitter.Comments {
+		var rateSum uint
+		for _, c := range petSitter.Comments {
 			comments++
-			rate += comment.Rating
+			rateSum += c.Rating
 		}
 		var averageRating float64
 		if comments > 0 {
-			averageRating = float64(rate) / float64(comments)
+			averageRating = float64(rateSum) / float64(comments)
 		}
 
 		if err := petSitterRepo.PreloadServices(petSitter); err != nil {
@@ -1018,34 +1061,42 @@ func (ps *PetSitterService) SearchPetSitters(info petsitter.SearchPetSittersRequ
 		}
 
 		services := make([]string, len(petSitter.Services))
+		for i, s := range petSitter.Services {
+			services[i] = s.Type.String()
+		}
 
-		var minPrice uint = 0
-		if serviceType != nil {
-			// ✅ min_price = price of selected serviceType (or 0 if not found)
-			for j, s := range petSitter.Services {
-				services[j] = s.Type.String()
-				if s.Type == *serviceType {
-					minPrice = s.Price
-				}
-			}
-			// اگر می‌خوای وقتی سرویس اون تایپ نبود، minPrice=0 بمونه (یا error/skip)
+		// ✅ CRITICAL: min_price = PriceKey (the DB sort key) if available
+		var minPrice uint
+		if petSitter.PriceKey != nil {
+			minPrice = *petSitter.PriceKey
 		} else {
-			// ✅ min_price = minimum across all services (previous behavior)
-			for j, s := range petSitter.Services {
-				services[j] = s.Type.String()
+			// fallback computation (only if PriceKey not returned)
+			minPrice = 0
+			for _, s := range petSitter.Services {
+				if s.Kind != "petSitter" || s.DeletedAt.Valid {
+					continue
+				}
+				if serviceType != nil && s.Type != *serviceType {
+					continue
+				}
+				if minFilter != nil && s.Price < *minFilter {
+					continue
+				}
+				if maxFilter != nil && s.Price > *maxFilter {
+					continue
+				}
 				if minPrice == 0 || s.Price < minPrice {
 					minPrice = s.Price
 				}
 			}
 		}
 
-		// Build petkinds slice correctly
 		petkinds := make([]string, len(petSitter.PetKinds))
-		for j, petkind := range petSitter.PetKinds {
-			petkinds[j] = petkind.String()
+		for j, pk := range petSitter.PetKinds {
+			petkinds[j] = pk.String()
 		}
 
-		res[i] = &petsitter.SearchPetSitterInfoResponse{
+		res = append(res, &petsitter.SearchPetSitterInfoResponse{
 			ID:        petSitter.ID,
 			FirstName: user.FirstName,
 			LastName:  user.LastName,
@@ -1056,7 +1107,7 @@ func (ps *PetSitterService) SearchPetSitters(info petsitter.SearchPetSittersRequ
 			MinPrice:  minPrice,
 			Rate:      averageRating,
 			Comments:  comments,
-		}
+		})
 	}
 
 	return res, total, nil
