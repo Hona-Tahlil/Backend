@@ -58,6 +58,11 @@ func SetUpPetSitterRoutes(v1 *gin.RouterGroup, app *wire.Application) {
 			calendar.PATCH("/", app.Controllers.PetSitterControllers.PetSitterCalendarController.UpdateFreeCalendarSlots)
 		}
 
+		comments := petsitter.Group("/comments")
+		{
+			comments.GET("/", app.Controllers.PetSitterControllers.PetSitterCommentController.GetAllComments)
+		}
+
 		wallet := petsitter.Group("/wallet")
 		{
 			wallet.PUT("/withdraw", app.Controllers.PetSitterControllers.PetSitterWalletController.Withdraw)

@@ -34,7 +34,7 @@ func SetUpUserRoutes(v1 *gin.RouterGroup, app *wire.Application) {
 	{
 		comments.POST("/", app.Controllers.UserControllers.UserCommentController.CreateComment)
 		comments.PUT("/", app.Controllers.UserControllers.UserCommentController.EditComment)
-		comments.DELETE("/:id", app.Controllers.UserControllers.UserCommentController.DeleteComment)
+		comments.DELETE("/:commentID", app.Controllers.UserControllers.UserCommentController.DeleteComment)
 		comments.GET("/petsitters/:petSitterID", app.Controllers.UserControllers.UserCommentController.GetAllPetSitterComments)
 	}
 

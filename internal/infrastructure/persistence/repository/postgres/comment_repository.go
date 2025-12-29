@@ -43,7 +43,7 @@ func (cr *CommentRepository) DeleteComment(comment *entities.Comment) error {
 func (cr *CommentRepository) GetAllPetSitterCommentsByID(id uint) ([]entities.Comment, error) {
 	var comments []entities.Comment
 
-	if err := cr.db.Find(&comments, "petSitterID = ?", id).Error; err != nil {
+	if err := cr.db.Find(&comments, "pet_sitter_id = ?", id).Error; err != nil {
 		return nil, err
 	}
 
