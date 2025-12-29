@@ -115,7 +115,7 @@ func (ps *PetService) UpdatePet(info pet.UpdatePetRequest) error {
 		var ce exceptions.ConflictErrors
 		ce.Add(bootstrap.Run().Constants.ErrorFields.Pet, bootstrap.Run().Constants.ErrorTags.DuplicateName)
 		return &ce
-	} else if _, ok := err.(*exceptions.NotFoundError); !ok {
+	} else if _, ok := err.(*exceptions.NotFoundError); !ok && err != nil {
 		return err
 	}
 
