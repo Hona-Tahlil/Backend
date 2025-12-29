@@ -1,6 +1,7 @@
 package rbac
 
 import (
+	"hona/backend/internal/application/dto/address"
 	"hona/backend/internal/domain/enums"
 	"time"
 )
@@ -25,12 +26,8 @@ type RefreshTokenResponse struct {
 }
 
 type RoleWithUsersResponse struct {
-	Role  RoleResponse       `json:"role"`
-	Users []UserInfoResponse `json:"users"`
-}
-
-type UserInfoResponse struct {
-	Email string `json:"email"`
+	Role  RoleResponse   `json:"role"`
+	Users []UserResponse `json:"users"`
 }
 
 type AdminPetSittersListResponse struct {
@@ -52,4 +49,28 @@ type PaginationResponse struct {
 	Page  int `json:"page"`
 	Limit int `json:"limit"`
 	Total int `json:"total"`
+}
+
+type WalletResponse struct {
+	ID             uint    `json:"id"`
+	Balance        uint    `json:"balance"`
+	PendingBalance uint    `json:"pendingBalance"`
+	PaymentInfo    *string `json:"paymentInfo"`
+	UserID         uint    `json:"userID"`
+}
+
+type UserResponse struct {
+	ID              uint                         `json:"id"`
+	Email           string                       `json:"email"`
+	IsEmailVerified bool                         `json:"isEmailVerified"`
+	FirstName       string                       `json:"firstName"`
+	LastName        string                       `json:"lastName"`
+	Address         *address.AddressInfoResponse `json:"address"`
+	Phone           *string                      `json:"phone"`
+	IsPhoneVerified bool                         `json:"isPhoneVerified"`
+	Gender          string                       `json:"gender"`
+	BirthDate       *time.Time                   `json:"birthDate"`
+	PictureLink     *string                      `json:"pictureLink"`
+	Wallet          WalletResponse               `json:"wallet"`
+	Roles           []RoleResponse               `json:"roles"`
 }

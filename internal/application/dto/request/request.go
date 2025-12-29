@@ -2,6 +2,7 @@ package request
 
 import (
 	"hona/backend/internal/application/dto/address"
+	"hona/backend/internal/application/dto/general"
 	"hona/backend/internal/domain/enums"
 	"time"
 )
@@ -52,6 +53,11 @@ type CancelRequestRequest struct {
 	UserID    uint
 }
 
+type PayRequestRequest struct {
+	RequestID uint
+	UserID    uint
+}
+
 type GetRequestFullDataRequest struct {
 	RequestID uint
 }
@@ -61,4 +67,20 @@ type RespondToRequestRequest struct {
 	RequestID uint
 	Accept    bool
 	UserID    uint
+}
+
+type SearchRequestsRequest struct {
+	UserID  uint
+	Offset  int
+	Limit   int
+	Filters []general.Filter
+	Sorts   []general.Sort
+}
+
+type SearchPetSitterRequestsRequest struct {
+	PetSitterUserID uint
+	Offset          int
+	Limit           int
+	Filters         []general.Filter
+	Sorts           []general.Sort
 }

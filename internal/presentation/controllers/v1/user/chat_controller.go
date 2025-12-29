@@ -8,6 +8,7 @@ import (
 	"hona/backend/internal/domain/enums"
 	"hona/backend/internal/infrastructure/websocket"
 	"hona/backend/internal/presentation/controllers"
+	"log"
 
 	"github.com/gin-gonic/gin"
 )
@@ -29,17 +30,28 @@ func (c *UserChatController) CreateOrGetRoom(ctx *gin.Context) {
 		PetSitterID uint `uri:"petSitterID" validate:"required"`
 	}
 	params := controllers.Receive[roomParams](ctx)
+	// log.Panicln(params.PetSitterID)
+	log.Println("Creating or getting room")
 	userID := controllers.GetID(ctx)
+	log.Printf("User ID: %d", userID)
 	roomInfo := chat.CreateOrGetUserRoomRequest{
 		PetSitterID: params.PetSitterID,
 		UserID:      userID,
 	}
+	log.Println("Creating or getting room")
+	if c.chatService == nil {
+		ctx.JSON(500, gin.H{"error": "chatService is nil (DI not wired)"})
+		return
+	}
+
 	roomsDetails, err := c.chatService.CreateOrGetRoom(roomInfo)
+	log.Printf("Room Details: %+v\n", roomsDetails)
 	if err != nil {
-		panic(err)
+		ctx.JSON(500, gin.H{"error": err.Error()})
+		return
 	}
 	msg := controllers.Message{}
-	controllers.Respond(ctx, 200, msg, roomsDetails)
+	controllers.Respond(ctx, 200, msg, roomInfo)
 }
 
 func (c *UserChatController) HandleWebsocket(ctx *gin.Context) {
@@ -68,7 +80,7 @@ func (c *UserChatController) GetAllRooms(ctx *gin.Context) {
 	}
 	senderID := controllers.GetID(ctx)
 	p := controllers.Receive[Params](ctx)
-	offset, limit := controllers.GetOffsetLimit(p.Page, p.Count, 1, 10)
+	offset, limit := controllers.GetOffsetLimit(p.Page, p.Count)
 
 	sorts := make([]general.Sort, len(p.Sort))
 	for i, s := range p.Sort {
@@ -106,7 +118,7 @@ func (c *UserChatController) GetRoomMessages(ctx *gin.Context) {
 	}
 	p := controllers.Receive[params](ctx)
 	senderID := controllers.GetID(ctx)
-	offset, limit := controllers.GetOffsetLimit(p.page, p.count, 1, 10)
+	offset, limit := controllers.GetOffsetLimit(p.page, p.count)
 
 	sorts := make([]general.Sort, len(p.Sort))
 	for i, s := range p.Sort {
@@ -131,7 +143,6 @@ func (c *UserChatController) GetRoomMessages(ctx *gin.Context) {
 	msg := controllers.Message{}
 	controllers.Respond(ctx, 200, msg, data)
 }
-
 
 func (c *UserChatController) BlockRoom(ctx *gin.Context) {
 	type params struct {
@@ -182,4 +193,3 @@ func (c *UserChatController) GetRoomRequestInfo(ctx *gin.Context) {
 	msg := controllers.Message{}
 	controllers.Respond(ctx, 200, msg, res)
 }
-

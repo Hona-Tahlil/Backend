@@ -7,7 +7,8 @@ import (
 	"hona/backend/internal/domain/enums"
 	"hona/backend/internal/domain/exceptions"
 	"hona/backend/internal/domain/ports"
-	domainpostgres "hona/backend/internal/domain/ports/postgres"
+	"hona/backend/internal/infrastructure/persistence/repository/postgres"
+
 	"log"
 )
 
@@ -24,6 +25,7 @@ func NewChatService(unitOfWork ports.UnitOfWork, userService usecase.UserService
 }
 
 func (cs *ChatService) CreateOrGetRoom(info chat.CreateOrGetUserRoomRequest) (chat.ChatRoomDetailsResponse, error) {
+	log.Println("Creating or getting room")
 	chatRepo := cs.unitOfWork.Factory().ChatRepository()
 	if info.PetSitterID == info.UserID {
 		return chat.ChatRoomDetailsResponse{}, nil
@@ -43,6 +45,8 @@ func (cs *ChatService) CreateOrGetRoom(info chat.CreateOrGetUserRoomRequest) (ch
 		if err != nil {
 			return chat.ChatRoomDetailsResponse{}, err
 		}
+		room = newRoom
+
 	}
 	return chat.ChatRoomDetailsResponse{RoomID: room.ID}, nil
 }
@@ -50,14 +54,14 @@ func (cs *ChatService) CreateOrGetRoom(info chat.CreateOrGetUserRoomRequest) (ch
 func (cs *ChatService) SaveMessage(info chat.SaveMessageRequest) (chat.SaveMessageResponse, error) {
 	chatRepo := cs.unitOfWork.Factory().ChatRepository()
 	message := &entities.ChatMessage{
-		RoomID:        info.RoomID,
-		SenderID:      info.SenderID,
-		Content:       info.Content,
+		RoomID:           info.RoomID,
+		SenderID:         info.SenderID,
+		Content:          info.Content,
 		ReplyToMessageID: info.ReplyToMessageID,
 	}
 	err := chatRepo.CreateMessage(message)
 	if err != nil {
-		return chat.SaveMessageResponse{}, err	
+		return chat.SaveMessageResponse{}, err
 	}
 	return chat.SaveMessageResponse{
 		ID:        message.ID,
@@ -70,7 +74,7 @@ func (cs *ChatService) SaveMessage(info chat.SaveMessageRequest) (chat.SaveMessa
 
 func (cs *ChatService) GetAllRooms(request chat.GetAllRoomsRequest) ([]chat.PetSitterRoomsResponse, int64, error) {
 	chatRepo := cs.unitOfWork.Factory().ChatRepository()
-	options := domainpostgres.NewQueryOptions().
+	options := postgres.NewQueryOptions().
 		WithPagination(request.Limit, request.Offset).
 		WithSorting(request.Sort)
 	rooms, totalCount, err := chatRepo.GetAllRooms(request.SenderID, options)
@@ -108,7 +112,7 @@ func (cs *ChatService) GetAllRooms(request chat.GetAllRoomsRequest) ([]chat.PetS
 
 func (cs *ChatService) GetRoomMessages(request *chat.GetRoomMessagesRequest) ([]chat.RoomMessagesResponse, int64, error) {
 	chatRepo := cs.unitOfWork.Factory().ChatRepository()
-	options := domainpostgres.NewQueryOptions().
+	options := postgres.NewQueryOptions().
 		WithPagination(request.Limit, request.Offset).
 		WithSorting(request.Sort)
 	room, err := chatRepo.GetRoomByID(request.RoomID)
@@ -135,8 +139,8 @@ func (cs *ChatService) GetRoomMessages(request *chat.GetRoomMessagesRequest) ([]
 			Content:   message.Content,
 			CreatedAt: message.CreatedAt,
 			Sender: chat.ChatParticipantResponse{
-				FirstName:  sender.FirstName,
-				LastName:   sender.LastName,
+				FirstName: sender.FirstName,
+				LastName:  sender.LastName,
 				// ProfilePic: sender.ProfilePic,
 				// IsOnline:   sender.IsOnline,
 			},
@@ -257,7 +261,7 @@ func (cs *ChatService) MarkAsRead(request chat.MarkRoomReadRequest) error {
 	chatRepo := cs.unitOfWork.Factory().ChatRepository()
 	room, err := chatRepo.GetRoomByID(request.RoomID)
 	if err != nil {
-		return err	
+		return err
 	}
 	if room == nil {
 		return exceptions.NewNotFoundError("ChatRoom")
@@ -274,15 +278,15 @@ func (cs *ChatService) MarkAsRead(request chat.MarkRoomReadRequest) error {
 	message, err := chatRepo.FindLastMessageByID(&request.LastReadMessageID)
 	if err != nil {
 		return err
-	}	
+	}
 	if message == nil || message.RoomID != request.RoomID {
 		return nil
 	}
 	if isUser {
-		if room.UserLastReadMessageID !=nil && request.LastReadMessageID <= *room.UserLastReadMessageID {
+		if room.UserLastReadMessageID != nil && request.LastReadMessageID <= *room.UserLastReadMessageID {
 			return nil
 		}
-		room.UserLastReadMessageID = &request.LastReadMessageID	
+		room.UserLastReadMessageID = &request.LastReadMessageID
 	} else if isPetSitter {
 		if room.PetSitterLastReadMessageID != nil && request.LastReadMessageID <= *room.PetSitterLastReadMessageID {
 			return nil

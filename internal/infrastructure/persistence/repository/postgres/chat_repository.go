@@ -2,7 +2,6 @@ package postgres
 
 import (
 	"hona/backend/internal/domain/entities"
-	domainpostgres "hona/backend/internal/domain/ports/postgres"
 
 	"gorm.io/gorm"
 )
@@ -82,7 +81,7 @@ func (cr *ChatRepository) UpdateRoom(room *entities.ChatRoom) error {
 	return cr.db.Save(room).Error
 }
 
-func (cr *ChatRepository) GetAllRooms(senderID uint, options *domainpostgres.QueryOptions) ([]*entities.ChatRoom, int64, error) {
+func (cr *ChatRepository) GetAllRooms(senderID uint, options *QueryOptions) ([]*entities.ChatRoom, int64, error) {
 	var rooms []*entities.ChatRoom
 	var totalCount int64
 	query := cr.db.Model(&entities.ChatRoom{}).Where("user_id = ? OR pet_sitter_id = ?", senderID, senderID)
@@ -128,7 +127,7 @@ func (cr *ChatRepository) FindLastMessageByID(messageID *uint) (*entities.ChatMe
 	return &message, nil
 }
 
-func (cr *ChatRepository) GetMessagesByRoomID(roomID uint, options *domainpostgres.QueryOptions) ([]*entities.ChatMessage, int64, error) {
+func (cr *ChatRepository) GetMessagesByRoomID(roomID uint, options *QueryOptions) ([]*entities.ChatMessage, int64, error) {
 	var messages []*entities.ChatMessage
 	var totalCount int64
 	query := cr.db.Model(&entities.ChatMessage{}).Where("room_id = ?", roomID)

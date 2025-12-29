@@ -8,7 +8,9 @@ import (
 	"hona/backend/internal/domain/enums"
 	"hona/backend/internal/domain/exceptions"
 	"hona/backend/internal/domain/ports"
+	domainpostgres "hona/backend/internal/domain/ports/postgres"
 	"hona/backend/internal/infrastructure/communication/mail"
+	"hona/backend/internal/infrastructure/persistence/repository/postgres"
 	"log"
 	"sort"
 	"time"
@@ -19,6 +21,7 @@ type RequestService struct {
 	addressService   usecase.AddressService
 	petService       usecase.PetService
 	petSitterService usecase.PetSitterService
+	walletService    usecase.WalletService
 	unitOfWork       ports.UnitOfWork
 	emailService     *mail.EmailService
 }
@@ -28,6 +31,7 @@ type RequestServiceDeps struct {
 	AddressService   usecase.AddressService
 	PetService       usecase.PetService
 	PetSitterService usecase.PetSitterService
+	WalletService    usecase.WalletService
 	UnitOfWork       ports.UnitOfWork
 	EmailService     *mail.EmailService
 }
@@ -39,6 +43,7 @@ func NewRequestService(deps RequestServiceDeps) *RequestService {
 		addressService:   deps.AddressService,
 		petService:       deps.PetService,
 		petSitterService: deps.PetSitterService,
+		walletService:    deps.WalletService,
 		emailService:     deps.EmailService,
 	}
 }
@@ -47,6 +52,10 @@ func (rs *RequestService) CreateRequest(info request.CreateRequestRequest) error
 	petSitter, err := rs.petSitterService.GetPetSitterByUserID(info.PetSitterUserID)
 	if err != nil {
 		return err
+	}
+
+	if petSitter.Status != enums.PSS_Active {
+		return exceptions.NewNotFoundError(bootstrap.Run().Constants.ErrorFields.PetSitter)
 	}
 
 	err = rs.petSitterService.PreloadFields(petSitter, []string{"Schedule", "Services"})
@@ -154,6 +163,10 @@ func (rs *RequestService) GetCreateRequestInfo(info request.GetCreateRequestInfo
 	petSitter, err := rs.petSitterService.GetPetSitterByUserID(info.PetSitterUserID)
 	if err != nil {
 		return nil, err
+	}
+
+	if petSitter.Status != enums.PSS_Active {
+		return nil, exceptions.NewNotFoundError(bootstrap.Run().Constants.ErrorFields.PetSitter)
 	}
 
 	err = rs.petSitterService.PreloadFields(petSitter, []string{"Schedule", "Services"})
@@ -317,6 +330,167 @@ func (rs *RequestService) CancelRequest(info request.CancelRequestRequest) error
 	return requestRepo.EditRequest(foundRequest)
 }
 
+func (rs *RequestService) PayRequest(info request.PayRequestRequest) error {
+	return rs.unitOfWork.WithTransaction(func(rf ports.RepositoryFactory) error {
+		requestRepo := rf.RequestRepository()
+		transferRepo := rf.TransferRepository()
+
+		foundRequest, err := rs.loadPayableRequest(requestRepo, info)
+		if err != nil {
+			return err
+		}
+
+		petSitter, err := rs.petSitterService.GetPetSitterByID(foundRequest.PetSitterID)
+		if err != nil {
+			return err
+		}
+
+		senderWallet, receiverWallet, err := rs.walletService.TransferInTransaction(rf, foundRequest.UserID, petSitter.UserID, foundRequest.TotalPrice)
+		if err != nil {
+			return err
+		}
+
+		transfer, err := rs.createTransfer(transferRepo, senderWallet.ID, receiverWallet.ID, foundRequest.TotalPrice)
+		if err != nil {
+			return err
+		}
+
+		return rs.markRequestPaid(requestRepo, foundRequest, transfer.ID)
+	})
+}
+
+func (rs *RequestService) loadPayableRequest(requestRepo domainpostgres.RequestRepository, info request.PayRequestRequest) (*entities.Request, error) {
+	foundRequest, err := requestRepo.GetRequestByID(info.RequestID)
+	if err != nil {
+		return nil, err
+	}
+	if foundRequest == nil {
+		return nil, exceptions.NewNotFoundError(bootstrap.Run().Constants.ErrorFields.Request)
+	}
+	if foundRequest.UserID != info.UserID {
+		return nil, exceptions.NewAccessDeniedError(bootstrap.Run().Constants.ErrorTags.ForbiddenStatus)
+	}
+	if foundRequest.Status != enums.Accepted {
+		return nil, exceptions.NewAccessDeniedError(bootstrap.Run().Constants.ErrorTags.ForbiddenStatus)
+	}
+
+	return foundRequest, nil
+}
+
+func (rs *RequestService) createTransfer(transferRepo domainpostgres.TransferRepository, senderWalletID, receiverWalletID, amount uint) (*entities.Transfer, error) {
+	transfer := &entities.Transfer{
+		ReceiverWalletID: receiverWalletID,
+		SenderWalletID:   senderWalletID,
+		Amount:           amount,
+	}
+	if err := transferRepo.CreateTransfer(transfer); err != nil {
+		return nil, err
+	}
+
+	return transfer, nil
+}
+
+func (rs *RequestService) markRequestPaid(requestRepo domainpostgres.RequestRepository, foundRequest *entities.Request, transferID uint) error {
+	foundRequest.Status = enums.Paid
+	foundRequest.TransferID = &transferID
+	return requestRepo.EditRequest(foundRequest)
+}
+
+func (rs *RequestService) SearchRequests(info request.SearchRequestsRequest) ([]request.RequestListItemResponse, int64, error) {
+	options := postgres.NewQueryOptions().WithPagination(info.Limit, info.Offset)
+	if len(info.Filters) > 0 {
+		options.WithFilters(info.Filters)
+	}
+	if len(info.Sorts) > 0 {
+		options.WithSorting(info.Sorts)
+	}
+
+	requestRepo := rs.unitOfWork.Factory().RequestRepository()
+	requests, total, err := requestRepo.SearchRequests(info.UserID, options)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	for i := range requests {
+		if err := rs.PreloadFields(&requests[i], []string{"Service"}); err != nil {
+			return nil, 0, err
+		}
+	}
+
+	res := make([]request.RequestListItemResponse, len(requests))
+	for i := range requests {
+		req := requests[i]
+		petSitter, err := rs.petSitterService.GetPetSitterByID(req.PetSitterID)
+		if err != nil {
+			return nil, 0, err
+		}
+		petSitterUser, err := rs.userService.FindUserByID(petSitter.UserID)
+		if err != nil {
+			return nil, 0, err
+		}
+		res[i] = request.RequestListItemResponse{
+			RequestID:          req.ID,
+			PetSitterUserID:    petSitter.UserID,
+			PetSitterFirstName: petSitterUser.FirstName,
+			PetSitterLastName:  petSitterUser.LastName,
+			Service:            rs.petSitterService.GetServiceResponse(&req.Service),
+			TotalPrice:         req.TotalPrice,
+			Status:             req.Status.String(),
+			UpdatedAt:          req.UpdatedAt,
+		}
+	}
+
+	return res, total, nil
+}
+
+func (rs *RequestService) SearchPetSitterRequests(info request.SearchPetSitterRequestsRequest) ([]request.RequestListItemResponse, int64, error) {
+	petSitter, err := rs.petSitterService.GetPetSitterByUserID(info.PetSitterUserID)
+	if err != nil {
+		return nil, 0, err
+	}
+	petSitterUser, err := rs.userService.FindUserByID(petSitter.UserID)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	options := postgres.NewQueryOptions().WithPagination(info.Limit, info.Offset)
+	if len(info.Filters) > 0 {
+		options.WithFilters(info.Filters)
+	}
+	if len(info.Sorts) > 0 {
+		options.WithSorting(info.Sorts)
+	}
+
+	requestRepo := rs.unitOfWork.Factory().RequestRepository()
+	requests, total, err := requestRepo.SearchRequestsByPetSitterID(petSitter.ID, options)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	for i := range requests {
+		if err := rs.PreloadFields(&requests[i], []string{"Service"}); err != nil {
+			return nil, 0, err
+		}
+	}
+
+	res := make([]request.RequestListItemResponse, len(requests))
+	for i := range requests {
+		req := requests[i]
+		res[i] = request.RequestListItemResponse{
+			RequestID:          req.ID,
+			PetSitterUserID:    petSitter.UserID,
+			PetSitterFirstName: petSitterUser.FirstName,
+			PetSitterLastName:  petSitterUser.LastName,
+			Service:            rs.petSitterService.GetServiceResponse(&req.Service),
+			TotalPrice:         req.TotalPrice,
+			Status:             req.Status.String(),
+			UpdatedAt:          req.UpdatedAt,
+		}
+	}
+
+	return res, total, nil
+}
+
 func (rs *RequestService) GetRequestFullData(info request.GetRequestFullDataRequest) (*request.RequestFullDataResponse, error) {
 	foundRequest, err := rs.FindRequestByID(info.RequestID)
 	if err != nil {
@@ -471,7 +645,7 @@ func (rs *RequestService) validateRequestPets(user *entities.User, petSitter *en
 		return nil, err
 	}
 
-	if err := rs.petSitterService.ValidatePets(pets, petSitter.PetKinds); err != nil {
+	if err := rs.petSitterService.ValidatePets(pets, []enums.PetKind(petSitter.PetKinds)); err != nil {
 		return nil, err
 	}
 
@@ -522,7 +696,7 @@ func (rs *RequestService) makeCalendarSlots(calendarSlots []request.RequestCalen
 	for i, slot := range calendarSlots {
 		calendarSlot := &entities.CalendarSlot{
 			Date:   slot.Date,
-			Slots:  slot.Slots,
+			Slots:  entities.Slots(slot.Slots),
 			Status: enums.Booked,
 		}
 		slots[i] = *calendarSlot

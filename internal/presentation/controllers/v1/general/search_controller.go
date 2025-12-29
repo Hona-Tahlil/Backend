@@ -9,18 +9,17 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type GeneralPetSitterController struct {
+type GeneralSearchController struct {
 	petSitterService *service.PetSitterService
 }
 
-func NewGeneralPetSitterController(petSitterService *service.PetSitterService) *GeneralPetSitterController {
-	return &GeneralPetSitterController{
+func NewGeneralSearchController(petSitterService *service.PetSitterService) *GeneralSearchController {
+	return &GeneralSearchController{
 		petSitterService: petSitterService,
 	}
 }
 
-
-func (gc *GeneralPetSitterController) SearchPetSitters(ctx *gin.Context) {
+func (gc *GeneralSearchController) SearchPetSitters(ctx *gin.Context) {
 	type Filter struct {
 		Field string `json:"field" validate:"required"`
 		Op    string `json:"op"    validate:"required,oneof== != > < >= <= LIKE IN"`
@@ -39,7 +38,7 @@ func (gc *GeneralPetSitterController) SearchPetSitters(ctx *gin.Context) {
 
 	params := controllers.Receive[SearchPetSittersParams](ctx)
 
-	offset, limit := controllers.GetOffsetLimit(params.Page, params.Count, 1, 10)
+	offset, limit := controllers.GetOffsetLimit(params.Page, params.Count)
 
 	// Convert params to DTO (no DSL conversion here)
 	filters := make([]general.Filter, len(params.Filters))
@@ -76,6 +75,23 @@ func (gc *GeneralPetSitterController) SearchPetSitters(ctx *gin.Context) {
 		Text:   "success.petSitterSearch",
 		Params: []string{},
 	}
-
 	controllers.Respond(ctx, 200, msg, data)
+}
+
+func (gc *GeneralSearchController) GetPetSitterProfile(ctx *gin.Context) {
+	type Params struct {
+		PetSitterID uint `uri:"petSitterID" validate:"required"`
+	}
+	params := controllers.Receive[Params](ctx)
+
+	req := petsitter.GetPetSitterProfileRequest{
+		PetSitterID: params.PetSitterID,
+	}
+	res, err := gc.petSitterService.GetPetSitterProfile(req)
+	if err != nil {
+		panic(err)
+	}
+
+	msg := controllers.Message{}
+	controllers.Respond(ctx, 200, msg, *res)
 }

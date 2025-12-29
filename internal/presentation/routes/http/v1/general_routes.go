@@ -26,21 +26,10 @@ func SetUpGeneralRoutes(v1 *gin.RouterGroup, app *wire.Application) {
 		pets.GET("/kinds", app.Controllers.GeneralControllers.GeneralPetController.GetAllPetKinds)
 		pets.GET("/kinds/:petKind/species", app.Controllers.GeneralControllers.GeneralPetController.GetPetKindSpecies)
 	}
-	// search := v1.Group("/search")
-	// {
-	// 	search.GET("/petsitters", app.Controllers.GeneralControllers.GeneralUserController.SearchPetSitters)
-	// }
+	search := v1.Group("/search")
+	{
+		search.GET("/petsitter", app.Controllers.GeneralControllers.GeneralSearchController.SearchPetSitters)
+	}
 
-	// WebSocket testing endpoints
-	// ws := v1.Group("/test/ws")
-	// ws.Use(app.Middlewares.WebsocketMiddleware.UpgradeToWebSocket)
-	// {
-	// 	ws.GET("/room/:roomID", app.Controllers.GeneralControllers.GeneralWebsocketTestController.HandleWebsocketTest)
-	// }
-
-	// // WebSocket status check endpoint (no WebSocket upgrade needed)
-	// wsStatus := v1.Group("/test/ws")
-	// {
-	// 	wsStatus.GET("/status", app.Controllers.GeneralControllers.GeneralWebsocketTestController.GetWebsocketStatus)
-	// }
+	v1.GET("/petsitter/:petSitterID", app.Controllers.GeneralControllers.GeneralSearchController.GetPetSitterProfile)
 }

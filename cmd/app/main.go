@@ -24,11 +24,12 @@ func main() {
 
 	ginEngine := gin.Default()
 	ginEngine.RedirectTrailingSlash = true
+	ginEngine.RemoveExtraSlash = true
 
 	hub := websocket.NewHub()
 	go hub.Run()
-	
-	app, err := wire.InitializeApplication(bootstrap.Run())
+
+	app, err := wire.InitializeApplication(bootstrap.Run(), hub)
 	if err != nil {
 		panic(err)
 	}
@@ -37,7 +38,7 @@ func main() {
 
 	srv := &http.Server{
 		Addr:    ":8080",
-		Handler: ginEngine.Handler(),
+		Handler: app.Middlewares.CORSMiddleware.Handler(ginEngine),
 	}
 
 	go func() {

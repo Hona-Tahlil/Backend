@@ -36,24 +36,25 @@ func NewPostgresDatabase() *gorm.DB {
 		seeder := seeder.NewDatabaseSeeder(db)
 		// seeder.ClearAll()
 
-		db.AutoMigrate(
-			&entities.User{},
-			&entities.User{},
+		if err := db.AutoMigrate(
 			&entities.Role{},
 			&entities.Permission{},
+			&entities.User{},
 			&entities.Wallet{},
-			&entities.Request{},
-			&entities.CalendarSlot{},
 			&entities.Pet{},
 			&entities.PetSitter{},
 			&entities.Service{},
+			&entities.Request{},
+			&entities.CalendarSlot{},
 			&entities.ChatRoom{},
 			&entities.Comment{},
 			&entities.Address{},
 			&entities.ChatMessage{},
 			&entities.Transaction{},
 			&entities.Transfer{},
-		)
+		); err != nil {
+			panic(err)
+		}
 
 		seeder.SeedAll()
 	})

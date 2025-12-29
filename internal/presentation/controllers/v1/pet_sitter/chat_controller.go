@@ -50,7 +50,7 @@ func (c *PetSitterChatController) GetAllRooms(ctx *gin.Context) {
 	}
 	senderID := controllers.GetID(ctx)
 	p := controllers.Receive[Params](ctx)
-	offset, limit := controllers.GetOffsetLimit(p.Page, p.Count, 1, 10)
+	offset, limit := controllers.GetOffsetLimit(p.Page, p.Count)
 
 	sorts := make([]general.Sort, len(p.Sort))
 	for i, s := range p.Sort {
@@ -88,7 +88,7 @@ func (c *PetSitterChatController) GetRoomMessages(ctx *gin.Context) {
 	}
 	p := controllers.Receive[params](ctx)
 	senderID := controllers.GetID(ctx)
-	offset, limit := controllers.GetOffsetLimit(p.page, p.count, 1, 10)
+	offset, limit := controllers.GetOffsetLimit(p.page, p.count)
 
 	sorts := make([]general.Sort, len(p.Sort))	
 	for i, s := range p.Sort {

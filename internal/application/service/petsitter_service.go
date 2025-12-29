@@ -6,6 +6,7 @@ import (
 	"hona/backend/bootstrap"
 	"hona/backend/internal/application/dto/address"
 	calendarslot "hona/backend/internal/application/dto/calendar_slot"
+	"hona/backend/internal/application/dto/pet"
 	"hona/backend/internal/application/dto/petsitter"
 	"hona/backend/internal/application/dto/servicedto"
 	"hona/backend/internal/application/usecase"
@@ -13,8 +14,10 @@ import (
 	"hona/backend/internal/domain/enums"
 	"hona/backend/internal/domain/exceptions"
 	"hona/backend/internal/domain/ports"
-	domainpostgres "hona/backend/internal/domain/ports/postgres"
 	domainstorage "hona/backend/internal/domain/storage"
+	"hona/backend/internal/infrastructure/persistence/repository/postgres"
+	"sort"
+	"time"
 
 	"github.com/samber/lo"
 )
@@ -33,6 +36,62 @@ func NewPetSitterService(unitOfWork ports.UnitOfWork, storage domainstorage.Stor
 		userService:    userService,
 		addressService: addressService,
 	}
+}
+
+func (ps *PetSitterService) GetCalendarSlots(info calendarslot.GetCalendarSlotsRequest) ([]calendarslot.CalendarSlotInfoResponse, error) {
+	petSitter, err := ps.GetPetSitterByUserID(info.UserID)
+	if err != nil {
+		return nil, err
+	}
+	if err := ps.PreloadFields(petSitter, []string{"Schedule"}); err != nil {
+		return nil, err
+	}
+	if petSitter.Schedule == nil {
+		return []calendarslot.CalendarSlotInfoResponse{}, nil
+	}
+
+	start := time.Now()
+	end := start.AddDate(0, 0, 30)
+	filtered := make([]entities.CalendarSlot, 0, len(petSitter.Schedule))
+	for _, slot := range petSitter.Schedule {
+		if slot.Date.Before(start) || slot.Date.After(end) {
+			continue
+		}
+		filtered = append(filtered, slot)
+	}
+
+	sort.Slice(filtered, func(i, j int) bool {
+		return filtered[i].Date.Before(filtered[j].Date)
+	})
+
+	return ps.GetCalendarSlotsResponse(filtered), nil
+}
+
+func (ps *PetSitterService) UpdateFreeCalendarSlots(info calendarslot.UpdateFreeCalendarSlotsRequest) error {
+	if len(info.Add) == 0 && len(info.Remove) == 0 {
+		var ve exceptions.ValidationErrors
+		ve.AddError(bootstrap.Run().Constants.ErrorFields.CalendarSlot, bootstrap.Run().Constants.ErrorTags.UnacceptableInput)
+		return &ve
+	}
+
+	petSitter, err := ps.GetPetSitterByUserID(info.UserID)
+	if err != nil {
+		return err
+	}
+	if err := ps.PreloadFields(petSitter, []string{"Schedule"}); err != nil {
+		return err
+	}
+
+	addSlots := ps.makeFreeCalendarSlots(info.Add)
+	removeSlots := ps.makeFreeCalendarSlots(info.Remove)
+	updatedSchedule, err := applyFreeSlotPatch(petSitter.Schedule, addSlots, removeSlots)
+	if err != nil {
+		return err
+	}
+
+	petSitter.Schedule = updatedSchedule
+	petSitterRepo := ps.unitOfWork.Factory().PetSitterRepository()
+	return petSitterRepo.ReplaceSchedule(petSitter, petSitter.Schedule)
 }
 
 func (ps *PetSitterService) GetPetSitterFreeSlotsResponse(petSitter *entities.PetSitter) ([]calendarslot.CalendarSlotInfoResponse, error) {
@@ -87,9 +146,7 @@ func (ps *PetSitterService) GetPetSitterByUserID(id uint) (*entities.PetSitter, 
 	if user.PetSitter == nil {
 		return nil, exceptions.NewNotFoundError(bootstrap.Run().Constants.ErrorFields.PetSitter)
 	}
-	if user.PetSitter.Status != enums.PSS_Active {
-		return nil, exceptions.NewNotFoundError(bootstrap.Run().Constants.ErrorFields.PetSitter)
-	}
+
 	return user.PetSitter, nil
 }
 
@@ -164,7 +221,7 @@ func (ps *PetSitterService) AutoUpdateSlots(petSitter *entities.PetSitter, calen
 	petSitter.Schedule = append(petSitter.Schedule, newSlots...)
 	ps.removeEmptySitterSlots(petSitter)
 	petSitterRepo := ps.unitOfWork.Factory().PetSitterRepository()
-	return petSitterRepo.UpdatePetSitter(petSitter)
+	return petSitterRepo.ReplaceSchedule(petSitter, petSitter.Schedule)
 }
 
 func (ps *PetSitterService) removeEmptySitterSlots(petSitter *entities.PetSitter) {
@@ -301,6 +358,7 @@ func (ps *PetSitterService) UploadDocuments(info petsitter.UploadDocumentsReques
 	foundPetSitter.Status = enums.PSS_Draft
 	petSitterRepo := ps.unitOfWork.Factory().PetSitterRepository()
 	err = petSitterRepo.UpdatePetSitter(foundPetSitter)
+	err = petSitterRepo.UpdatePetSitter(foundPetSitter)
 	if err != nil {
 		return err
 	}
@@ -362,10 +420,11 @@ func (ps *PetSitterService) SubmitSkills(SkillsInfo petsitter.SubmitSkillsReques
 	services := ps.GetPetsitterServicesResponse(SkillsInfo.Services, foundPetSitter.ID)
 	foundPetSitter.Bio = &SkillsInfo.Bio
 	foundPetSitter.Services = services
-	foundPetSitter.PetKinds = append(foundPetSitter.PetKinds, SkillsInfo.PetKinds...)
+	foundPetSitter.PetKinds = append(foundPetSitter.PetKinds, entities.PetKinds(SkillsInfo.PetKinds)...)
 	foundPetSitter.OnboardingStep = enums.OBS_Done
 	foundPetSitter.Status = enums.PSS_InReview
 
+	err = petSitterRepo.UpdatePetSitter(foundPetSitter)
 	err = petSitterRepo.UpdatePetSitter(foundPetSitter)
 	if err != nil {
 		return err
@@ -384,6 +443,97 @@ func (ps *PetSitterService) GetPetsitterStatus(userID uint) (*petsitter.PetSitte
 		OnboardingStep: foundPetSitter.OnboardingStep,
 		Status:         foundPetSitter.Status,
 	}, nil
+}
+
+func (ps *PetSitterService) GetPetKinds(info petsitter.GetPetKindsRequest) ([]pet.PetKindResponse, error) {
+	foundPetSitter, err := ps.GetPetSitterByUserID(info.UserID)
+	if err != nil {
+		return nil, err
+	}
+	return ps.buildPetKindsResponse([]enums.PetKind(foundPetSitter.PetKinds)), nil
+}
+
+func (ps *PetSitterService) UpdatePetKinds(info petsitter.UpdatePetKindsRequest) error {
+	foundPetSitter, err := ps.GetPetSitterByUserID(info.UserID)
+	if err != nil {
+		return err
+	}
+	foundPetSitter.PetKinds = entities.PetKinds(info.PetKinds)
+	petSitterRepo := ps.unitOfWork.Factory().PetSitterRepository()
+	return petSitterRepo.UpdatePetSitter(foundPetSitter)
+}
+
+func (ps *PetSitterService) GetServices(info petsitter.GetServicesRequest) ([]servicedto.ServiceInfoResponse, error) {
+	foundPetSitter, err := ps.GetPetSitterByUserID(info.UserID)
+	if err != nil {
+		return nil, err
+	}
+	if err := ps.PreloadFields(foundPetSitter, []string{"Services"}); err != nil {
+		return nil, err
+	}
+	return ps.GetServicesResponse(foundPetSitter)
+}
+
+func (ps *PetSitterService) CreateService(info petsitter.CreateServiceRequest) (servicedto.ServiceInfoResponse, error) {
+	foundPetSitter, err := ps.GetPetSitterByUserID(info.UserID)
+	if err != nil {
+		return servicedto.ServiceInfoResponse{}, err
+	}
+	service := entities.Service{
+		PetSitterID: foundPetSitter.ID,
+		Type:        info.Type,
+		Price:       info.Price,
+		Description: info.Description,
+	}
+	petSitterRepo := ps.unitOfWork.Factory().PetSitterRepository()
+	if err := petSitterRepo.CreateService(&service); err != nil {
+		return servicedto.ServiceInfoResponse{}, err
+	}
+	return ps.GetServiceResponse(&service), nil
+}
+
+func (ps *PetSitterService) UpdateService(info petsitter.UpdateServiceRequest) (servicedto.ServiceInfoResponse, error) {
+	foundPetSitter, err := ps.GetPetSitterByUserID(info.UserID)
+	if err != nil {
+		return servicedto.ServiceInfoResponse{}, err
+	}
+	petSitterRepo := ps.unitOfWork.Factory().PetSitterRepository()
+	foundService, err := petSitterRepo.FindServiceByID(info.ID)
+	if err != nil {
+		return servicedto.ServiceInfoResponse{}, err
+	}
+	if foundService == nil {
+		return servicedto.ServiceInfoResponse{}, exceptions.NewNotFoundError(bootstrap.Run().Constants.ErrorFields.Service)
+	}
+	if foundService.PetSitterID != foundPetSitter.ID {
+		return servicedto.ServiceInfoResponse{}, exceptions.NewAccessDeniedError("can't update other's services")
+	}
+	foundService.Type = info.Type
+	foundService.Price = info.Price
+	foundService.Description = info.Description
+	if err := petSitterRepo.UpdateService(foundService); err != nil {
+		return servicedto.ServiceInfoResponse{}, err
+	}
+	return ps.GetServiceResponse(foundService), nil
+}
+
+func (ps *PetSitterService) DeleteService(info petsitter.DeleteServiceRequest) error {
+	foundPetSitter, err := ps.GetPetSitterByUserID(info.UserID)
+	if err != nil {
+		return err
+	}
+	petSitterRepo := ps.unitOfWork.Factory().PetSitterRepository()
+	foundService, err := petSitterRepo.FindServiceByID(info.ID)
+	if err != nil {
+		return err
+	}
+	if foundService == nil {
+		return exceptions.NewNotFoundError(bootstrap.Run().Constants.ErrorFields.Service)
+	}
+	if foundService.PetSitterID != foundPetSitter.ID {
+		return exceptions.NewAccessDeniedError("can't delete other's services")
+	}
+	return petSitterRepo.DeleteService(foundService)
 }
 
 func (ps *PetSitterService) getStorageKey(userID uint) string {
@@ -469,13 +619,17 @@ func (ps *PetSitterService) GetAllPetSitters(page, count int) (*petsitter.PetSit
 		if err != nil {
 			continue
 		}
+		phoneNumber := ""
+		if user.Phone != nil {
+			phoneNumber = *user.Phone
+		}
 		items[i] = petsitter.PetSitterListItemResponse{
 			ID:             ps.ID,
 			UserID:         ps.UserID,
 			FirstName:      user.FirstName,
 			LastName:       user.LastName,
 			Email:          user.Email,
-			PhoneNumber:    *user.Phone,
+			PhoneNumber:    phoneNumber,
 			Status:         ps.Status,
 			OnboardingStep: ps.OnboardingStep,
 			CreatedAt:      ps.CreatedAt.Format("2006-01-02 15:04:05"),
@@ -581,13 +735,154 @@ func (ps *PetSitterService) GetCalendarSlotsResponse(calendarSlots []entities.Ca
 
 	for i, slot := range calendarSlots {
 		r[i] = calendarslot.CalendarSlotInfoResponse{
-			ID:    slot.ID,
-			Date:  slot.Date,
-			Slots: slot.Slots,
+			ID:     slot.ID,
+			Date:   slot.Date,
+			Slots:  []enums.Slot(slot.Slots),
+			Status: slot.Status,
 		}
 	}
 
 	return r
+}
+
+func (ps *PetSitterService) makeFreeCalendarSlots(slots []calendarslot.CalendarSlotRequest) []entities.CalendarSlot {
+	result := make([]entities.CalendarSlot, len(slots))
+	for i, slot := range slots {
+		result[i] = entities.CalendarSlot{
+			Date:   slot.Date,
+			Slots:  entities.Slots(slot.Slots),
+			Status: enums.Free,
+		}
+	}
+	return result
+}
+
+func applyFreeSlotPatch(schedule []entities.CalendarSlot, addSlots []entities.CalendarSlot, removeSlots []entities.CalendarSlot) ([]entities.CalendarSlot, error) {
+	freeSlots, bookedSlots, dateByKey := buildSlotMaps(schedule)
+
+	if err := applyFreeSlotAdds(addSlots, freeSlots, bookedSlots, dateByKey); err != nil {
+		return nil, err
+	}
+	if err := applyFreeSlotRemovals(removeSlots, freeSlots, bookedSlots, dateByKey); err != nil {
+		return nil, err
+	}
+
+	return rebuildSchedule(schedule, freeSlots, dateByKey), nil
+}
+
+func buildSlotMaps(schedule []entities.CalendarSlot) (map[string]map[enums.Slot]bool, map[string]map[enums.Slot]bool, map[string]time.Time) {
+	freeSlots := make(map[string]map[enums.Slot]bool)
+	bookedSlots := make(map[string]map[enums.Slot]bool)
+	dateByKey := make(map[string]time.Time)
+
+	for _, slot := range schedule {
+		dateKey := slot.Date.Format("2006-01-02")
+		if _, exists := dateByKey[dateKey]; !exists {
+			dateByKey[dateKey] = slot.Date
+		}
+		switch slot.Status {
+		case enums.Booked:
+			addSlotsToMap(bookedSlots, dateKey, []enums.Slot(slot.Slots))
+		case enums.Free:
+			addSlotsToMap(freeSlots, dateKey, []enums.Slot(slot.Slots))
+		}
+	}
+
+	return freeSlots, bookedSlots, dateByKey
+}
+
+func addSlotsToMap(target map[string]map[enums.Slot]bool, dateKey string, slots []enums.Slot) {
+	if _, exists := target[dateKey]; !exists {
+		target[dateKey] = make(map[enums.Slot]bool)
+	}
+	for _, s := range slots {
+		target[dateKey][s] = true
+	}
+}
+
+func applyFreeSlotAdds(addSlots []entities.CalendarSlot, freeSlots map[string]map[enums.Slot]bool, bookedSlots map[string]map[enums.Slot]bool, dateByKey map[string]time.Time) error {
+	for _, slot := range addSlots {
+		dateKey := slot.Date.Format("2006-01-02")
+		dateByKey[dateKey] = slot.Date
+		if hasBookedConflict(bookedSlots, dateKey, []enums.Slot(slot.Slots)) {
+			var ce exceptions.ConflictErrors
+			ce.Add(bootstrap.Run().Constants.ErrorFields.CalendarSlot, bootstrap.Run().Constants.ErrorTags.CalendarConflict)
+			return &ce
+		}
+		addSlotsToMap(freeSlots, dateKey, []enums.Slot(slot.Slots))
+	}
+	return nil
+}
+
+func applyFreeSlotRemovals(removeSlots []entities.CalendarSlot, freeSlots map[string]map[enums.Slot]bool, bookedSlots map[string]map[enums.Slot]bool, dateByKey map[string]time.Time) error {
+	for _, slot := range removeSlots {
+		dateKey := slot.Date.Format("2006-01-02")
+		dateByKey[dateKey] = slot.Date
+		if hasBookedConflict(bookedSlots, dateKey, []enums.Slot(slot.Slots)) {
+			var ce exceptions.ConflictErrors
+			ce.Add(bootstrap.Run().Constants.ErrorFields.CalendarSlot, bootstrap.Run().Constants.ErrorTags.CalendarConflict)
+			return &ce
+		}
+		daySlots, exists := freeSlots[dateKey]
+		for _, s := range []enums.Slot(slot.Slots) {
+			if !exists || !daySlots[s] {
+				var ve exceptions.ValidationErrors
+				ve.AddError(bootstrap.Run().Constants.ErrorFields.CalendarSlot, bootstrap.Run().Constants.ErrorTags.UnacceptableInput)
+				return &ve
+			}
+			delete(daySlots, s)
+		}
+		if len(daySlots) == 0 {
+			delete(freeSlots, dateKey)
+		}
+	}
+	return nil
+}
+
+func hasBookedConflict(bookedSlots map[string]map[enums.Slot]bool, dateKey string, slots []enums.Slot) bool {
+	day, exists := bookedSlots[dateKey]
+	if !exists {
+		return false
+	}
+	for _, s := range slots {
+		if day[s] {
+			return true
+		}
+	}
+	return false
+}
+
+func rebuildSchedule(schedule []entities.CalendarSlot, freeSlots map[string]map[enums.Slot]bool, dateByKey map[string]time.Time) []entities.CalendarSlot {
+	updated := make([]entities.CalendarSlot, 0, len(schedule))
+	for _, slot := range schedule {
+		if slot.Status == enums.Booked {
+			updated = append(updated, slot)
+		}
+	}
+
+	for dateKey, slotsMap := range freeSlots {
+		if len(slotsMap) == 0 {
+			continue
+		}
+		slots := make([]enums.Slot, 0, len(slotsMap))
+		for s := range slotsMap {
+			slots = append(slots, s)
+		}
+		sort.Slice(slots, func(i, j int) bool {
+			return slots[i] < slots[j]
+		})
+		updated = append(updated, entities.CalendarSlot{
+			Date:   dateByKey[dateKey],
+			Slots:  entities.Slots(slots),
+			Status: enums.Free,
+		})
+	}
+
+	sort.Slice(updated, func(i, j int) bool {
+		return updated[i].Date.Before(updated[j].Date)
+	})
+
+	return updated
 }
 
 func (ps *PetSitterService) GetFreeMap(calendarSlots []entities.CalendarSlot) map[string]map[interface{}]bool {
@@ -632,10 +927,10 @@ func (ps *PetSitterService) GetServiceResponse(serviceEntity *entities.Service) 
 	}
 }
 
-func (ps *PetSitterService) SearchPetSitters(info petsitter.SearchPetSittersRequest) ([]*entities.PetSitter, int64, error) {
+func (ps *PetSitterService) SearchPetSitters(info petsitter.SearchPetSittersRequest) ([]*petsitter.PetSitterInfoResponse, int64, error) {
 	var petSitters []*entities.PetSitter
 	var total int64
-	options := domainpostgres.NewQueryOptions().
+	options := postgres.NewQueryOptions().
 		WithPagination(info.Limit, info.Offset).
 		WithSorting(info.Sorts).
 		WithFilters(info.Filters)
@@ -646,6 +941,227 @@ func (ps *PetSitterService) SearchPetSitters(info petsitter.SearchPetSittersRequ
 	if err != nil {
 		return nil, 0, err
 	}
+	res := make([]*petsitter.PetSitterInfoResponse, len(petSitters))
+	for i, petSitter := range petSitters {
+		user, err := ps.userService.FindUserByID(petSitter.UserID)
+		if err != nil {
+			return nil, 0, err
+		}
+		address, err := ps.addressService.FindAddressByID(user.Address.ID)
+		if err != nil {
+			return nil, 0, err
+		}
+		err = petSitterRepo.PreloadServices(petSitter)
+		if err != nil {
+			return nil, 0, err
+		}
+		services := make([]string, len(petSitter.Services))
+		for _, service := range petSitter.Services {
+			services = append(services, service.Type.String())
+		}
+		petkinds := make([]string, len(petSitter.PetKinds))
+		for _, petkind := range petSitter.PetKinds {
+			petkinds = append(petkinds, petkind.String())
+		}
+		// service, err := ps.FindServiceByID(info.ServiceID)
+		res[i] = &petsitter.PetSitterInfoResponse{
+			ID:        petSitter.ID,
+			FirstName: user.FirstName,
+			LastName:  user.LastName,
+			Province:  address.Province.String(),
+			City:      address.City.String(),
+			Services:  services,
+			PetKinds:  petkinds,
+		}
+	}
 
-	return petSitters, total, nil
+	return res, total, nil
+}
+
+func (ps *PetSitterService) SearchPetSittersForAdmin(info petsitter.AdminSearchPetSittersRequest) ([]petsitter.PetSitterListItemResponse, int64, error) {
+	options := postgres.NewQueryOptions().WithPagination(info.Limit, info.Offset)
+	if len(info.Filters) > 0 {
+		options.WithFilters(info.Filters)
+	}
+	if len(info.Sorts) > 0 {
+		options.WithSorting(info.Sorts)
+	}
+
+	petSitterRepo := ps.unitOfWork.Factory().PetSitterRepository()
+	petSitters, total, err := petSitterRepo.SearchPetSitters(options)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	items := make([]petsitter.PetSitterListItemResponse, len(petSitters))
+	for i, psr := range petSitters {
+		user, err := ps.userService.FindUserByID(psr.UserID)
+		if err != nil {
+			continue
+		}
+		phoneNumber := ""
+		if user.Phone != nil {
+			phoneNumber = *user.Phone
+		}
+		items[i] = petsitter.PetSitterListItemResponse{
+			ID:             psr.ID,
+			UserID:         psr.UserID,
+			FirstName:      user.FirstName,
+			LastName:       user.LastName,
+			Email:          user.Email,
+			PhoneNumber:    phoneNumber,
+			Status:         psr.Status,
+			OnboardingStep: psr.OnboardingStep,
+			CreatedAt:      psr.CreatedAt.String(),
+		}
+	}
+
+	return items, total, nil
+}
+
+func (ps *PetSitterService) GetPetSitterDetails(info petsitter.GetPetSitterDetailsRequest) (*petsitter.PetSitterDetailsResponse, error) {
+	foundPetSitter, err := ps.GetPetSitterByUserID(info.PetSitterUserID)
+	if err != nil {
+		return nil, err
+	}
+	err = ps.PreloadFields(foundPetSitter, []string{"Services"})
+	if err != nil {
+		return nil, err
+	}
+
+	foundUser, err := ps.userService.FindUserByID(foundPetSitter.UserID)
+	if err != nil {
+		return nil, err
+	}
+
+	personalInfo, err := ps.userService.GetUserInfoResponse(foundUser)
+	if err != nil {
+		return nil, err
+	}
+	services, err := ps.GetServicesResponse(foundPetSitter)
+	if err != nil {
+		return nil, err
+	}
+	petKinds := ps.buildPetKindsResponse([]enums.PetKind(foundPetSitter.PetKinds))
+	documents := ps.GetDocumentsInfo(foundPetSitter)
+
+	return &petsitter.PetSitterDetailsResponse{
+		PersonalInfo: *personalInfo,
+		Skills: petsitter.SkillsResponse{
+			Bio:      *foundPetSitter.Bio,
+			Services: services,
+			PetKinds: petKinds,
+		},
+		Documents:      documents,
+		Status:         foundPetSitter.Status,
+		OnboardingStep: foundPetSitter.OnboardingStep,
+		CreatedAt:      foundPetSitter.CreatedAt.String(),
+	}, nil
+}
+
+func (ps *PetSitterService) GetPetSitterProfile(info petsitter.GetPetSitterProfileRequest) (*petsitter.PetSitterProfileResponse, error) {
+	foundPetSitter, err := ps.GetPetSitterByID(info.PetSitterID)
+	if err != nil {
+		return nil, err
+	}
+	if err := ps.PreloadFields(foundPetSitter, []string{"Services"}); err != nil {
+		return nil, err
+	}
+
+	foundUser, err := ps.userService.FindUserByID(foundPetSitter.UserID)
+	if err != nil {
+		return nil, err
+	}
+	if err := ps.userService.PreloadFields(foundUser, []string{"Address"}); err != nil {
+		return nil, err
+	}
+
+	services, err := ps.GetServicesResponse(foundPetSitter)
+	if err != nil {
+		return nil, err
+	}
+
+	province := ""
+	city := ""
+	if foundUser.Address != nil {
+		province = foundUser.Address.Province.String()
+		city = foundUser.Address.City.String()
+	}
+
+	bio := ""
+	if foundPetSitter.Bio != nil {
+		bio = *foundPetSitter.Bio
+	}
+
+	petKinds := ps.buildPetKindsResponse([]enums.PetKind(foundPetSitter.PetKinds))
+
+	return &petsitter.PetSitterProfileResponse{
+		ID:          foundPetSitter.ID,
+		UserID:      foundPetSitter.UserID,
+		FirstName:   foundUser.FirstName,
+		LastName:    foundUser.LastName,
+		PictureLink: foundUser.PictureLink,
+		Province:    province,
+		City:        city,
+		Bio:         bio,
+		Services:    services,
+		PetKinds:    petKinds,
+		CreatedAt:   foundPetSitter.CreatedAt.String(),
+	}, nil
+}
+
+func (ps *PetSitterService) buildPetKindsResponse(petKinds []enums.PetKind) []pet.PetKindResponse {
+	res := make([]pet.PetKindResponse, len(petKinds))
+	for i, pk := range petKinds {
+		res[i] = pet.PetKindResponse{
+			Num:  pk,
+			Name: pk.String(),
+		}
+	}
+	return res
+}
+
+func (ps *PetSitterService) ChangePetSitterStatus(info petsitter.ChangePetSitterStatusRequest) error {
+	foundPetSitter, err := ps.GetPetSitterByUserID(info.PetSitterUserID)
+	if err != nil {
+		return err
+	}
+	switch info.Status {
+	case enums.PSS_Suspended:
+		if foundPetSitter.Status != enums.PSS_Active && foundPetSitter.Status != enums.PSS_Rejected {
+			return exceptions.NewAccessDeniedError("can't change the status to suspend")
+		}
+	case enums.PSS_Active, enums.PSS_Rejected:
+		if foundPetSitter.Status != enums.PSS_Suspended && foundPetSitter.Status != enums.PSS_InReview {
+			return exceptions.NewAccessDeniedError("can't change the status to active or rejected")
+		}
+	}
+
+	foundPetSitter.Status = info.Status
+
+	petSitterRepo := ps.unitOfWork.Factory().PetSitterRepository()
+	return petSitterRepo.UpdatePetSitter(foundPetSitter)
+}
+
+func (ps *PetSitterService) GetDocumentsInfo(petSitter *entities.PetSitter) petsitter.DocumentResponse {
+	var CertificateFiles []string
+	if petSitter.CertificateKeys != nil {
+		CertificateFiles = make([]string, len(petSitter.CertificateKeys))
+		for i, certKey := range petSitter.CertificateKeys {
+			certificateURL, _ := ps.storage.GetPresignedURL(enums.PetSitterFile, certKey, 2)
+			CertificateFiles[i] = certificateURL
+		}
+	}
+	var Files []string
+	if petSitter.FileKeys != nil {
+		Files = make([]string, len(petSitter.FileKeys))
+		for i, fileKey := range petSitter.FileKeys {
+			fileURL, _ := ps.storage.GetPresignedURL(enums.PetSitterFile, fileKey, 2)
+			Files[i] = fileURL
+		}
+	}
+	return petsitter.DocumentResponse{
+		CertificateFiles: CertificateFiles,
+		Files:            Files,
+	}
 }

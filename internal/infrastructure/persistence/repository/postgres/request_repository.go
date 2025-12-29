@@ -44,3 +44,23 @@ func (rp *RequestRepository) PreloadFields(request *entities.Request, fields []s
 	}
 	return nil
 }
+
+func (rp *RequestRepository) SearchRequests(userID uint, options *QueryOptions) ([]entities.Request, int64, error) {
+	var requests []entities.Request
+	query, total := ApplyModifiers(rp.db.Model(&entities.Request{}).Where("user_id = ?", userID), *options)
+	if err := query.Find(&requests).Error; err != nil {
+		return nil, 0, err
+	}
+
+	return requests, total, nil
+}
+
+func (rp *RequestRepository) SearchRequestsByPetSitterID(petSitterID uint, options *QueryOptions) ([]entities.Request, int64, error) {
+	var requests []entities.Request
+	query, total := ApplyModifiers(rp.db.Model(&entities.Request{}).Where("pet_sitter_id = ?", petSitterID), *options)
+	if err := query.Find(&requests).Error; err != nil {
+		return nil, 0, err
+	}
+
+	return requests, total, nil
+}

@@ -1,4 +1,4 @@
-.env
+*.env
 .vscode
 *.pem
 # Air (Go live-reload tool)
@@ -20,3 +20,5 @@ cmd/tmp/**/*
 
 2.env
 3.env
+
+AGENTS.md

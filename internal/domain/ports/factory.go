@@ -1,8 +1,6 @@
 package ports
 
-import (
-	domainpostgres "hona/backend/internal/domain/ports/postgres"
-)
+import domainpostgres "hona/backend/internal/domain/ports/postgres"
 
 type RepositoryFactory interface {
 	UserRepository() domainpostgres.UserRepository
@@ -13,4 +11,7 @@ type RepositoryFactory interface {
 	PetSitterRepository() domainpostgres.PetSitterRepository
 	CommentRepository() domainpostgres.CommentRepository
 	ChatRepository() domainpostgres.ChatRepository
+	WalletRepository() domainpostgres.WalletRepository
+	TransferRepository() domainpostgres.TransferRepository
+	TransactionRepository() domainpostgres.TransactionRepository
 }

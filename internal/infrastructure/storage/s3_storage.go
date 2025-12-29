@@ -24,6 +24,7 @@ type S3Storage struct {
 func NewS3Storage() *S3Storage {
 	buckets := make(map[enums.BucketType]string)
 	buckets[enums.PetProfilePic] = bootstrap.Run().Env.Storage.Buckets.PetProfilePic
+	buckets[enums.UserProfilePic] = bootstrap.Run().Env.Storage.Buckets.UserProfilePic
 	return &S3Storage{
 		buckets: buckets,
 	}

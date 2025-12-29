@@ -49,9 +49,60 @@ type SubmitSkillsRequest struct {
 	Services []enums.ServiceType
 }
 
+type GetPetKindsRequest struct {
+	UserID uint
+}
 
+type UpdatePetKindsRequest struct {
+	UserID   uint
+	PetKinds []enums.PetKind
+}
+
+type GetServicesRequest struct {
+	UserID uint
+}
+
+type CreateServiceRequest struct {
+	UserID      uint
+	Type        enums.ServiceType
+	Price       uint
+	Description *string
+}
+
+type UpdateServiceRequest struct {
+	UserID      uint
+	ID          uint
+	Type        enums.ServiceType
+	Price       uint
+	Description *string
+}
+
+type DeleteServiceRequest struct {
+	UserID uint
+	ID     uint
+}
+
+type GetPetSitterDetailsRequest struct {
+	PetSitterUserID uint
+}
+
+type GetPetSitterProfileRequest struct {
+	PetSitterID uint
+}
+
+type ChangePetSitterStatusRequest struct {
+	PetSitterUserID uint
+	Status          enums.PetSitterStatus
+}
 
 type SearchPetSittersRequest struct {
+	Offset  int
+	Limit   int
+	Filters []general.Filter
+	Sorts   []general.Sort
+}
+
+type AdminSearchPetSittersRequest struct {
 	Offset  int
 	Limit   int
 	Filters []general.Filter
