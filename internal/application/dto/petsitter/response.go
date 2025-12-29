@@ -80,12 +80,15 @@ type SkillsResponse struct {
 	Services []servicedto.ServiceInfoResponse `json:"services"`
 }
 
-type PetSitterInfoResponse struct {
+type SearchPetSitterInfoResponse struct {
 	ID        uint     `json:"id"`
 	FirstName string   `json:"first_name"`
 	LastName  string   `json:"last_name"`
 	Province  string   `json:"province"`
 	City      string   `json:"city"`
 	Services  []string `json:"services"`
+	MinPrice  uint     `json:"min_price"`
 	PetKinds  []string `json:"pet_kinds"`
+	Rate      float64  `json:"rate"`
+	Comments  uint     `json:"comments"`
 }

@@ -1,7 +1,6 @@
 package general
 
 import (
-	"hona/backend/internal/application/dto/general"
 	"hona/backend/internal/application/dto/petsitter"
 	"hona/backend/internal/application/service"
 	"hona/backend/internal/presentation/controllers"
@@ -40,29 +39,29 @@ func (gc *GeneralSearchController) SearchPetSitters(ctx *gin.Context) {
 
 	offset, limit := controllers.GetOffsetLimit(params.Page, params.Count)
 
-	// Convert params to DTO (no DSL conversion here)
-	filters := make([]general.Filter, len(params.Filters))
+	filterParams := make([]controllers.FilterParams, len(params.Filters))
 	for i, f := range params.Filters {
-		filters[i] = general.Filter{
+		filterParams[i] = controllers.FilterParams{
 			Field: f.Field,
 			Op:    f.Op,
 			Value: f.Value,
 		}
 	}
 
-	sorts := make([]general.Sort, len(params.Sorts))
+	sortParams := make([]controllers.SortParams, len(params.Sorts))
 	for i, s := range params.Sorts {
-		sorts[i] = general.Sort{
+		sortParams[i] = controllers.SortParams{
 			Field: s.Field,
 			Dir:   s.Dir,
 		}
 	}
 
+
 	req := petsitter.SearchPetSittersRequest{
 		Offset:  offset,
 		Limit:   limit,
-		Filters: filters,
-		Sorts:   sorts,
+		Filters: controllers.ToFilters(filterParams),
+		Sorts:   controllers.ToSorts(sortParams),
 	}
 
 	petsitters, count, err := gc.petSitterService.SearchPetSitters(req)
