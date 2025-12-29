@@ -16,9 +16,9 @@ type PetSitter struct {
 	PetKinds        PetKinds       `gorm:"type:integer[]"`
 	Schedule        []CalendarSlot `gorm:"foreignKey:PetSitterID"`
 	Comments        []Comment      `gorm:"foreignKey:PetSitterID"`
-	// Rating          uint           `gorm:"index;not null"`
-	Bio            *string
-	Status         enums.PetSitterStatus `gorm:"type:integer;index"`
-	OnboardingStep enums.OnboardingStep  `gorm:"default:1"`
-	PriceKey             *uint                 `gorm:"column:price_key;->"` // read-only, comes from SQL alias
+	Bio             *string
+	Status          enums.PetSitterStatus `gorm:"type:integer;index"`
+	OnboardingStep  enums.OnboardingStep  `gorm:"default:1"`
+	Rating          float32
+	CommentsCount   uint
 }

@@ -74,7 +74,7 @@ func InitializeApplication(container *bootstrap.Config) (*Application, error) {
 	}
 	requestService := service.NewRequestService(requestServiceDeps)
 	userRequestController := user.NewUserRequestController(requestService)
-	commentService := service.NewCommentService(unitOfWork, userService, requestService)
+	commentService := service.NewCommentService(unitOfWork, userService, requestService, petSitterService)
 	userCommentController := user.NewUserCommentController(commentService)
 	userProfileController := user.NewUserProfileController(userService)
 	userWalletController := user.NewUserWalletController(walletService)
@@ -89,12 +89,14 @@ func InitializeApplication(container *bootstrap.Config) (*Application, error) {
 	petSitterRequestController := petsitter.NewPetSitterRequestController(requestService)
 	petSitterSkillsController := petsitter.NewPetSitterSkillsController(petSitterService)
 	petSitterCalendarController := petsitter.NewPetSitterCalendarController(petSitterService)
+	petSitterCommentController := petsitter.NewPetSitterCommentController(commentService)
 	petSitterWalletController := petsitter.NewPetSitterWalletController(walletService)
 	petSitterControllers := &PetSitterControllers{
 		PetSitterRegisterController: petSitterRegisterController,
 		PetSitterRequestController:  petSitterRequestController,
 		PetSitterSkillsController:   petSitterSkillsController,
 		PetSitterCalendarController: petSitterCalendarController,
+		PetSitterCommentController:  petSitterCommentController,
 		PetSitterWalletController:   petSitterWalletController,
 	}
 	controllers := &Controllers{
@@ -140,7 +142,7 @@ var AdminControllersProviderSet = wire.NewSet(admin.NewAdminRBACController, admi
 
 var UserControllersProviderSet = wire.NewSet(user.NewUserPetController, user.NewUserRequestController, user.NewUserCommentController, user.NewUserProfileController, user.NewUserWalletController, wire.Struct(new(UserControllers), "*"))
 
-var PetSitterControllersProviderSet = wire.NewSet(petsitter.NewPetSitterRegisterController, petsitter.NewPetSitterRequestController, petsitter.NewPetSitterSkillsController, petsitter.NewPetSitterCalendarController, petsitter.NewPetSitterWalletController, wire.Struct(new(PetSitterControllers), "*"))
+var PetSitterControllersProviderSet = wire.NewSet(petsitter.NewPetSitterRegisterController, petsitter.NewPetSitterRequestController, petsitter.NewPetSitterSkillsController, petsitter.NewPetSitterCalendarController, petsitter.NewPetSitterCommentController, petsitter.NewPetSitterWalletController, wire.Struct(new(PetSitterControllers), "*"))
 
 var ControllersProviderSet = wire.NewSet(wire.Struct(new(Controllers), "*"))
 
@@ -186,6 +188,7 @@ type PetSitterControllers struct {
 	PetSitterRequestController  *petsitter.PetSitterRequestController
 	PetSitterSkillsController   *petsitter.PetSitterSkillsController
 	PetSitterCalendarController *petsitter.PetSitterCalendarController
+	PetSitterCommentController  *petsitter.PetSitterCommentController
 	PetSitterWalletController   *petsitter.PetSitterWalletController
 }
 

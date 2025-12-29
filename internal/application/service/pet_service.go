@@ -110,8 +110,8 @@ func (ps *PetService) UpdatePet(info pet.UpdatePetRequest) error {
 		}
 	}
 
-	_, err = ps.findPet(info.Name, foundPet.UserID)
-	if err == nil {
+	oldPet, err := ps.findPet(info.Name, foundPet.UserID)
+	if err == nil && oldPet.ID != info.ID {
 		var ce exceptions.ConflictErrors
 		ce.Add(bootstrap.Run().Constants.ErrorFields.Pet, bootstrap.Run().Constants.ErrorTags.DuplicateName)
 		return &ce
