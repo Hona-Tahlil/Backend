@@ -1065,12 +1065,8 @@ func (ps *PetSitterService) SearchPetSitters(info petsitter.SearchPetSittersRequ
 			services[i] = s.Type.String()
 		}
 
-		// ✅ CRITICAL: min_price = PriceKey (the DB sort key) if available
 		var minPrice uint
-		if petSitter.PriceKey != nil {
-			minPrice = *petSitter.PriceKey
-		} else {
-			// fallback computation (only if PriceKey not returned)
+		if len(petSitter.Services) > 0 {
 			minPrice = 0
 			for _, s := range petSitter.Services {
 				if s.Kind != "petSitter" || s.DeletedAt.Valid {
