@@ -19,8 +19,8 @@ type PetBasicDataResponse struct {
 type PetFullDataResponse struct {
 	ID          uint            `json:"id"`
 	Name        string          `json:"name"`
-	Kind        string          `json:"kind"`
-	Species     string          `json:"species"`
+	Kind        enums.PetKind   `json:"kind"`
+	Species     enums.Species   `json:"species"`
 	Gender      enums.PetGender `json:"gender"`
 	PictureLink string          `json:"pictureLink"`
 	BirthDate   *time.Time      `json:"birthDate"`

@@ -181,8 +181,8 @@ func (ps *PetService) GetPetFullData(info pet.GetPetFullDataRequest) (*pet.PetFu
 	return &pet.PetFullDataResponse{
 		ID:          foundPet.ID,
 		Name:        foundPet.Name,
-		Kind:        foundPet.Kind.String(),
-		Species:     foundPet.Species.String(),
+		Kind:        foundPet.Kind,
+		Species:     foundPet.Species,
 		Gender:      foundPet.Gender,
 		PictureLink: link,
 		BirthDate:   foundPet.BirthDate,
