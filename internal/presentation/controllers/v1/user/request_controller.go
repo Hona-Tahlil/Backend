@@ -108,7 +108,7 @@ func (rc *UserRequestController) EditRequest(ctx *gin.Context) {
 		PetIDs        []uint         `json:"petIDs" validate:"required"`
 		Notes         *string        `json:"notes"`
 		AddressInfo   *AddressInfo   `json:"addressInfo" validate:"omitempty"`
-		AddressID     *uint          `json:"addressID" validate:"required"`
+		AddressID     *uint          `json:"addressID"`
 		ServiceID     uint           `json:"serviceID" validate:"required"`
 	}
 	params := controllers.Receive[Params](ctx)

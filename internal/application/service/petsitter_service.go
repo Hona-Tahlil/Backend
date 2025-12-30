@@ -128,7 +128,7 @@ func (ps *PetSitterService) GetAvailableServicesResponse(petSitter *entities.Pet
 		return r, nil
 	}
 	for i, service := range petSitter.Services {
-		if service.Price != 0 {
+		if service.Price != 0 && service.Kind == "petSitter" {
 			r[i] = ps.GetServiceResponse(&service)
 		}
 	}

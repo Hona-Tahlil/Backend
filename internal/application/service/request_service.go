@@ -2,6 +2,7 @@ package service
 
 import (
 	"hona/backend/bootstrap"
+	"hona/backend/internal/application/dto/pet"
 	"hona/backend/internal/application/dto/request"
 	"hona/backend/internal/application/usecase"
 	"hona/backend/internal/domain/entities"
@@ -165,6 +166,8 @@ func (rs *RequestService) GetCreateRequestInfo(info request.GetCreateRequestInfo
 		return nil, err
 	}
 
+	filteredPetsData := rs.filterPetsByPetSitterKinds(petsData, petSitter)
+
 	if petSitter.Status != enums.PSS_Active {
 		return nil, exceptions.NewNotFoundError(bootstrap.Run().Constants.ErrorFields.PetSitter)
 	}
@@ -195,9 +198,23 @@ func (rs *RequestService) GetCreateRequestInfo(info request.GetCreateRequestInfo
 	return &request.CreateRequestInfoResponse{
 		Services:          servicesData,
 		Addresses:         addresses,
-		Pets:              petsData,
+		Pets:              filteredPetsData,
 		FreeCalendarSlots: freeSlots,
 	}, nil
+}
+
+func (rs *RequestService) filterPetsByPetSitterKinds(petsData []pet.PetBasicDataResponse, petSitter *entities.PetSitter) []pet.PetBasicDataResponse {
+	filteredPetsData := make([]pet.PetBasicDataResponse, 0, len(petsData))
+	for _, petData := range petsData {
+		for _, kind := range petSitter.PetKinds {
+			if petData.Kind == kind.String() {
+				filteredPetsData = append(filteredPetsData, petData)
+				break
+			}
+		}
+	}
+
+	return filteredPetsData
 }
 
 func (rs *RequestService) EditRequest(info request.EditRequestRequest) error {
@@ -687,7 +704,7 @@ func (rs *RequestService) calculateTotalPrice(servicesEntity *entities.Service, 
 		totalPrice *= slotHours
 	}
 
-	return totalPrice
+	return uint(totalPrice + totalPrice/10)
 }
 
 func (rs *RequestService) makeCalendarSlots(calendarSlots []request.RequestCalendarSlotRequest) []entities.CalendarSlot {
