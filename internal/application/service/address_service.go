@@ -4,7 +4,6 @@ import (
 	"hona/backend/bootstrap"
 	"hona/backend/internal/application/dto/address"
 	"hona/backend/internal/application/dto/provincecity"
-	"hona/backend/internal/application/usecase"
 	"hona/backend/internal/domain/entities"
 	"hona/backend/internal/domain/enums"
 	"hona/backend/internal/domain/exceptions"
@@ -12,14 +11,12 @@ import (
 )
 
 type AddressService struct {
-	unitOfWork  ports.UnitOfWork
-	userService usecase.UserService
+	unitOfWork ports.UnitOfWork
 }
 
-func NewAddressService(unitOfWork ports.UnitOfWork, userService usecase.UserService) *AddressService {
+func NewAddressService(unitOfWork ports.UnitOfWork) *AddressService {
 	return &AddressService{
-		unitOfWork:  unitOfWork,
-		userService: userService,
+		unitOfWork: unitOfWork,
 	}
 }
 
@@ -101,6 +98,30 @@ func (as *AddressService) CreateAddressEntity(addressInfo address.AddressInfo) (
 	}
 
 	return address, nil
+}
+
+func (as *AddressService) UpdateAddressEntity(addressEntity *entities.Address, addressInfo address.AddressInfo) (*entities.Address, error) {
+	if addressEntity == nil {
+		return nil, exceptions.NewNotFoundError(bootstrap.Run().Constants.ErrorFields.Address)
+	}
+	createdAddress, err := as.CreateAddressEntity(addressInfo)
+	if err != nil {
+		return nil, err
+	}
+
+	addressEntity.Province = createdAddress.Province
+	addressEntity.City = createdAddress.City
+	addressEntity.StreetAddress = createdAddress.StreetAddress
+	addressEntity.HouseNumber = createdAddress.HouseNumber
+	addressEntity.Unit = createdAddress.Unit
+	addressEntity.PostalCode = createdAddress.PostalCode
+
+	addressRepo := as.unitOfWork.Factory().AddressRepository()
+	if err := addressRepo.Update(addressEntity); err != nil {
+		return nil, err
+	}
+
+	return addressEntity, nil
 }
 
 func (as *AddressService) GetAllProvincesResponse() ([]provincecity.ProvinceResponse, error) {

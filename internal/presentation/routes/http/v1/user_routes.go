@@ -22,8 +22,10 @@ func SetUpUserRoutes(v1 *gin.RouterGroup, app *wire.Application) {
 	{
 		requests.GET("/", app.Controllers.UserControllers.UserRequestController.GetCreateRequestInfo)
 		requests.POST("/", app.Controllers.UserControllers.UserRequestController.CreateRequest)
+		requests.POST("/search", app.Controllers.UserControllers.UserRequestController.SearchRequests)
 		requests.PUT("/", app.Controllers.UserControllers.UserRequestController.EditRequest)
 		requests.PUT("/cancel", app.Controllers.UserControllers.UserRequestController.CancelRequest)
+		requests.PUT("/pay", app.Controllers.UserControllers.UserRequestController.PayRequest)
 		requests.GET("/:requestID", app.Controllers.UserControllers.UserRequestController.GetRequestFullData)
 	}
 
@@ -32,7 +34,24 @@ func SetUpUserRoutes(v1 *gin.RouterGroup, app *wire.Application) {
 	{
 		comments.POST("/", app.Controllers.UserControllers.UserCommentController.CreateComment)
 		comments.PUT("/", app.Controllers.UserControllers.UserCommentController.EditComment)
-		comments.DELETE("/:id", app.Controllers.UserControllers.UserCommentController.DeleteComment)
+		comments.DELETE("/:commentID", app.Controllers.UserControllers.UserCommentController.DeleteComment)
 		comments.GET("/petsitters/:petSitterID", app.Controllers.UserControllers.UserCommentController.GetAllPetSitterComments)
+	}
+
+	profile := v1.Group("/profile")
+	profile.Use(app.Middlewares.AuthMiddleware.AuthRequired)
+	{
+		profile.GET("/", app.Controllers.UserControllers.UserProfileController.GetProfile)
+		profile.GET("/identity", app.Controllers.UserControllers.UserProfileController.GetIdentity)
+		profile.PUT("/", app.Controllers.UserControllers.UserProfileController.UpdateProfile)
+	}
+
+	wallet := v1.Group("/wallet")
+	wallet.Use(app.Middlewares.AuthMiddleware.AuthRequired)
+	{
+		wallet.GET("/", app.Controllers.UserControllers.UserWalletController.GetWallet)
+		wallet.GET("/transfers", app.Controllers.UserControllers.UserWalletController.ListTransfers)
+		wallet.GET("/transactions", app.Controllers.UserControllers.UserWalletController.ListTransactions)
+		wallet.PUT("/top-up", app.Controllers.UserControllers.UserWalletController.TopUp)
 	}
 }

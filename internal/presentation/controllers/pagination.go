@@ -1,13 +1,16 @@
 package controllers
 
-import "hona/backend/internal/application/dto/general"
+import (
+	"hona/backend/bootstrap"
+	"hona/backend/internal/application/dto/general"
+)
 
-func GetOffsetLimit(page, pageSize, defaultPage, defaultPageSize int) (int, int) {
+func GetOffsetLimit(page, pageSize int) (int, int) {
 	if page <= 0 {
-		page = defaultPage
+		page = bootstrap.Run().Constants.Pagination.DefaultPage
 	}
 	if pageSize <= 0 {
-		pageSize = defaultPageSize
+		pageSize = bootstrap.Run().Constants.Pagination.DefaultPageSize
 	}
 
 	return (page - 1) * pageSize, pageSize
@@ -61,13 +64,37 @@ type PaginationMeta struct {
 }
 
 type PaginatedResponse[T any] struct {
-	Data       []T             `json:"data"`
+	Data       T               `json:"data"`
 	Pagination *PaginationMeta `json:"pagination"`
 }
 
-func NewPaginatedResponse[T any](data []T, totalItems int64, offset, limit int) *PaginatedResponse[T] {
+// func NewPaginatedResponse[T any](data T, totalItems int64, offset, limit int) *PaginatedResponse[T] {
+// 	pageSize := limit
+// 	currentPage := int(offset/limit) + 1
+
+// 	totalPages := 0
+// 	if pageSize > 0 {
+// 		totalPages = int((totalItems + int64(pageSize) - 1) / int64(pageSize))
+// 	}
+
+//		return &PaginatedResponse[T]{
+//			Data: data,
+//			Pagination: &PaginationMeta{
+//				CurrentPage: currentPage,
+//				PageSize:    pageSize,
+//				TotalItems:  totalItems,
+//				TotalPages:  totalPages,
+//				HasNextPage: currentPage < totalPages,
+//				HasPrevPage: currentPage > 1,
+//			},
+//		}
+//	}
+func NewPaginatedResponse[T any](data T, totalItems int64, offset, limit int) *PaginatedResponse[T] {
 	pageSize := limit
-	currentPage := int(offset/limit) + 1
+	currentPage := 1
+	if limit > 0 {
+		currentPage = int(offset/limit) + 1
+	}
 
 	totalPages := 0
 	if pageSize > 0 {

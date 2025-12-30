@@ -1,16 +1,35 @@
 package postgres
 
 import (
-
 	"gorm.io/gorm"
 )
 
-func applyModifiers(db *gorm.DB, modifiers ...QueryModifier) *gorm.DB {
-	for _, m := range modifiers {
-		db = m.Apply(db)
+func ApplyModifiers(db *gorm.DB, options QueryOptions) (*gorm.DB, int64) {
+	var total int64
+	if options.HasFilters() {
+		filterModifier := NewFilterModifier(options.Filters.Filters)
+		db = filterModifier.Apply(db)
 	}
-	return db
+	if err := db.Count(&total).Error; err != nil {
+		panic(err)
+	}
+	if options.HasSorting() {
+		sortModifier := NewSortModifier(options.Sorting.Sorts)
+		db = sortModifier.Apply(db)
+	}
+	if options.HasPagination() {
+		paginationModifier := NewPaginationModifier(options.Pagination.Offset, options.Pagination.Limit)
+		db = paginationModifier.Apply(db)
+	}
+	return db, total
 }
+
+// func applyModifiers(db *gorm.DB, modifiers ...QueryModifier) *gorm.DB {
+// 	for _, m := range modifiers {
+// 		db = m.Apply(db)
+// 	}
+// 	return db
+// }
 
 // func applyQueryOptions(query *gorm.DB, options *dsl.ParsedQuery) *gorm.DB {
 // 	if options == nil {

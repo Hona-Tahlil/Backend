@@ -110,12 +110,12 @@ func (ps *PetService) UpdatePet(info pet.UpdatePetRequest) error {
 		}
 	}
 
-	_, err = ps.findPet(info.Name, foundPet.UserID)
-	if err == nil {
+	oldPet, err := ps.findPet(info.Name, foundPet.UserID)
+	if err == nil && oldPet.ID != info.ID {
 		var ce exceptions.ConflictErrors
 		ce.Add(bootstrap.Run().Constants.ErrorFields.Pet, bootstrap.Run().Constants.ErrorTags.DuplicateName)
 		return &ce
-	} else if _, ok := err.(*exceptions.NotFoundError); !ok {
+	} else if _, ok := err.(*exceptions.NotFoundError); !ok && err != nil {
 		return err
 	}
 
@@ -176,11 +176,7 @@ func (ps *PetService) GetPetFullData(info pet.GetPetFullDataRequest) (*pet.PetFu
 	if err != nil {
 		return nil, err
 	}
-	profileKeyValue := ps.getStorageKey(foundPet.Name, foundPet.UserID)
-	link, err := ps.storage.GetPresignedURL(enums.PetProfilePic, profileKeyValue, time.Minute*15)
-	if err != nil {
-		log.Println(err)
-	}
+	link := ps.getPetPictureLink(foundPet)
 
 	return &pet.PetFullDataResponse{
 		ID:          foundPet.ID,
@@ -197,11 +193,7 @@ func (ps *PetService) GetPetFullData(info pet.GetPetFullDataRequest) (*pet.PetFu
 }
 
 func (ps *PetService) getPetBasicDataResponse(petEntity *entities.Pet) (*pet.PetBasicDataResponse, error) {
-	profileKeyValue := ps.getStorageKey(petEntity.Name, petEntity.UserID)
-	link, err := ps.storage.GetPresignedURL(enums.PetProfilePic, profileKeyValue, time.Minute*15)
-	if err != nil {
-		log.Println(err)
-	}
+	link := ps.getPetPictureLink(petEntity)
 	return &pet.PetBasicDataResponse{
 		ID:          petEntity.ID,
 		Name:        petEntity.Name,
@@ -213,6 +205,40 @@ func (ps *PetService) getPetBasicDataResponse(petEntity *entities.Pet) (*pet.Pet
 		IsAdult:     petEntity.IsAdult,
 	}, nil
 
+}
+
+func (ps *PetService) getPetPictureLink(petEntity *entities.Pet) string {
+	key := ps.getPetPictureKey(petEntity)
+	if key == "" {
+		return ""
+	}
+	link, err := ps.storage.GetPresignedURL(enums.PetProfilePic, key, time.Minute*15)
+	if err == nil {
+		return link
+	}
+	log.Println(err)
+
+	defaultKey := ps.getDefaultPetProfileKey()
+	if defaultKey == "" || defaultKey == key {
+		return ""
+	}
+	fallbackLink, fallbackErr := ps.storage.GetPresignedURL(enums.PetProfilePic, defaultKey, time.Minute*15)
+	if fallbackErr != nil {
+		log.Println(fallbackErr)
+		return ""
+	}
+	return fallbackLink
+}
+
+func (ps *PetService) getPetPictureKey(petEntity *entities.Pet) string {
+	if petEntity.PictureKey != nil && *petEntity.PictureKey != "" {
+		return *petEntity.PictureKey
+	}
+	return ps.getDefaultPetProfileKey()
+}
+
+func (ps *PetService) getDefaultPetProfileKey() string {
+	return bootstrap.Run().Env.Storage.DefaultPetProfileKey
 }
 
 func (ps *PetService) findPet(name string, userID uint) (*entities.Pet, error) {

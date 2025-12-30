@@ -4,17 +4,26 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/base64"
+	"fmt"
 	"hona/backend/bootstrap"
+	"hona/backend/internal/application/dto/address"
 	"hona/backend/internal/application/dto/rbac"
 	"hona/backend/internal/application/dto/user"
+	"hona/backend/internal/application/usecase"
 	"hona/backend/internal/domain/entities"
+	"hona/backend/internal/domain/enums"
 	"hona/backend/internal/domain/exceptions"
 	domainjwt "hona/backend/internal/domain/jwt"
+	domainmail "hona/backend/internal/domain/mail"
 	"hona/backend/internal/domain/ports"
 	domainredis "hona/backend/internal/domain/ports/redis"
-	"hona/backend/internal/infrastructure/communication/mail"
+	domainstorage "hona/backend/internal/domain/storage"
+	"hona/backend/internal/infrastructure/persistence/repository/postgres"
+	"log"
 	"regexp"
 	"time"
+
+	"mime/multipart"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -23,19 +32,24 @@ type UserService struct {
 	jwtService          domainjwt.JWTService
 	unitOfWork          ports.UnitOfWork
 	userCacheRepository domainredis.UserCacheRepository
-	emailService        *mail.EmailService
+	emailService        domainmail.Mail
+	addressService      usecase.AddressService
+	storage             domainstorage.Storage
 }
 
-func NewUserService(jwtService domainjwt.JWTService, unitOfWork ports.UnitOfWork, userCacheRepository domainredis.UserCacheRepository, emailService *mail.EmailService) *UserService {
+func NewUserService(jwtService domainjwt.JWTService, unitOfWork ports.UnitOfWork, userCacheRepository domainredis.UserCacheRepository, emailService domainmail.Mail, addressService usecase.AddressService, storage domainstorage.Storage) *UserService {
 	return &UserService{
 		unitOfWork:          unitOfWork,
 		userCacheRepository: userCacheRepository,
 		emailService:        emailService,
 		jwtService:          jwtService,
+		addressService:      addressService,
+		storage:             storage,
 	}
 }
 
 func (us *UserService) GetRolesResponse(user *entities.User) []rbac.RoleResponse {
+	us.PreloadFields(user, []string{"Roles.Permissions"})
 	r := make([]rbac.RoleResponse, len(user.Roles))
 	for j, role := range user.Roles {
 		p := make([]rbac.PermissionResponse, len(role.Permissions))
@@ -96,23 +110,234 @@ func (us *UserService) Login(loginInfo user.LoginRequest) (*user.LoginResponse, 
 	}, refreshToken, expireTime, nil
 }
 
-func (us *UserService) GetUserInfosResponse(users []entities.User) []rbac.UserInfoResponse {
-	r := make([]rbac.UserInfoResponse, len(users))
+func (us *UserService) GetUserInfosResponse(users []entities.User) ([]rbac.UserResponse, error) {
+	r := make([]rbac.UserResponse, len(users))
 	for i, user := range users {
-		r[i] = rbac.UserInfoResponse{
-			Email: user.Email,
+		data, err := us.GetUserInfoResponse(&user)
+		if err != nil {
+			return nil, err
 		}
+		r[i] = *data
 	}
-	return r
+	return r, nil
 }
 
-func (us *UserService) GetRoleUsersByID(roleID uint, limit, offset int) ([]entities.User, error) {
-	userRepo := us.unitOfWork.Factory().UserRepository()
-	users, err := userRepo.GetRoleUsersByID(roleID, limit, offset)
+func (us *UserService) GetUserInfoResponse(userEntity *entities.User) (*rbac.UserResponse, error) {
+	var addressInfo *address.AddressInfoResponse
+	if err := us.PreloadFields(userEntity, []string{"Address", "Wallet", "Pets", "Roles.Permissions"}); err != nil {
+		return nil, err
+	}
+	if userEntity.Address != nil {
+		address := us.addressService.GetUserAddressInfo(userEntity.Address)
+		addressInfo = &address
+	}
+
+	pictureLink, err := us.getUserPictureLink(userEntity)
 	if err != nil {
 		return nil, err
 	}
-	return users, nil
+
+	walletResponse := rbac.WalletResponse{
+		ID:             userEntity.Wallet.ID,
+		Balance:        userEntity.Wallet.Balance,
+		PendingBalance: userEntity.Wallet.PendingBalance,
+		PaymentInfo:    userEntity.Wallet.PaymentInfo,
+		UserID:         userEntity.Wallet.UserID,
+	}
+
+	return &rbac.UserResponse{
+		ID:              userEntity.ID,
+		Email:           userEntity.Email,
+		IsEmailVerified: userEntity.IsEmailVerified,
+		FirstName:       userEntity.FirstName,
+		LastName:        userEntity.LastName,
+		Address:         addressInfo,
+		Phone:           userEntity.Phone,
+		IsPhoneVerified: userEntity.IsPhoneVerified,
+		Gender:          userEntity.Gender.String(),
+		BirthDate:       userEntity.BirthDate,
+		PictureLink:     pictureLink,
+		Wallet:          walletResponse,
+		Roles:           us.GetRolesResponse(userEntity),
+	}, nil
+}
+
+func (us *UserService) GetProfile(info user.GetProfileRequest) (*user.ProfileResponse, error) {
+	foundUser, err := us.FindUserByID(info.UserID)
+	if err != nil {
+		return nil, err
+	}
+	if err := us.PreloadFields(foundUser, []string{"Address"}); err != nil {
+		return nil, err
+	}
+
+	return us.buildProfileResponse(foundUser)
+}
+
+func (us *UserService) GetIdentity(info user.GetIdentityRequest) (*user.IdentityResponse, error) {
+	foundUser, err := us.FindUserByID(info.UserID)
+	if err != nil {
+		return nil, err
+	}
+
+	return &user.IdentityResponse{
+		Email:     foundUser.Email,
+		FirstName: foundUser.FirstName,
+		LastName:  foundUser.LastName,
+	}, nil
+}
+
+func (us *UserService) UpdateProfile(info user.UpdateProfileRequest) error {
+	return us.unitOfWork.WithTransaction(func(rf ports.RepositoryFactory) error {
+		userRepo := rf.UserRepository()
+		foundUser, err := us.FindUserByID(info.UserID)
+		if err != nil {
+			return err
+		}
+
+		if err := us.PreloadFields(foundUser, []string{"Address"}); err != nil {
+			return err
+		}
+
+		if info.Province != 0 && info.City != 0 && info.HouseNumber != 0 && info.StreetAddress != "" && info.Unit != 0 {
+			addressInfo := us.buildAddressInfo(info)
+			if err := us.persistUserAddress(foundUser, addressInfo); err != nil {
+				return err
+			}
+		}
+
+		if err := us.updateProfilePicture(foundUser, info.ProfilePic); err != nil {
+			return err
+		}
+
+		us.applyProfileFields(foundUser, info)
+
+		return userRepo.SaveUser(foundUser)
+	})
+}
+
+func (us *UserService) buildAddressInfo(info user.UpdateProfileRequest) address.AddressInfo {
+	return address.AddressInfo{
+		ProvinceName:  info.Province,
+		CityName:      info.City,
+		StreetAddress: info.StreetAddress,
+		HouseNumber:   info.HouseNumber,
+		Unit:          info.Unit,
+		PostalCode:    info.PostalCode,
+	}
+}
+
+func (us *UserService) persistUserAddress(foundUser *entities.User, addressInfo address.AddressInfo) error {
+	if foundUser.Address != nil {
+		updatedAddress, err := us.addressService.UpdateAddressEntity(foundUser.Address, addressInfo)
+		if err != nil {
+			return err
+		}
+		foundUser.Address = updatedAddress
+		return nil
+	}
+
+	createdAddress, err := us.addressService.CreateAddressEntity(addressInfo)
+	if err != nil {
+		return err
+	}
+	foundUser.Address = createdAddress
+	return nil
+}
+
+func (us *UserService) updateProfilePicture(foundUser *entities.User, file *multipart.FileHeader) error {
+	if file == nil {
+		return nil
+	}
+	profileKey := us.getUserProfileKey(foundUser.ID)
+	if err := us.storage.UploadFile(enums.UserProfilePic, profileKey, file); err != nil {
+		return err
+	}
+	foundUser.PictureLink = &profileKey
+	return nil
+}
+
+func (us *UserService) applyProfileFields(foundUser *entities.User, info user.UpdateProfileRequest) {
+	foundUser.FirstName = info.FirstName
+	foundUser.LastName = info.LastName
+	foundUser.Phone = info.Phone
+	foundUser.Gender = info.Gender
+	foundUser.BirthDate = info.BirthDate
+}
+
+func (us *UserService) buildProfileResponse(userEntity *entities.User) (*user.ProfileResponse, error) {
+	var addressInfo *address.AddressInfoResponse
+	if userEntity.Address != nil {
+		address := us.addressService.GetUserAddressInfo(userEntity.Address)
+		addressInfo = &address
+	}
+
+	pictureLink, err := us.getUserPictureLink(userEntity)
+	if err != nil {
+		return nil, err
+	}
+
+	return &user.ProfileResponse{
+		ID:              userEntity.ID,
+		Email:           userEntity.Email,
+		IsEmailVerified: userEntity.IsEmailVerified,
+		FirstName:       userEntity.FirstName,
+		LastName:        userEntity.LastName,
+		Address:         addressInfo,
+		Phone:           userEntity.Phone,
+		IsPhoneVerified: userEntity.IsPhoneVerified,
+		Gender:          userEntity.Gender.String(),
+		BirthDate:       userEntity.BirthDate,
+		PictureLink:     pictureLink,
+	}, nil
+}
+
+func (us *UserService) getUserPictureLink(userEntity *entities.User) (*string, error) {
+	key := us.getUserPictureKey(userEntity)
+	if key == "" {
+		return nil, nil
+	}
+
+	link, err := us.storage.GetPresignedURL(enums.UserProfilePic, key, time.Minute*15)
+	if err == nil {
+		return &link, nil
+	}
+	log.Println(err)
+
+	defaultKey := us.getDefaultUserProfileKey()
+	if defaultKey == "" || defaultKey == key {
+		return nil, nil
+	}
+	fallbackLink, fallbackErr := us.storage.GetPresignedURL(enums.UserProfilePic, defaultKey, time.Minute*15)
+	if fallbackErr != nil {
+		log.Println(fallbackErr)
+		return nil, nil
+	}
+	return &fallbackLink, nil
+}
+
+func (us *UserService) getUserProfileKey(userID uint) string {
+	return fmt.Sprintf("user-profile-%d", userID)
+}
+
+func (us *UserService) getUserPictureKey(userEntity *entities.User) string {
+	if userEntity.PictureLink != nil && *userEntity.PictureLink != "" {
+		return *userEntity.PictureLink
+	}
+	return us.getDefaultUserProfileKey()
+}
+
+func (us *UserService) getDefaultUserProfileKey() string {
+	return bootstrap.Run().Env.Storage.DefaultUserProfileKey
+}
+
+func (us *UserService) GetRoleUsersByID(roleID uint, options *postgres.QueryOptions) ([]entities.User, int64, error) {
+	userRepo := us.unitOfWork.Factory().UserRepository()
+	users, total, err := userRepo.GetRoleUsersByID(roleID, options)
+	if err != nil {
+		return nil, 0, err
+	}
+	return users, total, nil
 }
 
 func (us *UserService) FindVerifiedUserByEmail(email string) (*entities.User, error) {
