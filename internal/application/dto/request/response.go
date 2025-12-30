@@ -10,10 +10,12 @@ import (
 )
 
 type CreateRequestInfoResponse struct {
-	Services          []servicedto.ServiceInfoResponse        `json:"services"`
-	Addresses         []address.AddressInfoResponse           `json:"addresses"`
-	Pets              []pet.PetBasicDataResponse              `json:"pets"`
-	FreeCalendarSlots []calendarslot.CalendarSlotInfoResponse `json:"freeCalendarSlots"`
+	Services           []servicedto.ServiceInfoResponse        `json:"services"`
+	Addresses          []address.AddressInfoResponse           `json:"addresses"`
+	Pets               []pet.PetBasicDataResponse              `json:"pets"`
+	FreeCalendarSlots  []calendarslot.CalendarSlotInfoResponse `json:"freeCalendarSlots"`
+	PetSitterFirstName string                                  `json:"petSitterFirstName"`
+	PetSitterLastName  string                                  `json:"petSitterLastName"`
 }
 
 type RequestFullDataResponse struct {

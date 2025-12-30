@@ -172,6 +172,11 @@ func (rs *RequestService) GetCreateRequestInfo(info request.GetCreateRequestInfo
 		return nil, exceptions.NewNotFoundError(bootstrap.Run().Constants.ErrorFields.PetSitter)
 	}
 
+	petSitterUser, err := rs.userService.FindUserByID(petSitter.UserID)
+	if err != nil {
+		return nil, err
+	}
+
 	err = rs.petSitterService.PreloadFields(petSitter, []string{"Schedule", "Services"})
 	if err != nil {
 		return nil, err
@@ -196,10 +201,12 @@ func (rs *RequestService) GetCreateRequestInfo(info request.GetCreateRequestInfo
 	}
 
 	return &request.CreateRequestInfoResponse{
-		Services:          servicesData,
-		Addresses:         addresses,
-		Pets:              filteredPetsData,
-		FreeCalendarSlots: freeSlots,
+		Services:           servicesData,
+		Addresses:          addresses,
+		Pets:               filteredPetsData,
+		FreeCalendarSlots:  freeSlots,
+		PetSitterFirstName: petSitterUser.FirstName,
+		PetSitterLastName:  petSitterUser.LastName,
 	}, nil
 }
 
@@ -290,6 +297,10 @@ func (rs *RequestService) EditRequest(info request.EditRequestRequest) error {
 	rs.sendEditRequestEmail(user, petSitter.UserID)
 
 	requestRepo := rs.unitOfWork.Factory().RequestRepository()
+	err = requestRepo.DeleteCalendarSlotsByRequestID(foundRequest.ID)
+	if err != nil {
+		return err
+	}
 	err = requestRepo.EditRequest(foundRequest)
 	if err != nil {
 		return err
