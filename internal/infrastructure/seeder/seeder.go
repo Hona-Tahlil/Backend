@@ -33,6 +33,10 @@ func (s *DatabaseSeeder) SeedAll() error {
 		return err
 	}
 
+	if err := s.SeedPets(150); err != nil {
+		return err
+	}
+
 	// مهم: Address باید قبل از سرچ آماده باشد
 	if err := s.SeedAddressesForUsers(); err != nil {
 		return err
@@ -318,7 +322,6 @@ func (s *DatabaseSeeder) SeedCommentsForPetSitters(count int) error {
 	return nil
 }
 
-
 func min(a, b int) int {
 	if a < b {
 		return a
@@ -391,5 +394,3 @@ func randomProvince() enums.Province {
 	}
 	return fallback[rand.Intn(len(fallback))]
 }
-
-
