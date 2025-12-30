@@ -60,7 +60,7 @@ jobs:
 
 
 
-            docker compose down -v
+            docker compose down
             sleep 10
             docker logout ghcr.io && \
             docker login ghcr.io -u '${{ secrets.USERNAME }}' -p '${{ secrets.PAT }}' && \
