@@ -1,7 +1,6 @@
 package service
 
 import (
-	"errors"
 	"fmt"
 	"hona/backend/bootstrap"
 	"hona/backend/internal/application/dto/address"
@@ -16,7 +15,6 @@ import (
 	"hona/backend/internal/domain/ports"
 	domainpostgres "hona/backend/internal/domain/ports/postgres"
 	domainstorage "hona/backend/internal/domain/storage"
-	"log"
 
 	"github.com/lib/pq"
 	"github.com/samber/lo"
@@ -195,7 +193,7 @@ func (ps *PetSitterService) CreateSignupSession(PetsitterInfo petsitter.GetPetSi
 	petSitterRepo := ps.unitOfWork.Factory().PetSitterRepository()
 	foundUser, err := ps.userService.FindVerifiedUserByID(PetsitterInfo.UserID)
 	if err != nil {
-		return nil, exceptions.NewNotFoundError(bootstrap.Run().Constants.ErrorFields.User)
+		return nil, exceptions.NewNotVerifiedError()
 	}
 	err = userRepo.PreloadPetSitter(foundUser)
 	if err != nil {
@@ -225,7 +223,7 @@ func (ps *PetSitterService) CreateSignupSession(PetsitterInfo petsitter.GetPetSi
 func (ps *PetSitterService) GetPersonalInfo(userID uint) (*petsitter.PersonalInfoResponse, error) {
 	foundUser, err := ps.userService.FindVerifiedUserByID(userID)
 	if err != nil {
-		return nil, exceptions.NewNotFoundError(bootstrap.Run().Constants.ErrorFields.User)
+		return nil, exceptions.NewNotVerifiedError()
 	}
 	userRepo := ps.unitOfWork.Factory().UserRepository()
 	err = userRepo.PreloadPetSitter(foundUser)
@@ -270,35 +268,46 @@ func (ps *PetSitterService) GetPersonalInfo(userID uint) (*petsitter.PersonalInf
 	if foundUser.Phone != nil {
 		phoneNumber = *foundUser.Phone
 	}
+	var userProfilePicURL *string
+	if foundUser.PictureLink != nil {
+		url, _ := ps.storage.GetPresignedURL(enums.UserProfilePic, *foundUser.PictureLink, 2)
+		userProfilePicURL = &url
+	}
 	r := &petsitter.PersonalInfoResponse{
 		FirstName:      foundUser.FirstName,
 		LastName:       foundUser.LastName,
 		Email:          foundUser.Email,
 		PhoneNumber:    phoneNumber,
+		BirthDate:      foundUser.BirthDate,
 		Gender:         foundUser.Gender,
 		Province:       address.Province,
 		City:           address.City,
 		Address:        address.StreetAddress,
 		HouseNumber:    address.HouseNumber,
 		Unit:           address.Unit,
+		UserProfilePic: userProfilePicURL,
 		Status:         foundUser.PetSitter.Status,
 		OnboardingStep: foundUser.PetSitter.OnboardingStep,
 	}
-	log.Println("Personal Info Response:", r)
 	return r, nil
 
 }
 
 func (ps *PetSitterService) UploadDocuments(info petsitter.UploadDocumentsRequest) error {
-	foundPetSitter, err := ps.FindPetSitterByID(info.UserID)
+	foundUser, err := ps.userService.FindVerifiedUserByID(info.UserID)
+	if err != nil {
+		return exceptions.NewNotVerifiedError()
+	}
+	userRepo := ps.unitOfWork.Factory().UserRepository()
+	err = userRepo.PreloadPetSitter(foundUser)
+	if err != nil {
+		return exceptions.NewNotFoundError(bootstrap.Run().Constants.ErrorFields.PetSitter)
+	}
+	err = ps.CheckPetSitterStatus(foundUser.PetSitter.Status)
 	if err != nil {
 		return err
 	}
-	err = ps.CheckPetSitterStatus(foundPetSitter.Status)
-	if err != nil {
-		return err
-	}
-	err = ps.CheckPetSitterStep(foundPetSitter.OnboardingStep, enums.OBS_Documents)
+	err = ps.CheckPetSitterStep(foundUser.PetSitter.OnboardingStep, enums.OBS_Documents)
 	if err != nil {
 		return err
 	}
@@ -325,12 +334,12 @@ func (ps *PetSitterService) UploadDocuments(info petsitter.UploadDocumentsReques
 			FileKeys[i] = *fileKey
 		}
 	}
-	foundPetSitter.CertificateKeys = CertificateKeys
-	foundPetSitter.FileKeys = FileKeys
-	foundPetSitter.OnboardingStep = enums.OBS_Documents
-	foundPetSitter.Status = enums.PSS_Draft
+	foundUser.PetSitter.CertificateKeys = CertificateKeys
+	foundUser.PetSitter.FileKeys = FileKeys
+	foundUser.PetSitter.OnboardingStep = enums.OBS_Documents
+	foundUser.PetSitter.Status = enums.PSS_Draft
 	petSitterRepo := ps.unitOfWork.Factory().PetSitterRepository()
-	err = petSitterRepo.UpdatePetSitter(foundPetSitter)
+	err = petSitterRepo.UpdatePetSitter(foundUser.PetSitter)
 	if err != nil {
 		return err
 	}
@@ -338,25 +347,30 @@ func (ps *PetSitterService) UploadDocuments(info petsitter.UploadDocumentsReques
 }
 
 func (ps *PetSitterService) GetDocuments(userID uint) (*petsitter.DocumentResponse, error) {
-	foundPetSitter, err := ps.FindPetSitterByID(userID)
+	foundUser, err := ps.userService.FindVerifiedUserByID(userID)
+	if err != nil {
+		return nil, exceptions.NewNotVerifiedError()
+	}
+	userRepo := ps.unitOfWork.Factory().UserRepository()
+	err = userRepo.PreloadPetSitter(foundUser)
+	if err != nil {
+		return nil, exceptions.NewNotFoundError(bootstrap.Run().Constants.ErrorFields.PetSitter)
+	}
+	err = ps.CheckPetSitterStatus(foundUser.PetSitter.Status)
 	if err != nil {
 		return nil, err
 	}
-	err = ps.CheckPetSitterStatus(foundPetSitter.Status)
+	err = ps.CheckPetSitterStep(foundUser.PetSitter.OnboardingStep, enums.OBS_Done)
 	if err != nil {
 		return nil, err
 	}
-	err = ps.CheckPetSitterStep(foundPetSitter.OnboardingStep, enums.OBS_Done)
-	if err != nil {
-		return nil, err
-	}
-	CertificateFiles := make([]string, len(foundPetSitter.CertificateKeys))
-	for i, certKey := range foundPetSitter.CertificateKeys {
+	CertificateFiles := make([]string, len(foundUser.PetSitter.CertificateKeys))
+	for i, certKey := range foundUser.PetSitter.CertificateKeys {
 		certificateURL, _ := ps.storage.GetPresignedURL(enums.PetSitterFile, certKey, 2)
 		CertificateFiles[i] = certificateURL
 	}
-	Files := make([]string, len(foundPetSitter.FileKeys))
-	for i, fileKey := range foundPetSitter.FileKeys {
+	Files := make([]string, len(foundUser.PetSitter.FileKeys))
+	for i, fileKey := range foundUser.PetSitter.FileKeys {
 		fileURL, _ := ps.storage.GetPresignedURL(enums.PetSitterFile, fileKey, 2)
 		Files[i] = fileURL
 	}
@@ -367,37 +381,31 @@ func (ps *PetSitterService) GetDocuments(userID uint) (*petsitter.DocumentRespon
 }
 
 func (ps *PetSitterService) SubmitSkills(SkillsInfo petsitter.SubmitSkillsRequest) error {
-	_, err := ps.userService.FindVerifiedUserByID(SkillsInfo.UserID)
+	foundUser, err := ps.userService.FindVerifiedUserByID(SkillsInfo.UserID)
 	if err != nil {
-		return exceptions.NewNotFoundError(bootstrap.Run().Constants.ErrorFields.User)
+		return exceptions.NewNotVerifiedError()
 	}
-	petSitterRepo := ps.unitOfWork.Factory().PetSitterRepository()
-
-	foundPetSitter, err := ps.FindPetSitterByID(SkillsInfo.UserID)
+	userRepo := ps.unitOfWork.Factory().UserRepository()
+	err = userRepo.PreloadPetSitter(foundUser)
 	if err != nil {
 		return exceptions.NewNotFoundError(bootstrap.Run().Constants.ErrorFields.PetSitter)
 	}
-	// err = petSitterRepo.PreloadServices(foundPetSitter)
-	// if err != nil {
-	// 	return err
-	// }
-	err = ps.CheckPetSitterStep(foundPetSitter.OnboardingStep, enums.OBS_Done)
+	err = ps.CheckPetSitterStep(foundUser.PetSitter.OnboardingStep, enums.OBS_Done)
 	if err != nil {
 		return err
 	}
-	err = ps.CheckPetSitterStatus(foundPetSitter.Status)
+	err = ps.CheckPetSitterStatus(foundUser.PetSitter.Status)
 	if err != nil {
 		return err
 	}
-	services := ps.GetPetsitterServicesResponse(SkillsInfo.Services, foundPetSitter.ID)
-	foundPetSitter.Bio = &SkillsInfo.Bio
-	foundPetSitter.Services = services
-	// Initialize PetKinds using the custom PetKindsJSON type
-	foundPetSitter.PetKinds = mapPetKinds(SkillsInfo.PetKinds)
-	foundPetSitter.OnboardingStep = enums.OBS_Done
-	foundPetSitter.Status = enums.PSS_InReview
-
-	err = petSitterRepo.UpdatePetSitter(foundPetSitter)
+	services := ps.GetPetsitterServicesResponse(SkillsInfo.Services, foundUser.PetSitter.ID)
+	foundUser.PetSitter.Bio = &SkillsInfo.Bio
+	foundUser.PetSitter.Services = services
+	foundUser.PetSitter.PetKinds = mapPetKinds(SkillsInfo.PetKinds)
+	foundUser.PetSitter.OnboardingStep = enums.OBS_Done
+	foundUser.PetSitter.Status = enums.PSS_InReview
+	petSitterRepo := ps.unitOfWork.Factory().PetSitterRepository()
+	err = petSitterRepo.UpdatePetSitter(foundUser.PetSitter)
 	if err != nil {
 		return err
 	}
@@ -413,14 +421,18 @@ func mapPetKinds(kinds []enums.PetKind) pq.Int32Array {
 }
 
 func (ps *PetSitterService) GetPetsitterStatus(userID uint) (*petsitter.PetSitterStatusResponse, error) {
-	petSitterRepo := ps.unitOfWork.Factory().PetSitterRepository()
-	foundPetSitter, err := petSitterRepo.FindPetSitterByUserID(userID)
+	foundUser, err := ps.userService.FindVerifiedUserByID(userID)
 	if err != nil {
-		return nil, err
+		return nil, exceptions.NewNotVerifiedError()
+	}
+	userRepo := ps.unitOfWork.Factory().UserRepository()
+	err = userRepo.PreloadPetSitter(foundUser)
+	if err != nil {
+		return nil, exceptions.NewNotFoundError(bootstrap.Run().Constants.ErrorFields.PetSitter)
 	}
 	return &petsitter.PetSitterStatusResponse{
-		OnboardingStep: foundPetSitter.OnboardingStep,
-		Status:         foundPetSitter.Status,
+		OnboardingStep: foundUser.PetSitter.OnboardingStep,
+		Status:         foundUser.PetSitter.Status,
 	}, nil
 }
 
@@ -458,23 +470,23 @@ func (ps *PetSitterService) GetPetsitterServicesResponse(Services []enums.Servic
 
 func (ps *PetSitterService) CheckPetSitterStatus(pss enums.PetSitterStatus) error {
 	if pss == enums.PSS_Rejected {
-		return errors.New("operation not allowed: petsitter is rejected")
+		return exceptions.NewForbiddenError(bootstrap.Run().Constants.ErrorTags.ForbiddenStatus, bootstrap.Run().Constants.ErrorFields.PetSitter)
 	}
 	if pss == enums.PSS_Suspended {
-		return errors.New("operation not allowed: petsitter is suspended")
+		return exceptions.NewForbiddenError(bootstrap.Run().Constants.ErrorTags.ForbiddenStatus, bootstrap.Run().Constants.ErrorFields.PetSitter)
 	}
 	if pss == enums.PSS_Active {
-		return errors.New("operation not allowed: petsitter is active")
+		return exceptions.NewForbiddenError(bootstrap.Run().Constants.ErrorTags.ForbiddenStatus, bootstrap.Run().Constants.ErrorFields.PetSitter)
 	}
 	if pss == enums.PSS_InReview {
-		return errors.New("operation not allowed: petsitter is in review")
+		return exceptions.NewForbiddenError(bootstrap.Run().Constants.ErrorTags.ForbiddenStatus, bootstrap.Run().Constants.ErrorFields.PetSitter)
 	}
 	return nil
 }
 
 func (ps *PetSitterService) CheckPetSitterStep(currentStep enums.OnboardingStep, requiredStep enums.OnboardingStep) error {
 	if (currentStep + 1) < requiredStep {
-		return errors.New("operation not allowed: invalid onboarding step")
+		return exceptions.NewForbiddenError(bootstrap.Run().Constants.ErrorTags.ForbiddenStatus, bootstrap.Run().Constants.ErrorFields.PetSitter)
 	}
 	return nil
 }
@@ -532,7 +544,7 @@ func (ps *PetSitterService) GetAllPetSitters(page, count int) (*petsitter.PetSit
 func (ps *PetSitterService) SubmitPersonalInfo(petSitterInfo petsitter.SubmitPersonalInfoRequest) error {
 	foundUser, err := ps.userService.FindVerifiedUserByID(petSitterInfo.UserID)
 	if err != nil {
-		return exceptions.NewNotFoundError(bootstrap.Run().Constants.ErrorFields.User)
+		return exceptions.NewNotVerifiedError()
 	}
 	errr := ps.unitOfWork.WithTransaction(func(rf ports.RepositoryFactory) error {
 		userRepo := rf.UserRepository()
@@ -597,6 +609,17 @@ func (ps *PetSitterService) SubmitPersonalInfo(petSitterInfo petsitter.SubmitPer
 		foundUser.Gender = petSitterInfo.Gender
 		foundUser.BirthDate = petSitterInfo.BirthDate
 		foundUser.Phone = &petSitterInfo.Phone
+
+		var ProfilePicKey *string
+		if petSitterInfo.UserProfilePic != nil {
+			profileKeyValue := ps.getStorageKey(foundUser.ID)
+			ProfilePicKey = &profileKeyValue
+			if err := ps.storage.UploadFile(enums.UserProfilePic, *ProfilePicKey, petSitterInfo.UserProfilePic); err != nil {
+				return err
+			}
+			foundUser.PictureLink = ProfilePicKey
+		}
+
 		err = userRepo.SaveUser(foundUser)
 		if err != nil {
 			return err
