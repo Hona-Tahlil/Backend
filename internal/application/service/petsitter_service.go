@@ -123,13 +123,13 @@ func (ps *PetSitterService) GetServicesResponse(petSitter *entities.PetSitter) (
 }
 
 func (ps *PetSitterService) GetAvailableServicesResponse(petSitter *entities.PetSitter) ([]servicedto.ServiceInfoResponse, error) {
-	r := make([]servicedto.ServiceInfoResponse, len(petSitter.Services))
+	r := make([]servicedto.ServiceInfoResponse, 0)
 	if petSitter.Services == nil {
 		return r, nil
 	}
-	for i, service := range petSitter.Services {
+	for _, service := range petSitter.Services {
 		if service.Price != 0 && service.Kind == "petSitter" {
-			r[i] = ps.GetServiceResponse(&service)
+			r = append(r, ps.GetServiceResponse(&service))
 		}
 	}
 	return r, nil
