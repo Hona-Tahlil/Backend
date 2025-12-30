@@ -21,19 +21,20 @@ type GetPetSitterRequest struct {
 }
 
 type SubmitPersonalInfoRequest struct {
-	UserID      uint
-	FirstName   string
-	LastName    string
-	Email       string
-	Gender      enums.Gender
-	BirthDate   *time.Time
-	Phone       string
-	Province    enums.Province
-	City        enums.City
-	Address     string
-	HouseNumber uint
-	Unit        uint
-	PostalCode  string
+	UserID         uint
+	FirstName      string
+	LastName       string
+	Email          string
+	Gender         enums.Gender
+	BirthDate      *time.Time
+	Phone          string
+	Province       enums.Province
+	City           enums.City
+	Address        string
+	HouseNumber    uint
+	Unit           uint
+	PostalCode     string
+	UserProfilePic *multipart.FileHeader
 }
 
 type UploadDocumentsRequest struct {

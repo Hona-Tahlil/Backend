@@ -47,6 +47,8 @@ func handleError(err error) ([]controllers.Message, int) {
 		return handleNotFoundError(notFoundErr)
 	} else if conflictErrs, ok := err.(*exceptions.ConflictErrors); ok {
 		return handleConflictErrors(conflictErrs)
+	} else if forbiddenErr, ok := err.(*exceptions.ForbiddenError); ok {
+		return handleForbiddenError(forbiddenErr)
 	}
 	return unhandledErrors(err)
 }
@@ -111,4 +113,13 @@ func unhandledErrors(err error) ([]controllers.Message, int) {
 		Params: []string{},
 	}
 	return []controllers.Message{msg}, 500
+}
+
+
+func handleForbiddenError(forbiddenError *exceptions.ForbiddenError) ([]controllers.Message, int) {
+	msg := controllers.Message{
+		Text:   forbiddenError.Message,
+		Params: []string{forbiddenError.Resource},
+	}
+	return []controllers.Message{msg}, 403
 }

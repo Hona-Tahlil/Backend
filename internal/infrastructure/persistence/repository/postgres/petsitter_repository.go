@@ -51,12 +51,15 @@ func (pr *PetSitterRepository) CreatePetSitter(petSitter *entities.PetSitter) er
 }
 
 func (pr *PetSitterRepository) UpdatePetSitter(petSitter *entities.PetSitter) error {
+	// Use Save but it should work correctly with the proper array type
+	// If there are issues with associations, specify columns to update
 	return pr.db.Save(petSitter).Error
 }
 
 func (pr *PetSitterRepository) ReplaceSchedule(petSitter *entities.PetSitter, schedule []entities.CalendarSlot) error {
 	return pr.db.Model(petSitter).Association("Schedule").Replace(schedule)
 }
+
 
 // func (pr *PetSitterRepository) SearchPetSitters(options *QueryOptions) ([]*entities.PetSitter, int64, error) {
 // 	var petSitters []*entities.PetSitter

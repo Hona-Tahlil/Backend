@@ -43,13 +43,13 @@ func (s *PetSitterSeeder) Seed(count int) error {
 		userID := users[i].ID
 
 		bioText := faker.Paragraph()
-		status := enums.PSS_Active // برای تست سرچ
-
+		status := enums.PSS_Draft
 		petSitter := entities.PetSitter{
-			UserID:   userID,
-			Bio:      &bioText,
-			Status:   status,
-			PetKinds: randomPetKinds(), // اضافه شد
+			UserID:       userID,
+			Bio:          &bioText,
+			Status:       status,
+			OnboardingStep: enums.OBS_Review,
+			PetKinds: randomPetKinds(), 
 		}
 
 		petSitters = append(petSitters, petSitter)

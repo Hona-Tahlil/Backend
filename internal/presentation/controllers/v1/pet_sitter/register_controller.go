@@ -1,6 +1,7 @@
 package petsitter
 
 import (
+	"hona/backend/bootstrap"
 	"hona/backend/internal/application/dto/petsitter"
 	"hona/backend/internal/application/usecase"
 	"hona/backend/internal/domain/enums"
@@ -50,6 +51,10 @@ func (pc *PetSitterRegisterController) SubmitPersonalInfo(ctx *gin.Context) {
 		HouseNumber uint           `json:"house_number"`
 		Unit        uint           `json:"unit"`
 	}
+	file, err := ctx.FormFile(bootstrap.Run().Env.Storage.Buckets.UserProfilePic)
+	if err != nil {
+		file = nil
+	}
 	params := controllers.Receive[FirstSubmitParams](ctx)
 	FirstSubmitInfo := petsitter.SubmitPersonalInfoRequest{
 		UserID:      UserID,
@@ -64,9 +69,10 @@ func (pc *PetSitterRegisterController) SubmitPersonalInfo(ctx *gin.Context) {
 		Address:     params.Address,
 		HouseNumber: params.HouseNumber,
 		Unit:        params.Unit,
+		UserProfilePic: file,
 	}
 
-	err := pc.petSitterService.SubmitPersonalInfo(FirstSubmitInfo)
+	err = pc.petSitterService.SubmitPersonalInfo(FirstSubmitInfo)
 	if err != nil {
 		panic(err)
 	}
