@@ -207,6 +207,12 @@ func (rs *RequestService) GetCreateRequestInfo(info request.GetCreateRequestInfo
 		FreeCalendarSlots:  freeSlots,
 		PetSitterFirstName: petSitterUser.FirstName,
 		PetSitterLastName:  petSitterUser.LastName,
+		Services:           servicesData,
+		Addresses:          addresses,
+		Pets:               filteredPetsData,
+		FreeCalendarSlots:  freeSlots,
+		PetSitterFirstName: petSitterUser.FirstName,
+		PetSitterLastName:  petSitterUser.LastName,
 	}, nil
 }
 
@@ -231,6 +237,7 @@ func (rs *RequestService) EditRequest(info request.EditRequestRequest) error {
 	}
 
 	if foundRequest.Status != enums.Pending && foundRequest.Status != enums.Conflict {
+	if foundRequest.Status != enums.Pending && foundRequest.Status != enums.Conflict {
 		err = exceptions.NewAccessDeniedError(bootstrap.Run().Constants.ErrorTags.ForbiddenStatus)
 		return err
 	}
@@ -246,6 +253,11 @@ func (rs *RequestService) EditRequest(info request.EditRequestRequest) error {
 	}
 
 	user, err := rs.userService.FindVerifiedUserByID(info.UserID)
+	if err != nil {
+		return err
+	}
+
+	user.Pets, err = rs.petService.FindUserPetsByID(user.ID)
 	if err != nil {
 		return err
 	}
