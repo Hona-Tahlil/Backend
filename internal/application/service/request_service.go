@@ -207,12 +207,6 @@ func (rs *RequestService) GetCreateRequestInfo(info request.GetCreateRequestInfo
 		FreeCalendarSlots:  freeSlots,
 		PetSitterFirstName: petSitterUser.FirstName,
 		PetSitterLastName:  petSitterUser.LastName,
-		Services:           servicesData,
-		Addresses:          addresses,
-		Pets:               filteredPetsData,
-		FreeCalendarSlots:  freeSlots,
-		PetSitterFirstName: petSitterUser.FirstName,
-		PetSitterLastName:  petSitterUser.LastName,
 	}, nil
 }
 
@@ -236,7 +230,6 @@ func (rs *RequestService) EditRequest(info request.EditRequestRequest) error {
 		return err
 	}
 
-	if foundRequest.Status != enums.Pending && foundRequest.Status != enums.Conflict {
 	if foundRequest.Status != enums.Pending && foundRequest.Status != enums.Conflict {
 		err = exceptions.NewAccessDeniedError(bootstrap.Run().Constants.ErrorTags.ForbiddenStatus)
 		return err
