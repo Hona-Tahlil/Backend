@@ -24,6 +24,10 @@ func (rp *RequestRepository) EditRequest(request *entities.Request) error {
 	return rp.db.Save(request).Error
 }
 
+func (rp *RequestRepository) DeleteCalendarSlotsByRequestID(requestID uint) error {
+	return rp.db.Where("request_id = ?", requestID).Delete(&entities.CalendarSlot{}).Error
+}
+
 func (rp *RequestRepository) GetRequestByID(requestID uint) (*entities.Request, error) {
 	var request entities.Request
 	if err := rp.db.First(&request, requestID).Error; err != nil {
