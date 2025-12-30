@@ -243,6 +243,11 @@ func (rs *RequestService) EditRequest(info request.EditRequestRequest) error {
 		return err
 	}
 
+	user.Pets, err = rs.petService.FindUserPetsByID(user.ID)
+	if err != nil {
+		return err
+	}
+
 	pets, err := rs.validateRequestPets(user, petSitter, info.PetIDs)
 	if err != nil {
 		return err
