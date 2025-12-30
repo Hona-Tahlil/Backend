@@ -28,6 +28,10 @@ func (rp *RequestRepository) DeleteCalendarSlotsByRequestID(requestID uint) erro
 	return rp.db.Where("request_id = ?", requestID).Delete(&entities.CalendarSlot{}).Error
 }
 
+func (rp *RequestRepository) DeletePetsByRequestID(requestID uint) error {
+	return rp.db.Where("request_id = ? AND type = ?", requestID, "request").Delete(&entities.Pet{}).Error
+}
+
 func (rp *RequestRepository) GetRequestByID(requestID uint) (*entities.Request, error) {
 	var request entities.Request
 	if err := rp.db.First(&request, requestID).Error; err != nil {

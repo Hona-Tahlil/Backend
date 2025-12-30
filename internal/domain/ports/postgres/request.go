@@ -10,6 +10,7 @@ type RequestRepository interface {
 	GetRequestByID(requestID uint) (*entities.Request, error)
 	EditRequest(request *entities.Request) error
 	DeleteCalendarSlotsByRequestID(requestID uint) error
+	DeletePetsByRequestID(requestID uint) error
 	PreloadFields(request *entities.Request, fields []string) error
 	SearchRequests(userID uint, options *postgres.QueryOptions) ([]entities.Request, int64, error)
 	SearchRequestsByPetSitterID(petSitterID uint, options *postgres.QueryOptions) ([]entities.Request, int64, error)
