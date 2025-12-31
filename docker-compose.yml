@@ -54,7 +54,7 @@ services:
     restart: unless-stopped
     ports:
       - "${AMQP_PORT}:5672"
-      - "15673:15672"
+      - "15672:15672"
     environment:
       - RABBITMQ_DEFAULT_USER=${AMQP_USER}
       - RABBITMQ_DEFAULT_PASS=${AMQP_PASSWORD}
