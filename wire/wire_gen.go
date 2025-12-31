@@ -13,11 +13,13 @@ import (
 	"hona/backend/internal/application/usecase"
 	"hona/backend/internal/domain/jwt"
 	"hona/backend/internal/domain/mail"
+	"hona/backend/internal/domain/metrics"
 	"hona/backend/internal/domain/ports"
 	"hona/backend/internal/domain/ports/redis"
 	"hona/backend/internal/domain/storage"
 	"hona/backend/internal/infrastructure/communication/mail"
 	"hona/backend/internal/infrastructure/jwt"
+	"hona/backend/internal/infrastructure/metrics"
 	"hona/backend/internal/infrastructure/persistence"
 	"hona/backend/internal/infrastructure/persistence/repository/redis"
 	"hona/backend/internal/infrastructure/seeder"
@@ -110,12 +112,15 @@ func InitializeApplication(container *bootstrap.Config) (*Application, error) {
 	authMiddleware := middleware.NewAuthMiddleware(jwtService)
 	rbacMiddleware := middleware.NewRBACMiddleware(unitOfWork)
 	corsMiddleware := middleware.NewCORSMiddleware()
+	prometheusMetrics := metrics.NewPrometheusMetrics()
+	prometheusMiddleware := middleware.NewPrometheusMiddleware(prometheusMetrics)
 	middlewares := &Middlewares{
 		LocalizationMiddleware: localizationMiddleware,
 		RecoveryMiddleware:     recoveryMiddleware,
 		AuthMiddleware:         authMiddleware,
 		RBACMiddleware:         rbacMiddleware,
 		CORSMiddleware:         corsMiddleware,
+		Prometheus:             prometheusMiddleware,
 	}
 	databaseSeeder := seeder.NewDatabaseSeeder(db)
 	wireSeeder := &Seeder{
@@ -146,7 +151,7 @@ var PetSitterControllersProviderSet = wire.NewSet(petsitter.NewPetSitterRegister
 
 var ControllersProviderSet = wire.NewSet(wire.Struct(new(Controllers), "*"))
 
-var MiddlewaresProviderSet = wire.NewSet(middleware.NewLocalizationMiddleware, middleware.NewRecoveryMiddleware, middleware.NewRBACMiddleware, middleware.NewAuthMiddleware, middleware.NewCORSMiddleware, wire.Struct(new(Middlewares), "*"))
+var MiddlewaresProviderSet = wire.NewSet(metrics.NewPrometheusMetrics, wire.Bind(new(domainmetrics.PrometheusMetrics), new(*metrics.PrometheusMetrics)), middleware.NewLocalizationMiddleware, middleware.NewRecoveryMiddleware, middleware.NewRBACMiddleware, middleware.NewAuthMiddleware, middleware.NewCORSMiddleware, middleware.NewPrometheusMiddleware, wire.Struct(new(Middlewares), "*"))
 
 var SeederProviderSet = wire.NewSet(seeder.NewDatabaseSeeder, wire.Struct(new(Seeder), "*"))
 
@@ -205,6 +210,7 @@ type Middlewares struct {
 	AuthMiddleware         *middleware.AuthMiddleware
 	RBACMiddleware         *middleware.RBACMiddleware
 	CORSMiddleware         *middleware.CORSMiddleware
+	Prometheus             *middleware.PrometheusMiddleware
 }
 
 type Seeder struct {

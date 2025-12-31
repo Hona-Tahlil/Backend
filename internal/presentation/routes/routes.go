@@ -5,12 +5,16 @@ import (
 	"hona/backend/wire"
 
 	"github.com/gin-gonic/gin"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 func SetUpRoutes(ginEngine *gin.Engine, app *wire.Application) {
 	ginEngine.Use(app.Middlewares.CORSMiddleware.CORS())
 	ginEngine.Use(app.Middlewares.LocalizationMiddleware.AddTranslator)
 	ginEngine.Use(app.Middlewares.RecoveryMiddleware.Recover)
+	ginEngine.Use(app.Middlewares.Prometheus.PrometheusMiddleware)
+
+	ginEngine.GET("/metrics", gin.WrapH(promhttp.Handler()))
 
 	v1 := ginEngine.Group("/v1")
 	httpv1.SetUpGeneralRoutes(v1, app)

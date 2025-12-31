@@ -9,11 +9,13 @@ import (
 	"hona/backend/internal/application/usecase"
 	domainjwt "hona/backend/internal/domain/jwt"
 	domainmail "hona/backend/internal/domain/mail"
+	domainmetrics "hona/backend/internal/domain/metrics"
 	"hona/backend/internal/domain/ports"
 	domainredis "hona/backend/internal/domain/ports/redis"
 	domainstorage "hona/backend/internal/domain/storage"
 	"hona/backend/internal/infrastructure/communication/mail"
 	"hona/backend/internal/infrastructure/jwt"
+	"hona/backend/internal/infrastructure/metrics"
 	"hona/backend/internal/infrastructure/persistence"
 	"hona/backend/internal/infrastructure/persistence/repository/redis"
 	"hona/backend/internal/infrastructure/seeder"
@@ -108,11 +110,14 @@ var ControllersProviderSet = wire.NewSet(
 )
 
 var MiddlewaresProviderSet = wire.NewSet(
+	metrics.NewPrometheusMetrics,
+	wire.Bind(new(domainmetrics.PrometheusMetrics), new(*metrics.PrometheusMetrics)),
 	middleware.NewLocalizationMiddleware,
 	middleware.NewRecoveryMiddleware,
 	middleware.NewRBACMiddleware,
 	middleware.NewAuthMiddleware,
 	middleware.NewCORSMiddleware,
+	middleware.NewPrometheusMiddleware,
 	wire.Struct(new(Middlewares), "*"),
 )
 
@@ -176,6 +181,7 @@ type Middlewares struct {
 	AuthMiddleware         *middleware.AuthMiddleware
 	RBACMiddleware         *middleware.RBACMiddleware
 	CORSMiddleware         *middleware.CORSMiddleware
+	Prometheus             *middleware.PrometheusMiddleware
 }
 
 type Seeder struct {

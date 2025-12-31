@@ -39,6 +39,8 @@ services:
     image: ghcr.io/hona-tahlil/backend
     container_name: backend
     restart: unless-stopped
+    ports:
+      - "8080:8080"
     depends_on:
       - db
       - rdb
@@ -53,9 +55,152 @@ services:
     networks:
       - web
 
+  prometheus:
+    image: prom/prometheus:main
+    container_name: prometheus
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./monitoring/alertmanager/rules.yml:/etc/prometheus/rules.yml
+      - prometheus_data:/prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--web.console.libraries=/usr/share/prometheus/console_libraries"
+      - "--web.console.templates=/usr/share/prometheus/consoles"
+    deploy:
+      resources:
+        limits:
+          cpus: "0.3"
+          memory: 512M
+        reservations:
+          cpus: "0.1"
+          memory: 128M
+    networks:
+        - web
+
+  node-exporter:
+    image: prom/node-exporter:master
+    container_name: node-exporter
+    restart: unless-stopped
+    ports:
+      - "9100:9100"
+    deploy:
+      resources:
+        limits:
+          cpus: "0.1"
+          memory: 128M
+        reservations:
+          cpus: "0.05"
+          memory: 32M
+    networks:
+        - web
+
+  postgres-exporter:
+    image: bitnami/postgres-exporter:latest
+    container_name: postgres-exporter
+    restart: unless-stopped
+    ports:
+      - "9187:9187"
+    environment:
+      - DATA_SOURCE_NAME=postgresql://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}?sslmode=disable
+    depends_on:
+      - db
+    deploy:
+      resources:
+        limits:
+          cpus: "0.1"
+          memory: 128M
+        reservations:
+          cpus: "0.05"
+          memory: 32M
+    networks:
+        - web
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor
+    container_name: cadvisor
+    restart: unless-stopped
+    ports:
+      - "8081:8080"
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:rw
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+    depends_on:
+      - rdb
+    deploy:
+      resources:
+        limits:
+          cpus: "0.2"
+          memory: 256M
+        reservations:
+          cpus: "0.05"
+          memory: 64M
+    networks:
+        - web
+
+  alertmanager:
+    image: prom/alertmanager:main
+    container_name: alertmanager
+    restart: unless-stopped
+    ports:
+      - "9093:9093"
+    environment:
+      - EMAIL_PAT=${SMTP_PASSWORD}
+    volumes:
+      - ./monitoring/alertmanager/config.yml:/etc/alertmanager/config.yml
+      - alertmanager_data:/alertmanager
+    command:
+      - "--config.file=/etc/alertmanager/config.yml"
+      - "--storage.path=/alertmanager"
+    deploy:
+      resources:
+        limits:
+          cpus: "0.1"
+          memory: 128M
+        reservations:
+          cpus: "0.05"
+          memory: 32M
+    networks:
+        - web
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    restart: unless-stopped
+    ports:
+      - "3002:3000"
+    depends_on:
+      - prometheus
+    volumes:
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards
+      - grafana_data:/var/lib/grafana
+    environment:
+      - GF_SECURITY_ADMIN_USER=${GF_SECURITY_ADMIN_USER}
+      - GF_SECURITY_ADMIN_PASSWORD=${GF_SECURITY_ADMIN_PASSWORD}
+      - GF_USERS_ALLOW_SIGN_UP=false
+    deploy:
+      resources:
+        limits:
+          cpus: "0.3"
+          memory: 384M
+        reservations:
+          cpus: "0.1"
+          memory: 128M
+    networks:
+        - web
+
 volumes:
   pgdata:
   rdb_data:
+  prometheus_data:
+  alertmanager_data:
+  grafana_data:
 
 networks:
   web:
