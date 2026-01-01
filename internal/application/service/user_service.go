@@ -633,10 +633,6 @@ func (us *UserService) VerifyEmail(info user.VerifyEmailRequest) error {
 }
 
 func (us *UserService) SendVerificationEmail(info user.SendVerificationEmailRequest) error {
-	// user, err := us.FindUserByEmail(info.Email)
-	// if err != nil {
-	// 	return err
-	// }
 	token, err := us.generateRandomToken()
 	if err != nil {
 		return err
@@ -667,7 +663,7 @@ func (us *UserService) SendVerificationEmail(info user.SendVerificationEmailRequ
 		TemplateFile string      `json:"templateFile"`
 		Data         interface{} `json:"data"`
 	}{
-		ToEmail:      user.Email,
+		ToEmail:      info.Email,
 		Subject:      "Email Verification",
 		TemplateFile: bootstrap.Run().Constants.TemplatesPath.EmailVerification,
 		Data:         data,
