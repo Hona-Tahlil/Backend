@@ -3,16 +3,17 @@ package bootstrap
 import "fmt"
 
 type Constants struct {
-	Context         Context
-	JWTKeysPath     JWTKeysPath
-	ErrorFields     ErrorFields
-	ErrorTags       ErrorTags
-	JWTConstants    JWTConstants
-	SuccessMessages SuccessMessages
-	RedisKey        RedisKey
-	EntityConstants EntityConstants
-	TemplatesPath   TemplatesPath
-	Pagination      Pagination
+	Context           Context
+	JWTKeysPath       JWTKeysPath
+	ErrorFields       ErrorFields
+	ErrorTags         ErrorTags
+	JWTConstants      JWTConstants
+	SuccessMessages   SuccessMessages
+	RedisKey          RedisKey
+	EntityConstants   EntityConstants
+	TemplatesPath     TemplatesPath
+	Pagination        Pagination
+	RabbitMQConstants RabbitMQConstants
 }
 
 type Pagination struct {

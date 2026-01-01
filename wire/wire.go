@@ -70,7 +70,6 @@ var ServiceProviderSet = wire.NewSet(
 	wire.Bind(new(usecase.PetSitterService), new(*service.PetSitterService)),
 	wire.Bind(new(usecase.CommentService), new(*service.CommentService)),
 	wire.Bind(new(usecase.WalletService), new(*service.WalletService)),
-	wire.Bind(new(domainmail.Mail), new(*mail.EmailService)),
 )
 
 var GeneralControllersProviderSet = wire.NewSet(
