@@ -26,7 +26,7 @@ func (pm *PrometheusMiddleware) PrometheusMiddleware(ctx *gin.Context) {
 	duration := time.Since(start).Seconds()
 	status := ctx.Writer.Status()
 
-	route := ctx.Request.URL.Path
+	route := ctx.FullPath()
 	method := ctx.Request.Method
 
 	pm.metricsClient.IncHTTPRequest(method, route, strconv.Itoa(status))

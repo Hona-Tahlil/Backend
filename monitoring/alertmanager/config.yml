@@ -13,7 +13,7 @@ receivers:
   email_configs:
   - to: 'myavarih@gmail.com'
     from: 'myavarih@gmail.com'
-    smarthost: 'smtp.example.com:587'
+    smarthost: 'smtp.gmail.com:587'
     auth_username: 'myavarih@gmail.com'
     auth_password: ${SMTP_PASSWORD}
 

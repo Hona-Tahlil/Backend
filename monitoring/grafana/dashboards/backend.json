@@ -462,12 +462,7 @@
         },
         "frameIndex": 0,
         "showHeader": true,
-        "sortBy": [
-          {
-            "desc": true,
-            "displayName": "{method=\"GET\", route=\"/messages\", status=\"È\"}"
-          }
-        ]
+        "sortBy": []
       },
       "pluginVersion": "11.6.0-228027",
       "targets": [

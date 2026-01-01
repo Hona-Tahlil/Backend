@@ -13,19 +13,20 @@ type PrometheusMetrics struct {
 }
 
 func NewPrometheusMetrics() *PrometheusMetrics {
+	config := bootstrap.Run().Constants.Metrics
+
 	return &PrometheusMetrics{
 		httpRequestsTotal: promauto.NewCounterVec(
 			prometheus.CounterOpts{
-
-				Name: bootstrap.Run().Constants.Metrics.HTTPRequestsTotal.Name,
-				Help: bootstrap.Run().Constants.Metrics.HTTPRequestsTotal.Help,
+				Name: config.HTTPRequestsTotal.Name,
+				Help: config.HTTPRequestsTotal.Help,
 			},
 			[]string{"method", "route", "status"},
 		),
 		httpRequestDuration: promauto.NewHistogramVec(
 			prometheus.HistogramOpts{
-				Name:    bootstrap.Run().Constants.Metrics.HTTPRequestDuration.Name,
-				Help:    bootstrap.Run().Constants.Metrics.HTTPRequestDuration.Help,
+				Name:    config.HTTPRequestDuration.Name,
+				Help:    config.HTTPRequestDuration.Help,
 				Buckets: prometheus.DefBuckets,
 			},
 			[]string{"method", "route"},
