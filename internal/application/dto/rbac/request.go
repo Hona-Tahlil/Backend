@@ -17,15 +17,15 @@ type GetUserRolesByIDRequest struct {
 }
 
 type GetRoleWithUsersByTypeRequest struct {
-	Type  string
-	Page  int
-	Count int
+	Type   string
+	Offset int
+	Limit  int
 }
 
 type GetRoleWithUsersByIDRequest struct {
-	ID    uint
-	Page  int
-	Count int
+	ID     uint
+	Offset int
+	Limit  int
 }
 
 type GetUserRolesByEmailRequest struct {
@@ -80,15 +80,14 @@ type GetPermissionRolesRequest struct {
 }
 
 type ListRolesWithUsersRequest struct {
-	Page  int
-	Count int
+	Offset int
+	Limit  int
 }
 
-
 type ListPetSittersRequest struct {
-    Page    int
-    Limit   int
-    Status  *string // optional
-    Search  *string // optional
-    Sort    string  // created_at_desc (default)
+	Page   int
+	Limit  int
+	Status *string // optional
+	Search *string // optional
+	Sort   string  // created_at_desc (default)
 }

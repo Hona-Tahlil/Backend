@@ -2,6 +2,7 @@ package seeder
 
 import (
 	"fmt"
+	"hona/backend/bootstrap"
 	"hona/backend/internal/domain/entities"
 	"hona/backend/internal/domain/enums"
 	"log"
@@ -24,6 +25,10 @@ func (s *PetSeeder) Seed(count int) error {
 	if s.db.First(&entities.Pet{}).Error == nil {
 		log.Println("✓ Pets already seeded, skipping...")
 		return nil
+	}
+	defaultProfileKey := bootstrap.Run().Env.Storage.DefaultPetProfileKey
+	if defaultProfileKey == "" {
+		return fmt.Errorf("default pet profile key is empty")
 	}
 	var users []entities.User
 	if err := s.db.Limit(100).Find(&users).Error; err != nil {
@@ -92,17 +97,19 @@ func (s *PetSeeder) Seed(count int) error {
 		}
 
 		name := generatePetName(kind)
+		pictureKey := defaultProfileKey
 
 		pet := entities.Pet{
-			UserID:    user.ID,
-			Name:      name,
-			Kind:      kind,
-			Species:   species,
-			BirthDate: &birthDate,
-			IsAdult:   isAdult,
-			Gender:    gender,
-			Weight:    weight,
-			AboutPet:  aboutPet,
+			UserID:     user.ID,
+			Name:       name,
+			Kind:       kind,
+			Species:    species,
+			BirthDate:  &birthDate,
+			IsAdult:    isAdult,
+			Gender:     gender,
+			Weight:     weight,
+			AboutPet:   aboutPet,
+			PictureKey: &pictureKey,
 		}
 
 		pets = append(pets, pet)

@@ -24,6 +24,14 @@ func (rp *RequestRepository) EditRequest(request *entities.Request) error {
 	return rp.db.Save(request).Error
 }
 
+func (rp *RequestRepository) DeleteCalendarSlotsByRequestID(requestID uint) error {
+	return rp.db.Where("request_id = ?", requestID).Delete(&entities.CalendarSlot{}).Error
+}
+
+func (rp *RequestRepository) DeletePetsByRequestID(requestID uint) error {
+	return rp.db.Where("request_id = ? AND type = ?", requestID, "request").Delete(&entities.Pet{}).Error
+}
+
 func (rp *RequestRepository) GetRequestByID(requestID uint) (*entities.Request, error) {
 	var request entities.Request
 	if err := rp.db.First(&request, requestID).Error; err != nil {
@@ -43,4 +51,24 @@ func (rp *RequestRepository) PreloadFields(request *entities.Request, fields []s
 		}
 	}
 	return nil
+}
+
+func (rp *RequestRepository) SearchRequests(userID uint, options *QueryOptions) ([]entities.Request, int64, error) {
+	var requests []entities.Request
+	query, total := ApplyModifiers(rp.db.Model(&entities.Request{}).Where("user_id = ?", userID), *options)
+	if err := query.Find(&requests).Error; err != nil {
+		return nil, 0, err
+	}
+
+	return requests, total, nil
+}
+
+func (rp *RequestRepository) SearchRequestsByPetSitterID(petSitterID uint, options *QueryOptions) ([]entities.Request, int64, error) {
+	var requests []entities.Request
+	query, total := ApplyModifiers(rp.db.Model(&entities.Request{}).Where("pet_sitter_id = ?", petSitterID), *options)
+	if err := query.Find(&requests).Error; err != nil {
+		return nil, 0, err
+	}
+
+	return requests, total, nil
 }

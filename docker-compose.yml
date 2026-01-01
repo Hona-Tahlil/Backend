@@ -10,6 +10,8 @@ services:
       - "${DB_HOST_PORT}:${DB_PORT}"
     volumes:
       - pgdata:/var/lib/postgresql/data
+    networks:
+      - web
 
   rdb:
     image: redis:latest
@@ -27,6 +29,8 @@ services:
         reservations:
           cpus: "0.1"
           memory: 64M
+    networks:
+      - web
 
   app:
     build:
@@ -45,8 +49,10 @@ services:
       DB_PASSWORD: ${DB_PASSWORD}
       DB_NAME: ${DB_NAME}
       DB_PORT: ${DB_PORT}
-    ports:
-      - "${SERVER_PORT}:8080"
+    expose:
+      - "8080"
+    networks:
+      - web
 
   rabbitmq:
     image: rabbitmq:3-management
@@ -67,8 +73,14 @@ services:
       timeout: 5s
       retries: 3
       start_period: 20s
+    networks:
+      - web
 
 volumes:
   pgdata:
   rdb_data:
   rabbitmq_data:
+
+networks:
+  web:
+    external: true

@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"hona/backend/internal/domain/entities"
+	"log"
 
 	"gorm.io/gorm"
 )
@@ -48,34 +49,41 @@ func (up *UserRepository) DeleteUserByEmail(email string) error {
 	return up.db.Where("email = ?", email).Delete(&entities.User{}).Error
 }
 
-
 func (up *UserRepository) SaveUser(user *entities.User) error {
 	return up.db.Save(user).Error
 }
 
-func (up *UserRepository) GetRoleUsersByID(roleID uint, limit, offset int) ([]entities.User, error) {
+func (up *UserRepository) GetRoleUsersByID(roleID uint, options *QueryOptions) ([]entities.User, int64, error) {
 	var users []entities.User
 
-	err := up.db.
+	baseQuery := up.db.Model(&entities.User{}).
 		Joins("JOIN user_roles ur ON ur.user_id = users.id").
-		Where("ur.role_id = ?", roleID).
-		Preload("Roles").
-		Limit(limit).
-		Offset(offset).
+		Where("ur.role_id = ?", roleID)
+
+	newDB, total := ApplyModifiers(baseQuery, *options)
+
+	err := newDB.
+		Preload("Roles.Permissions").
 		Find(&users).Error
 
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
-	return users, nil
+	return users, total, nil
 }
 func (up *UserRepository) PreloadPetSitter(user *entities.User) error {
 	return up.db.Preload("PetSitter").First(user, user.ID).Error
 }
 
 func (up *UserRepository) PreloadAddress(user *entities.User) error {
-	return up.db.Preload("Address").First(user, user.ID).Error
+	// For polymorphic relationships, we need to preload with the correct conditions
+	err := up.db.Preload("Address", "type = ? AND refer = ?", "User", user.ID).First(user, user.ID).Error
+	if err != nil {
+		log.Println("Error preloading address:", err)
+		return err
+	}
+	return nil
 }
 
 func (up *UserRepository) PreloadFields(user *entities.User, fields []string) error {

@@ -10,10 +10,12 @@ import (
 )
 
 type CreateRequestInfoResponse struct {
-	Services          []servicedto.ServiceInfoResponse        `json:"services"`
-	Addresses         []address.AddressInfoResponse           `json:"addresses"`
-	Pets              []pet.PetBasicDataResponse              `json:"pets"`
-	FreeCalendarSlots []calendarslot.CalendarSlotInfoResponse `json:"freeCalendarSlots"`
+	Services           []servicedto.ServiceInfoResponse        `json:"services"`
+	Addresses          []address.AddressInfoResponse           `json:"addresses"`
+	Pets               []pet.PetBasicDataResponse              `json:"pets"`
+	FreeCalendarSlots  []calendarslot.CalendarSlotInfoResponse `json:"freeCalendarSlots"`
+	PetSitterFirstName string                                  `json:"petSitterFirstName"`
+	PetSitterLastName  string                                  `json:"petSitterLastName"`
 }
 
 type RequestFullDataResponse struct {
@@ -33,4 +35,15 @@ type RequestFullDataResponse struct {
 	Status             string                                  `json:"status"`
 	TransferID         *uint                                   `json:"transferID"`
 	UpdatedAt          time.Time                               `json:"updatedAt"`
+}
+
+type RequestListItemResponse struct {
+	RequestID          uint                           `json:"requestID"`
+	PetSitterUserID    uint                           `json:"petSitterUserID"`
+	PetSitterFirstName string                         `json:"petSitterFirstName"`
+	PetSitterLastName  string                         `json:"petSitterLastName"`
+	Service            servicedto.ServiceInfoResponse `json:"service"`
+	TotalPrice         uint                           `json:"totalPrice"`
+	Status             string                         `json:"status"`
+	UpdatedAt          time.Time                      `json:"updatedAt"`
 }

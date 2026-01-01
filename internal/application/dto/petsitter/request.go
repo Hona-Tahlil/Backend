@@ -1,6 +1,7 @@
 package petsitter
 
 import (
+	"hona/backend/internal/application/dto/general"
 	"hona/backend/internal/domain/enums"
 	"mime/multipart"
 	"time"
@@ -20,19 +21,20 @@ type GetPetSitterRequest struct {
 }
 
 type SubmitPersonalInfoRequest struct {
-	UserID      uint
-	FirstName   string
-	LastName    string
-	Email       string
-	Gender      enums.Gender
-	BirthDate   *time.Time
-	Phone       string
-	Province    enums.Province
-	City        enums.City
-	Address     string
-	HouseNumber uint
-	Unit        uint
-	PostalCode  string
+	UserID         uint
+	FirstName      string
+	LastName       string
+	Email          string
+	Gender         enums.Gender
+	BirthDate      *time.Time
+	Phone          string
+	Province       enums.Province
+	City           enums.City
+	Address        string
+	HouseNumber    uint
+	Unit           uint
+	PostalCode     string
+	UserProfilePic *multipart.FileHeader
 }
 
 type UploadDocumentsRequest struct {
@@ -46,4 +48,64 @@ type SubmitSkillsRequest struct {
 	Bio      string
 	PetKinds []enums.PetKind
 	Services []enums.ServiceType
+}
+
+type GetPetKindsRequest struct {
+	UserID uint
+}
+
+type UpdatePetKindsRequest struct {
+	UserID   uint
+	PetKinds []enums.PetKind
+}
+
+type GetServicesRequest struct {
+	UserID uint
+}
+
+type CreateServiceRequest struct {
+	UserID      uint
+	Type        enums.ServiceType
+	Price       uint
+	Description *string
+}
+
+type UpdateServiceRequest struct {
+	UserID      uint
+	ID          uint
+	Type        enums.ServiceType
+	Price       uint
+	Description *string
+}
+
+type DeleteServiceRequest struct {
+	UserID uint
+	ID     uint
+}
+
+type GetPetSitterDetailsRequest struct {
+	PetSitterUserID uint
+}
+
+type GetPetSitterProfileRequest struct {
+	PetSitterID uint
+}
+
+type ChangePetSitterStatusRequest struct {
+	PetSitterUserID uint
+	Status          enums.PetSitterStatus
+}
+
+type SearchPetSittersRequest struct {
+	Offset  int
+	Limit   int
+	Filters []general.Filter
+	Sorts   []general.Sort
+}
+
+type AdminSearchPetSittersRequest struct {
+	Offset  int
+	Limit   int
+	Filters []general.Filter
+	Sorts   []general.Sort
 }

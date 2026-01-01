@@ -26,4 +26,10 @@ func SetUpGeneralRoutes(v1 *gin.RouterGroup, app *wire.Application) {
 		pets.GET("/kinds", app.Controllers.GeneralControllers.GeneralPetController.GetAllPetKinds)
 		pets.GET("/kinds/:petKind/species", app.Controllers.GeneralControllers.GeneralPetController.GetPetKindSpecies)
 	}
+	search := v1.Group("/search")
+	{
+		search.POST("/petsitters", app.Controllers.GeneralControllers.GeneralSearchController.SearchPetSitters)
+	}
+
+	v1.GET("/petsitter/:petSitterID", app.Controllers.GeneralControllers.GeneralSearchController.GetPetSitterProfile)
 }

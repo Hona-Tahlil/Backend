@@ -23,13 +23,15 @@ var successMessages = bootstrap.Run().Constants.SuccessMessages
 
 func (ac *AdminRBACController) ListRolesWithUsers(ctx *gin.Context) {
 	type ListRolesWithUsersParams struct {
-		Page  int `form:"page" validate:"min=0"`
-		Count int `form:"count" validate:"min=0,max=100"`
+		Page  int `form:"page" validate:"min=1"`
+		Count int `form:"count" validate:"min=10,max=100"`
 	}
 	params := controllers.Receive[ListRolesWithUsersParams](ctx)
+	offset, limit := controllers.GetOffsetLimit(params.Page, params.Count)
+
 	ListRolesWithUsersInfo := rbac.ListRolesWithUsersRequest{
-		Page:  params.Page,
-		Count: params.Count,
+		Offset: offset,
+		Limit:  limit,
 	}
 	res, err := ac.rbacService.ListRolesWithUsers(ListRolesWithUsersInfo)
 	if err != nil {
@@ -43,45 +45,47 @@ func (ac *AdminRBACController) ListRolesWithUsers(ctx *gin.Context) {
 func (ac *AdminRBACController) GetRoleWithUsersByID(ctx *gin.Context) {
 	type GetRoleWithUsersByIDParams struct {
 		ID    uint `uri:"id"`
-		Page  int  `form:"page" validate:"min=0"`
-		Count int  `form:"count" validate:"min=0,max=100"`
+		Page  int  `form:"page" validate:"min=1"`
+		Count int  `form:"count" validate:"min=10,max=100"`
 	}
 	params := controllers.Receive[GetRoleWithUsersByIDParams](ctx)
+	offset, limit := controllers.GetOffsetLimit(params.Page, params.Count)
 
 	GetRoleWithUsersByIDInfo := rbac.GetRoleWithUsersByIDRequest{
-		ID:    params.ID,
-		Page:  params.Page,
-		Count: params.Count,
+		ID:     params.ID,
+		Limit:  limit,
+		Offset: offset,
 	}
-	res, err := ac.rbacService.GetRoleWithUsersByID(GetRoleWithUsersByIDInfo)
+	res, total, err := ac.rbacService.GetRoleWithUsersByID(GetRoleWithUsersByIDInfo)
 	if err != nil {
 		panic(err)
 	}
 
 	msg := controllers.Message{}
-	controllers.Respond(ctx, 200, msg, *res)
+	controllers.Respond(ctx, 200, msg, controllers.NewPaginatedResponse(*res, total, offset, limit))
 }
 
 func (ac *AdminRBACController) GetRoleWithUsersByType(ctx *gin.Context) {
 	type GetRoleWithUsersByTypeParams struct {
 		Type  string `uri:"type"`
-		Page  int    `form:"page" validate:"min=0"`
-		Count int    `form:"count" validate:"min=0,max=100"`
+		Page  int    `form:"page" validate:"min=1"`
+		Count int    `form:"count" validate:"min=10,max=100"`
 	}
 	params := controllers.Receive[GetRoleWithUsersByTypeParams](ctx)
+	offset, limit := controllers.GetOffsetLimit(params.Page, params.Count)
 
 	GetRoleWithUsersByTypeInfo := rbac.GetRoleWithUsersByTypeRequest{
-		Type:  params.Type,
-		Page:  params.Page,
-		Count: params.Count,
+		Type:   params.Type,
+		Limit:  limit,
+		Offset: offset,
 	}
-	res, err := ac.rbacService.GetRoleWithUsersByType(GetRoleWithUsersByTypeInfo)
+	res, total, err := ac.rbacService.GetRoleWithUsersByType(GetRoleWithUsersByTypeInfo)
 	if err != nil {
 		panic(err)
 	}
 
 	msg := controllers.Message{}
-	controllers.Respond(ctx, 200, msg, *res)
+	controllers.Respond(ctx, 200, msg, controllers.NewPaginatedResponse(*res, total, offset, limit))
 }
 
 func (ac *AdminRBACController) GetRoleByID(ctx *gin.Context) {
@@ -364,5 +368,3 @@ func (ac *AdminRBACController) GetPermissionRoles(ctx *gin.Context) {
 	msg := controllers.Message{}
 	controllers.Respond(ctx, 200, msg, res)
 }
-
-

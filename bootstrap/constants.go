@@ -3,15 +3,21 @@ package bootstrap
 import "fmt"
 
 type Constants struct {
-	Context           Context
-	JWTKeysPath       JWTKeysPath
-	ErrorFields       ErrorFields
-	ErrorTags         ErrorTags
-	JWTConstants      JWTConstants
-	SuccessMessages   SuccessMessages
-	RedisKey          RedisKey
-	EntityConstants   EntityConstants
-	TemplatesPath     TemplatesPath
+	Context         Context
+	JWTKeysPath     JWTKeysPath
+	ErrorFields     ErrorFields
+	ErrorTags       ErrorTags
+	JWTConstants    JWTConstants
+	SuccessMessages SuccessMessages
+	RedisKey        RedisKey
+	EntityConstants EntityConstants
+	TemplatesPath   TemplatesPath
+	Pagination      Pagination
+}
+
+type Pagination struct {
+	DefaultPage       int
+	DefaultPageSize   int
 	RabbitMQConstants RabbitMQConstants
 }
 
@@ -106,6 +112,7 @@ type ErrorFields struct {
 	CalendarSlot string
 	Service      string
 	Comment      string
+	Wallet       string
 }
 
 type ErrorTags struct {
@@ -141,6 +148,7 @@ type ErrorTags struct {
 	DuplicateName          string
 	CalendarConflict       string
 	OldInfo                string
+	InsufficientBalance    string
 }
 
 type JWTKeysPath struct {
@@ -204,6 +212,7 @@ func NewConstants() *Constants {
 			Request:      "request",
 			CalendarSlot: "calendarSlot",
 			Service:      "service",
+			Wallet:       "wallet",
 		},
 		ErrorTags: ErrorTags{
 			AlreadyRegistered:      "errors.alreadyRegistered",
@@ -238,6 +247,7 @@ func NewConstants() *Constants {
 			DuplicateName:          "errors.duplicateName",
 			CalendarConflict:       "errors.calendarConflict",
 			OldInfo:                "errors.oldInfo",
+			InsufficientBalance:    "errors.insufficientBalance",
 		},
 		JWTConstants: JWTConstants{
 			AccessTokenType:  "access",
@@ -277,6 +287,10 @@ func NewConstants() *Constants {
 			RequestAccepted:        "request_accepted.html",
 			RequestDeclined:        "request_declined.html",
 			RequestEdited:          "request_edited.html",
+		},
+		Pagination: Pagination{
+			DefaultPage:     1,
+			DefaultPageSize: 10,
 		},
 		RabbitMQConstants: RabbitMQConstants{
 			Exchanges: Exchanges{
