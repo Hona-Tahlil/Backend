@@ -10,8 +10,8 @@ import (
 	"hona/backend/internal/domain/exceptions"
 	"hona/backend/internal/domain/ports"
 	domainpostgres "hona/backend/internal/domain/ports/postgres"
-	"hona/backend/internal/infrastructure/communication/mail"
 	"hona/backend/internal/infrastructure/persistence/repository/postgres"
+	"hona/backend/internal/infrastructure/rabbitmq"
 	"log"
 	"sort"
 	"time"
@@ -24,7 +24,7 @@ type RequestService struct {
 	petSitterService usecase.PetSitterService
 	walletService    usecase.WalletService
 	unitOfWork       ports.UnitOfWork
-	emailService     *mail.EmailService
+	rabbitMQ         *rabbitmq.RabbitMQ
 }
 
 type RequestServiceDeps struct {
@@ -34,7 +34,7 @@ type RequestServiceDeps struct {
 	PetSitterService usecase.PetSitterService
 	WalletService    usecase.WalletService
 	UnitOfWork       ports.UnitOfWork
-	EmailService     *mail.EmailService
+	RabbitMQ         *rabbitmq.RabbitMQ
 }
 
 func NewRequestService(deps RequestServiceDeps) *RequestService {
@@ -45,7 +45,7 @@ func NewRequestService(deps RequestServiceDeps) *RequestService {
 		petService:       deps.PetService,
 		petSitterService: deps.PetSitterService,
 		walletService:    deps.WalletService,
-		emailService:     deps.EmailService,
+		rabbitMQ:         deps.RabbitMQ,
 	}
 }
 
@@ -775,7 +775,18 @@ func (rs *RequestService) sendNewRequestEmail(id uint) {
 	}{
 		Year: time.Now().Year(),
 	}
-	err = rs.emailService.SendEmail(petSitterUser.Email, "New Request Received", bootstrap.Run().Constants.TemplatesPath.NewRequest, data)
+	msg := struct {
+		ToEmail      string      `json:"toEmail"`
+		Subject      string      `json:"subject"`
+		TemplateFile string      `json:"templateFile"`
+		Data         interface{} `json:"data"`
+	}{
+		ToEmail:      petSitterUser.Email,
+		Subject:      "New Request Received",
+		TemplateFile: bootstrap.Run().Constants.TemplatesPath.NewRequest,
+		Data:         data,
+	}
+	err = rs.rabbitMQ.PublishMessage(bootstrap.Run().Constants.RabbitMQConstants.Events.SendEmail, msg)
 	if err != nil {
 		log.Println(err)
 	}
@@ -793,7 +804,18 @@ func (rs *RequestService) sendEditRequestEmail(user *entities.User, id uint) {
 		RequesterName: user.FirstName,
 		Year:          time.Now().Year(),
 	}
-	err = rs.emailService.SendEmail(petSitterUser.Email, "Request Edited", bootstrap.Run().Constants.TemplatesPath.RequestEdited, data)
+	msg := struct {
+		ToEmail      string      `json:"toEmail"`
+		Subject      string      `json:"subject"`
+		TemplateFile string      `json:"templateFile"`
+		Data         interface{} `json:"data"`
+	}{
+		ToEmail:      petSitterUser.Email,
+		Subject:      "Request Edited",
+		TemplateFile: bootstrap.Run().Constants.TemplatesPath.RequestEdited,
+		Data:         data,
+	}
+	err = rs.rabbitMQ.PublishMessage(bootstrap.Run().Constants.RabbitMQConstants.Events.SendEmail, msg)
 	if err != nil {
 		log.Println(err)
 	}
@@ -817,7 +839,18 @@ func (rs *RequestService) SendPetOwnerRequestCancelEmail(userID, petSitterUserID
 		SitterName:    petSitterUser.FirstName + " " + petSitterUser.LastName,
 		Year:          time.Now().Year(),
 	}
-	err = rs.emailService.SendEmail(user.Email, "Request Canceled", bootstrap.Run().Constants.TemplatesPath.PetOwnerRequestCancel, data)
+	msg := struct {
+		ToEmail      string      `json:"toEmail"`
+		Subject      string      `json:"subject"`
+		TemplateFile string      `json:"templateFile"`
+		Data         interface{} `json:"data"`
+	}{
+		ToEmail:      user.Email,
+		Subject:      "Request Canceled",
+		TemplateFile: bootstrap.Run().Constants.TemplatesPath.PetOwnerRequestCancel,
+		Data:         data,
+	}
+	err = rs.rabbitMQ.PublishMessage(bootstrap.Run().Constants.RabbitMQConstants.Events.SendEmail, msg)
 	if err != nil {
 		log.Println(err)
 	}
@@ -839,7 +872,18 @@ func (rs *RequestService) SendPetSitterRequestCancelEmail(userID, petSitterUserI
 		RequesterName: user.FirstName,
 		Year:          time.Now().Year(),
 	}
-	err = rs.emailService.SendEmail(petSitterUser.Email, "Request Canceled", bootstrap.Run().Constants.TemplatesPath.PetSitterRequestCancel, data)
+	msg := struct {
+		ToEmail      string      `json:"toEmail"`
+		Subject      string      `json:"subject"`
+		TemplateFile string      `json:"templateFile"`
+		Data         interface{} `json:"data"`
+	}{
+		ToEmail:      petSitterUser.Email,
+		Subject:      "Request Canceled",
+		TemplateFile: bootstrap.Run().Constants.TemplatesPath.PetSitterRequestCancel,
+		Data:         data,
+	}
+	err = rs.rabbitMQ.PublishMessage(bootstrap.Run().Constants.RabbitMQConstants.Events.SendEmail, msg)
 	if err != nil {
 		log.Println(err)
 	}
@@ -857,7 +901,19 @@ func (rs *RequestService) sendAcceptRequestEmail(id uint) {
 		RequesterName: user.FirstName,
 		Year:          time.Now().Year(),
 	}
-	err = rs.emailService.SendEmail(user.Email, "Request Accepted", bootstrap.Run().Constants.TemplatesPath.RequestAccepted, data)
+
+	msg := struct {
+		ToEmail      string      `json:"toEmail"`
+		Subject      string      `json:"subject"`
+		TemplateFile string      `json:"templateFile"`
+		Data         interface{} `json:"data"`
+	}{
+		ToEmail:      user.Email,
+		Subject:      "Request Accepted",
+		TemplateFile: bootstrap.Run().Constants.TemplatesPath.RequestAccepted,
+		Data:         data,
+	}
+	err = rs.rabbitMQ.PublishMessage(bootstrap.Run().Constants.RabbitMQConstants.Events.SendEmail, msg)
 	if err != nil {
 		log.Println(err)
 	}
@@ -875,7 +931,18 @@ func (rs *RequestService) sendDeclineRequestEmail(id uint) {
 		RequesterName: user.FirstName,
 		Year:          time.Now().Year(),
 	}
-	err = rs.emailService.SendEmail(user.Email, "Request Declined", bootstrap.Run().Constants.TemplatesPath.RequestDeclined, data)
+	msg := struct {
+		ToEmail      string      `json:"toEmail"`
+		Subject      string      `json:"subject"`
+		TemplateFile string      `json:"templateFile"`
+		Data         interface{} `json:"data"`
+	}{
+		ToEmail:      user.Email,
+		Subject:      "Request Declined",
+		TemplateFile: bootstrap.Run().Constants.TemplatesPath.RequestDeclined,
+		Data:         data,
+	}
+	err = rs.rabbitMQ.PublishMessage(bootstrap.Run().Constants.RabbitMQConstants.Events.SendEmail, msg)
 	if err != nil {
 		log.Println(err)
 	}

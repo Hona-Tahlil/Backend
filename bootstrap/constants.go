@@ -3,21 +3,62 @@ package bootstrap
 import "fmt"
 
 type Constants struct {
-	Context         Context
-	JWTKeysPath     JWTKeysPath
-	ErrorFields     ErrorFields
-	ErrorTags       ErrorTags
-	JWTConstants    JWTConstants
-	SuccessMessages SuccessMessages
-	RedisKey        RedisKey
-	EntityConstants EntityConstants
-	TemplatesPath   TemplatesPath
-	Pagination      Pagination
+	Context           Context
+	JWTKeysPath       JWTKeysPath
+	ErrorFields       ErrorFields
+	ErrorTags         ErrorTags
+	JWTConstants      JWTConstants
+	SuccessMessages   SuccessMessages
+	RedisKey          RedisKey
+	EntityConstants   EntityConstants
+	TemplatesPath     TemplatesPath
+	Pagination        Pagination
+	RabbitMQConstants RabbitMQConstants
 }
 
 type Pagination struct {
-	DefaultPage     int
-	DefaultPageSize int
+	DefaultPage       int
+	DefaultPageSize   int
+	RabbitMQConstants RabbitMQConstants
+}
+
+type RabbitMQConstants struct {
+	Exchanges Exchanges
+	Channels  Channels
+	Queues    Queues
+	Headers   Headers
+	Events    Events
+}
+
+type Exchanges struct {
+	General    string
+	DLX        string
+	TypeTopic  string
+	TypeFanout string
+}
+
+type Channels struct {
+	Notifications string
+	Emails        string
+	StorageUpload string
+	Chat          string
+	DLQ           string
+}
+type Queues struct {
+	DLQ string
+}
+
+type Headers struct {
+	RetryCount string
+	LastError  string
+	DeadLetter string
+}
+
+type Events struct {
+	SendEmail           string
+	SendNotification    string
+	FileUpload          string
+	MultipleFilesUpload string
 }
 
 type EntityConstants struct {
@@ -129,6 +170,7 @@ type RedisKey struct {
 type TemplatesPath struct {
 	Path                   string
 	EmailVerification      string
+	ForgetPassword         string
 	NewRequest             string
 	PetOwnerRequestCancel  string
 	PetSitterRequestCancel string
@@ -239,6 +281,7 @@ func NewConstants() *Constants {
 		TemplatesPath: TemplatesPath{
 			Path:                   "./internal/infrastructure/communication/mail/",
 			EmailVerification:      "email_verification.html",
+			ForgetPassword:         "forget_password.html",
 			NewRequest:             "new_request.html",
 			PetOwnerRequestCancel:  "pet_owner_request_cancel.html",
 			PetSitterRequestCancel: "pet_sitter_request_cancel.html",
@@ -249,6 +292,34 @@ func NewConstants() *Constants {
 		Pagination: Pagination{
 			DefaultPage:     1,
 			DefaultPageSize: 10,
+		},
+		RabbitMQConstants: RabbitMQConstants{
+			Exchanges: Exchanges{
+				General:    "general",
+				DLX:        "dlx",
+				TypeFanout: "fanout",
+				TypeTopic:  "topic",
+			},
+			Channels: Channels{
+				Notifications: "notifications",
+				Emails:        "emails",
+				StorageUpload: "storage_upload",
+				Chat:          "chat",
+				DLQ:           "dlq",
+			},
+			Queues: Queues{
+				DLQ: "dlq",
+			},
+			Headers: Headers{
+				RetryCount: "x-retry-count",
+				LastError:  "x-last-error",
+				DeadLetter: "x-dead-letter-exchange",
+			},
+			Events: Events{
+				SendEmail:        "emails",
+				SendNotification: "notifications",
+				FileUpload:       "storage_upload",
+			},
 		},
 	}
 }

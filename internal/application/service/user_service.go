@@ -19,6 +19,7 @@ import (
 	domainredis "hona/backend/internal/domain/ports/redis"
 	domainstorage "hona/backend/internal/domain/storage"
 	"hona/backend/internal/infrastructure/persistence/repository/postgres"
+	"hona/backend/internal/infrastructure/rabbitmq"
 	"log"
 	"regexp"
 	"time"
@@ -32,16 +33,17 @@ type UserService struct {
 	jwtService          domainjwt.JWTService
 	unitOfWork          ports.UnitOfWork
 	userCacheRepository domainredis.UserCacheRepository
+	rabbitMQ            *rabbitmq.RabbitMQ
 	emailService        domainmail.Mail
 	addressService      usecase.AddressService
 	storage             domainstorage.Storage
 }
 
-func NewUserService(jwtService domainjwt.JWTService, unitOfWork ports.UnitOfWork, userCacheRepository domainredis.UserCacheRepository, emailService domainmail.Mail, addressService usecase.AddressService, storage domainstorage.Storage) *UserService {
+func NewUserService(jwtService domainjwt.JWTService, unitOfWork ports.UnitOfWork, userCacheRepository domainredis.UserCacheRepository, emailService domainmail.Mail, addressService usecase.AddressService, storage domainstorage.Storage, rabbitMQ *rabbitmq.RabbitMQ) *UserService {
 	return &UserService{
 		unitOfWork:          unitOfWork,
 		userCacheRepository: userCacheRepository,
-		emailService:        emailService,
+		rabbitMQ:            rabbitMQ,
 		jwtService:          jwtService,
 		addressService:      addressService,
 		storage:             storage,
@@ -542,8 +544,21 @@ func (us *UserService) SendRestPassEmail(email string) error {
 		ExpiryMinute: bootstrap.Run().Env.EmailVerification.ExpireMinutes,
 		Year:         time.Now().Year(),
 	}
-	us.emailService.SendEmail(user.Email, "Reset Password", "forget_password.html", data)
-
+	msg := struct {
+		ToEmail      string      `json:"toEmail"`
+		Subject      string      `json:"subject"`
+		TemplateFile string      `json:"templateFile"`
+		Data         interface{} `json:"data"`
+	}{
+		ToEmail:      user.Email,
+		Subject:      "Reset Password",
+		TemplateFile: bootstrap.Run().Constants.TemplatesPath.ForgetPassword,
+		Data:         data,
+	}
+	err = us.rabbitMQ.PublishMessage(bootstrap.Run().Constants.RabbitMQConstants.Events.SendEmail, msg)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -646,7 +661,23 @@ func (us *UserService) SendVerificationEmail(info user.SendVerificationEmailRequ
 		ExpiryMinute: bootstrap.Run().Env.EmailVerification.ExpireMinutes,
 		Year:         time.Now().Year(),
 	}
-	return us.emailService.SendEmail(info.Email, "Email Verification", bootstrap.Run().Constants.TemplatesPath.EmailVerification, data)
+	msg := struct {
+		ToEmail      string      `json:"toEmail"`
+		Subject      string      `json:"subject"`
+		TemplateFile string      `json:"templateFile"`
+		Data         interface{} `json:"data"`
+	}{
+		ToEmail:      user.Email,
+		Subject:      "Email Verification",
+		TemplateFile: bootstrap.Run().Constants.TemplatesPath.EmailVerification,
+		Data:         data,
+	}
+	err = us.rabbitMQ.PublishMessage(bootstrap.Run().Constants.RabbitMQConstants.Events.SendEmail, msg)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (us *UserService) RefreshTokens(refreshTokenInfo rbac.RefreshTokenRequest) (*rbac.RefreshTokenResponse, string, int, error) {
