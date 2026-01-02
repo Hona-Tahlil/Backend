@@ -27,10 +27,7 @@ func (lm *LoggingMiddleware) LogRequests(ctx *gin.Context) {
 	ctx.Next()
 
 	status := ctx.Writer.Status()
-	size := ctx.Writer.Size()
-	if size < 0 {
-		size = 0
-	}
+	size := max(ctx.Writer.Size(), 0)
 
 	attrs := []slog.Attr{
 		slog.String("method", ctx.Request.Method),
