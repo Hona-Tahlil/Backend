@@ -18,6 +18,8 @@ import (
 	"hona/backend/internal/infrastructure/metrics"
 	"hona/backend/internal/infrastructure/persistence"
 	"hona/backend/internal/infrastructure/persistence/repository/redis"
+	"hona/backend/internal/infrastructure/rabbitmq"
+	"hona/backend/internal/infrastructure/rabbitmq/consumers"
 	"hona/backend/internal/infrastructure/seeder"
 	"hona/backend/internal/infrastructure/storage"
 	"hona/backend/internal/presentation/controllers/v1/admin"
@@ -61,6 +63,7 @@ var ServiceProviderSet = wire.NewSet(
 	service.NewWalletService,
 	wire.Bind(new(domainjwt.JWTService), new(*jwt.JWTService)),
 	wire.Bind(new(domainjwt.JWTKeyManager), new(*jwt.JWTKeyManager)),
+	wire.Bind(new(domainmail.Mail), new(*mail.EmailService)),
 	wire.Bind(new(usecase.RBACService), new(*service.RBACService)),
 	wire.Bind(new(usecase.UserService), new(*service.UserService)),
 	wire.Bind(new(usecase.PetService), new(*service.PetService)),
@@ -69,7 +72,6 @@ var ServiceProviderSet = wire.NewSet(
 	wire.Bind(new(usecase.PetSitterService), new(*service.PetSitterService)),
 	wire.Bind(new(usecase.CommentService), new(*service.CommentService)),
 	wire.Bind(new(usecase.WalletService), new(*service.WalletService)),
-	wire.Bind(new(domainmail.Mail), new(*mail.EmailService)),
 )
 
 var GeneralControllersProviderSet = wire.NewSet(
@@ -127,6 +129,12 @@ var SeederProviderSet = wire.NewSet(
 	wire.Struct(new(Seeder), "*"),
 )
 
+var ConsumersProviderSet = wire.NewSet(
+	consumers.NewEmailConsumer,
+	rabbitmq.NewRabbitMQ,
+	wire.Struct(new(Consumers), "*"),
+)
+
 var ProviderSet = wire.NewSet(
 	MiddlewaresProviderSet,
 	ControllersProviderSet,
@@ -138,6 +146,7 @@ var ProviderSet = wire.NewSet(
 	RepositoryProviderSet,
 	SeederProviderSet,
 	StorageProviderSet,
+	ConsumersProviderSet,
 )
 
 type GeneralControllers struct {
@@ -194,19 +203,25 @@ type Storage struct {
 	S3Storage *storage.S3Storage
 }
 
+type Consumers struct {
+	EmailConsumer *consumers.EmailConsumer
+}
+
 type Application struct {
 	Controllers *Controllers
 	Middlewares *Middlewares
 	Seeder      *Seeder
 	Storage     *Storage
+	Consumers   *Consumers
 }
 
-func NewApplication(controllers *Controllers, middlewares *Middlewares, seeder *Seeder, storage *Storage) *Application {
+func NewApplication(controllers *Controllers, middlewares *Middlewares, seeder *Seeder, storage *Storage, consumers *Consumers) *Application {
 	return &Application{
 		Controllers: controllers,
 		Middlewares: middlewares,
 		Seeder:      seeder,
 		Storage:     storage,
+		Consumers:   consumers,
 	}
 }
 

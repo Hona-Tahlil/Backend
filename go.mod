@@ -18,6 +18,7 @@ require (
 	github.com/google/wire v0.7.0
 	github.com/joho/godotenv v1.5.1
 	github.com/prometheus/client_golang v1.19.1
+	github.com/rabbitmq/amqp091-go v1.10.0
 	github.com/samber/lo v1.52.0
 	github.com/wneessen/go-mail v0.7.2
 	golang.org/x/crypto v0.43.0

@@ -5,6 +5,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/joho/godotenv"
 )
@@ -18,6 +19,17 @@ type Env struct {
 	URLs              URLs
 	EmailVerification EmailVerification
 	Logger            LoggerConfig
+	RabbitMQ          RabbitMQ
+}
+
+type RabbitMQ struct {
+	User          string
+	Password      string
+	Host          string
+	Port          string
+	VHost         string
+	MaxRetryCount int
+	RetryDelay    time.Duration
 }
 
 type Storage struct {
@@ -30,8 +42,8 @@ type Storage struct {
 }
 
 type Buckets struct {
-	PetProfilePic string
-	PetSitterCert string
+	PetProfilePic  string
+	PetSitterCert  string
 	PetSitterFile  string
 	UserProfilePic string
 }
@@ -103,8 +115,8 @@ func NewEnv() *Env {
 			AccessKey: os.Getenv("STORAGE_ACCESS_KEY"),
 			SecretKey: os.Getenv("STORAGE_SECRET_KEY"),
 			Buckets: Buckets{
-				PetProfilePic: os.Getenv("STORAGE_PET_PROFILE_PIC_BUCKET"),
-				PetSitterCert: os.Getenv("STORAGE_PET_SITTER_CERT_BUCKET"),
+				PetProfilePic:  os.Getenv("STORAGE_PET_PROFILE_PIC_BUCKET"),
+				PetSitterCert:  os.Getenv("STORAGE_PET_SITTER_CERT_BUCKET"),
 				PetSitterFile:  os.Getenv("STORAGE_PET_SITTER_FILE_BUCKET"),
 				UserProfilePic: os.Getenv("STORAGE_USER_PROFILE_PIC_BUCKET"),
 			},
@@ -131,6 +143,15 @@ func NewEnv() *Env {
 			ExpireMinutes: expireMinutes,
 		},
 		Logger: loadLoggerConfig(),
+		RabbitMQ: RabbitMQ{
+			User:          os.Getenv("AMQP_USER"),
+			Password:      os.Getenv("AMQP_PASSWORD"),
+			Host:          os.Getenv("AMQP_HOST"),
+			Port:          os.Getenv("AMQP_PORT"),
+			VHost:         os.Getenv("AMQP_VHOST"),
+			MaxRetryCount: getEnvInt("AMQP_MAX_RETRY", 3),
+			RetryDelay:    getEnvDuration("AMQP_RETRY_DELAY", 5*time.Second),
+		},
 	}
 }
 
@@ -216,4 +237,13 @@ func parseLogLevel(value string) slog.Level {
 		}
 		return slog.LevelInfo
 	}
+}
+
+func getEnvDuration(key string, defaultVal time.Duration) time.Duration {
+	if val := os.Getenv(key); val != "" {
+		if parsed, err := time.ParseDuration(val); err == nil {
+			return parsed
+		}
+	}
+	return defaultVal
 }

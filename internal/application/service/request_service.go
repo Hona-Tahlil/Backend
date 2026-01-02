@@ -438,6 +438,13 @@ func (rs *RequestService) markRequestPaid(requestRepo domainpostgres.RequestRepo
 	return requestRepo.EditRequest(foundRequest)
 }
 
+func buildRequestStatusResponse(status enums.RequestStatus) request.RequestStatusResponse {
+	return request.RequestStatusResponse{
+		Num:  status,
+		Name: status.String(),
+	}
+}
+
 func (rs *RequestService) SearchRequests(info request.SearchRequestsRequest) ([]request.RequestListItemResponse, int64, error) {
 	options := postgres.NewQueryOptions().WithPagination(info.Limit, info.Offset)
 	if len(info.Filters) > 0 {
@@ -477,7 +484,7 @@ func (rs *RequestService) SearchRequests(info request.SearchRequestsRequest) ([]
 			PetSitterLastName:  petSitterUser.LastName,
 			Service:            rs.petSitterService.GetServiceResponse(&req.Service),
 			TotalPrice:         req.TotalPrice,
-			Status:             req.Status.String(),
+			Status:             buildRequestStatusResponse(req.Status),
 			UpdatedAt:          req.UpdatedAt,
 		}
 	}
@@ -525,7 +532,7 @@ func (rs *RequestService) SearchPetSitterRequests(info request.SearchPetSitterRe
 			PetSitterLastName:  petSitterUser.LastName,
 			Service:            rs.petSitterService.GetServiceResponse(&req.Service),
 			TotalPrice:         req.TotalPrice,
-			Status:             req.Status.String(),
+			Status:             buildRequestStatusResponse(req.Status),
 			UpdatedAt:          req.UpdatedAt,
 		}
 	}
@@ -539,7 +546,7 @@ func (rs *RequestService) GetRequestFullData(info request.GetRequestFullDataRequ
 		return nil, err
 	}
 
-	err = rs.PreloadFields(foundRequest, []string{"CalendarSlots", "Service"})
+	err = rs.PreloadFields(foundRequest, []string{"CalendarSlots", "Service", "Comment"})
 	if err != nil {
 		return nil, err
 	}
@@ -574,6 +581,11 @@ func (rs *RequestService) GetRequestFullData(info request.GetRequestFullDataRequ
 		return nil, err
 	}
 
+	commentResponse, err := buildCommentResponse(rs.userService, requestUser, foundRequest.Comment)
+	if err != nil {
+		return nil, err
+	}
+
 	err = rs.petSitterService.PreloadFields(petSitter, []string{"Schedule"})
 	if err != nil {
 		return nil, err
@@ -601,7 +613,8 @@ func (rs *RequestService) GetRequestFullData(info request.GetRequestFullDataRequ
 		Address:            rs.addressService.GetUserAddressInfo(address),
 		Notes:              foundRequest.Notes,
 		TotalPrice:         foundRequest.TotalPrice,
-		Status:             foundRequest.Status.String(),
+		Comment:            commentResponse,
+		Status:             buildRequestStatusResponse(foundRequest.Status),
 		TransferID:         foundRequest.TransferID,
 		CalendarSlots:      rs.petSitterService.GetCalendarSlotsResponse(foundRequest.CalendarSlots),
 		UpdatedAt:          foundRequest.UpdatedAt,
