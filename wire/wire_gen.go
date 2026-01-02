@@ -73,7 +73,7 @@ func InitializeApplication(container *bootstrap.Config) (*Application, error) {
 		PetSitterService: petSitterService,
 		WalletService:    walletService,
 		UnitOfWork:       unitOfWork,
-		RabbitMQ:         rabbitMQ,
+		EmailService:     emailService,
 	}
 	requestService := service.NewRequestService(requestServiceDeps)
 	userRequestController := user.NewUserRequestController(requestService)
