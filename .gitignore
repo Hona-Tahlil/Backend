@@ -22,3 +22,5 @@ cmd/tmp/**/*
 3.env
 
 AGENTS.md
+
+logs/
