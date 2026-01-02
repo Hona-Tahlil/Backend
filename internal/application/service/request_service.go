@@ -10,8 +10,8 @@ import (
 	"hona/backend/internal/domain/exceptions"
 	"hona/backend/internal/domain/ports"
 	domainpostgres "hona/backend/internal/domain/ports/postgres"
+	"hona/backend/internal/infrastructure/communication/mail"
 	"hona/backend/internal/infrastructure/persistence/repository/postgres"
-	"hona/backend/internal/infrastructure/rabbitmq"
 	"log"
 	"sort"
 	"time"
@@ -24,7 +24,7 @@ type RequestService struct {
 	petSitterService usecase.PetSitterService
 	walletService    usecase.WalletService
 	unitOfWork       ports.UnitOfWork
-	rabbitMQ         *rabbitmq.RabbitMQ
+	emailService     *mail.EmailService
 }
 
 type RequestServiceDeps struct {
@@ -34,7 +34,7 @@ type RequestServiceDeps struct {
 	PetSitterService usecase.PetSitterService
 	WalletService    usecase.WalletService
 	UnitOfWork       ports.UnitOfWork
-	RabbitMQ         *rabbitmq.RabbitMQ
+	EmailService     *mail.EmailService
 }
 
 func NewRequestService(deps RequestServiceDeps) *RequestService {
@@ -45,7 +45,7 @@ func NewRequestService(deps RequestServiceDeps) *RequestService {
 		petService:       deps.PetService,
 		petSitterService: deps.PetSitterService,
 		walletService:    deps.WalletService,
-		rabbitMQ:         deps.RabbitMQ,
+		emailService:     deps.EmailService,
 	}
 }
 
@@ -438,6 +438,13 @@ func (rs *RequestService) markRequestPaid(requestRepo domainpostgres.RequestRepo
 	return requestRepo.EditRequest(foundRequest)
 }
 
+func buildRequestStatusResponse(status enums.RequestStatus) request.RequestStatusResponse {
+	return request.RequestStatusResponse{
+		Num:  status,
+		Name: status.String(),
+	}
+}
+
 func (rs *RequestService) SearchRequests(info request.SearchRequestsRequest) ([]request.RequestListItemResponse, int64, error) {
 	options := postgres.NewQueryOptions().WithPagination(info.Limit, info.Offset)
 	if len(info.Filters) > 0 {
@@ -477,7 +484,7 @@ func (rs *RequestService) SearchRequests(info request.SearchRequestsRequest) ([]
 			PetSitterLastName:  petSitterUser.LastName,
 			Service:            rs.petSitterService.GetServiceResponse(&req.Service),
 			TotalPrice:         req.TotalPrice,
-			Status:             req.Status.String(),
+			Status:             buildRequestStatusResponse(req.Status),
 			UpdatedAt:          req.UpdatedAt,
 		}
 	}
@@ -525,7 +532,7 @@ func (rs *RequestService) SearchPetSitterRequests(info request.SearchPetSitterRe
 			PetSitterLastName:  petSitterUser.LastName,
 			Service:            rs.petSitterService.GetServiceResponse(&req.Service),
 			TotalPrice:         req.TotalPrice,
-			Status:             req.Status.String(),
+			Status:             buildRequestStatusResponse(req.Status),
 			UpdatedAt:          req.UpdatedAt,
 		}
 	}
@@ -539,7 +546,7 @@ func (rs *RequestService) GetRequestFullData(info request.GetRequestFullDataRequ
 		return nil, err
 	}
 
-	err = rs.PreloadFields(foundRequest, []string{"CalendarSlots", "Service"})
+	err = rs.PreloadFields(foundRequest, []string{"CalendarSlots", "Service", "Comment"})
 	if err != nil {
 		return nil, err
 	}
@@ -574,6 +581,11 @@ func (rs *RequestService) GetRequestFullData(info request.GetRequestFullDataRequ
 		return nil, err
 	}
 
+	commentResponse, err := buildCommentResponse(rs.userService, requestUser, foundRequest.Comment)
+	if err != nil {
+		return nil, err
+	}
+
 	err = rs.petSitterService.PreloadFields(petSitter, []string{"Schedule"})
 	if err != nil {
 		return nil, err
@@ -601,7 +613,8 @@ func (rs *RequestService) GetRequestFullData(info request.GetRequestFullDataRequ
 		Address:            rs.addressService.GetUserAddressInfo(address),
 		Notes:              foundRequest.Notes,
 		TotalPrice:         foundRequest.TotalPrice,
-		Status:             foundRequest.Status.String(),
+		Comment:            commentResponse,
+		Status:             buildRequestStatusResponse(foundRequest.Status),
 		TransferID:         foundRequest.TransferID,
 		CalendarSlots:      rs.petSitterService.GetCalendarSlotsResponse(foundRequest.CalendarSlots),
 		UpdatedAt:          foundRequest.UpdatedAt,
@@ -775,18 +788,7 @@ func (rs *RequestService) sendNewRequestEmail(id uint) {
 	}{
 		Year: time.Now().Year(),
 	}
-	msg := struct {
-		ToEmail      string      `json:"toEmail"`
-		Subject      string      `json:"subject"`
-		TemplateFile string      `json:"templateFile"`
-		Data         interface{} `json:"data"`
-	}{
-		ToEmail:      petSitterUser.Email,
-		Subject:      "New Request Received",
-		TemplateFile: bootstrap.Run().Constants.TemplatesPath.NewRequest,
-		Data:         data,
-	}
-	err = rs.rabbitMQ.PublishMessage(bootstrap.Run().Constants.RabbitMQConstants.Events.SendEmail, msg)
+	err = rs.emailService.SendEmail(petSitterUser.Email, "New Request Received", bootstrap.Run().Constants.TemplatesPath.NewRequest, data)
 	if err != nil {
 		log.Println(err)
 	}
@@ -804,18 +806,7 @@ func (rs *RequestService) sendEditRequestEmail(user *entities.User, id uint) {
 		RequesterName: user.FirstName,
 		Year:          time.Now().Year(),
 	}
-	msg := struct {
-		ToEmail      string      `json:"toEmail"`
-		Subject      string      `json:"subject"`
-		TemplateFile string      `json:"templateFile"`
-		Data         interface{} `json:"data"`
-	}{
-		ToEmail:      petSitterUser.Email,
-		Subject:      "Request Edited",
-		TemplateFile: bootstrap.Run().Constants.TemplatesPath.RequestEdited,
-		Data:         data,
-	}
-	err = rs.rabbitMQ.PublishMessage(bootstrap.Run().Constants.RabbitMQConstants.Events.SendEmail, msg)
+	err = rs.emailService.SendEmail(petSitterUser.Email, "Request Edited", bootstrap.Run().Constants.TemplatesPath.RequestEdited, data)
 	if err != nil {
 		log.Println(err)
 	}
@@ -839,18 +830,7 @@ func (rs *RequestService) SendPetOwnerRequestCancelEmail(userID, petSitterUserID
 		SitterName:    petSitterUser.FirstName + " " + petSitterUser.LastName,
 		Year:          time.Now().Year(),
 	}
-	msg := struct {
-		ToEmail      string      `json:"toEmail"`
-		Subject      string      `json:"subject"`
-		TemplateFile string      `json:"templateFile"`
-		Data         interface{} `json:"data"`
-	}{
-		ToEmail:      user.Email,
-		Subject:      "Request Canceled",
-		TemplateFile: bootstrap.Run().Constants.TemplatesPath.PetOwnerRequestCancel,
-		Data:         data,
-	}
-	err = rs.rabbitMQ.PublishMessage(bootstrap.Run().Constants.RabbitMQConstants.Events.SendEmail, msg)
+	err = rs.emailService.SendEmail(user.Email, "Request Canceled", bootstrap.Run().Constants.TemplatesPath.PetOwnerRequestCancel, data)
 	if err != nil {
 		log.Println(err)
 	}
@@ -872,18 +852,7 @@ func (rs *RequestService) SendPetSitterRequestCancelEmail(userID, petSitterUserI
 		RequesterName: user.FirstName,
 		Year:          time.Now().Year(),
 	}
-	msg := struct {
-		ToEmail      string      `json:"toEmail"`
-		Subject      string      `json:"subject"`
-		TemplateFile string      `json:"templateFile"`
-		Data         interface{} `json:"data"`
-	}{
-		ToEmail:      petSitterUser.Email,
-		Subject:      "Request Canceled",
-		TemplateFile: bootstrap.Run().Constants.TemplatesPath.PetSitterRequestCancel,
-		Data:         data,
-	}
-	err = rs.rabbitMQ.PublishMessage(bootstrap.Run().Constants.RabbitMQConstants.Events.SendEmail, msg)
+	err = rs.emailService.SendEmail(petSitterUser.Email, "Request Canceled", bootstrap.Run().Constants.TemplatesPath.PetSitterRequestCancel, data)
 	if err != nil {
 		log.Println(err)
 	}
@@ -901,19 +870,7 @@ func (rs *RequestService) sendAcceptRequestEmail(id uint) {
 		RequesterName: user.FirstName,
 		Year:          time.Now().Year(),
 	}
-
-	msg := struct {
-		ToEmail      string      `json:"toEmail"`
-		Subject      string      `json:"subject"`
-		TemplateFile string      `json:"templateFile"`
-		Data         interface{} `json:"data"`
-	}{
-		ToEmail:      user.Email,
-		Subject:      "Request Accepted",
-		TemplateFile: bootstrap.Run().Constants.TemplatesPath.RequestAccepted,
-		Data:         data,
-	}
-	err = rs.rabbitMQ.PublishMessage(bootstrap.Run().Constants.RabbitMQConstants.Events.SendEmail, msg)
+	err = rs.emailService.SendEmail(user.Email, "Request Accepted", bootstrap.Run().Constants.TemplatesPath.RequestAccepted, data)
 	if err != nil {
 		log.Println(err)
 	}
@@ -931,18 +888,7 @@ func (rs *RequestService) sendDeclineRequestEmail(id uint) {
 		RequesterName: user.FirstName,
 		Year:          time.Now().Year(),
 	}
-	msg := struct {
-		ToEmail      string      `json:"toEmail"`
-		Subject      string      `json:"subject"`
-		TemplateFile string      `json:"templateFile"`
-		Data         interface{} `json:"data"`
-	}{
-		ToEmail:      user.Email,
-		Subject:      "Request Declined",
-		TemplateFile: bootstrap.Run().Constants.TemplatesPath.RequestDeclined,
-		Data:         data,
-	}
-	err = rs.rabbitMQ.PublishMessage(bootstrap.Run().Constants.RabbitMQConstants.Events.SendEmail, msg)
+	err = rs.emailService.SendEmail(user.Email, "Request Declined", bootstrap.Run().Constants.TemplatesPath.RequestDeclined, data)
 	if err != nil {
 		log.Println(err)
 	}

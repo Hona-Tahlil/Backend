@@ -6,6 +6,7 @@ import (
 	"hona/backend/internal/application/dto/comment"
 	"hona/backend/internal/application/dto/pet"
 	"hona/backend/internal/application/dto/servicedto"
+	"hona/backend/internal/domain/enums"
 	"time"
 )
 
@@ -16,6 +17,11 @@ type CreateRequestInfoResponse struct {
 	FreeCalendarSlots  []calendarslot.CalendarSlotInfoResponse `json:"freeCalendarSlots"`
 	PetSitterFirstName string                                  `json:"petSitterFirstName"`
 	PetSitterLastName  string                                  `json:"petSitterLastName"`
+}
+
+type RequestStatusResponse struct {
+	Num  enums.RequestStatus `json:"num"`
+	Name string              `json:"name"`
 }
 
 type RequestFullDataResponse struct {
@@ -30,9 +36,9 @@ type RequestFullDataResponse struct {
 	CalendarSlots      []calendarslot.CalendarSlotInfoResponse `json:"calendarSlots"`
 	Notes              *string                                 `json:"notes"`
 	TotalPrice         uint                                    `json:"totalPrice"`
-	Comment            comment.CommentResponse                 `json:"comment"`
+	Comment            *comment.CommentResponse                `json:"comment"`
 	Address            address.AddressInfoResponse             `json:"address"`
-	Status             string                                  `json:"status"`
+	Status             RequestStatusResponse                   `json:"status"`
 	TransferID         *uint                                   `json:"transferID"`
 	UpdatedAt          time.Time                               `json:"updatedAt"`
 }
@@ -44,6 +50,6 @@ type RequestListItemResponse struct {
 	PetSitterLastName  string                         `json:"petSitterLastName"`
 	Service            servicedto.ServiceInfoResponse `json:"service"`
 	TotalPrice         uint                           `json:"totalPrice"`
-	Status             string                         `json:"status"`
+	Status             RequestStatusResponse          `json:"status"`
 	UpdatedAt          time.Time                      `json:"updatedAt"`
 }
