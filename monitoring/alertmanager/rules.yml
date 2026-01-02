@@ -5,7 +5,7 @@ groups:
         expr: rate(http_requests_total{status=~"5.."}[5m]) / rate(http_requests_total[5m]) > 0.05
         for: 5m
         labels:
-          severity: critical
+          severity: warning
         annotations:
           summary: "High error rate detected"
           description: "More than 5% of HTTP requests are failing with 5xx status codes."

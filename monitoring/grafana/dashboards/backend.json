@@ -89,7 +89,7 @@
         }
       ],
       "title": "Requests by Status Code",
-      "type": "bargauge"
+      "type": "piechart"
     },
     {
       "datasource": {

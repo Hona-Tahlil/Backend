@@ -4,9 +4,10 @@ import (
 	"context"
 	"errors"
 	"hona/backend/bootstrap"
+	"hona/backend/internal/infrastructure/logger"
 	"hona/backend/internal/presentation/routes"
 	"hona/backend/wire"
-	"log"
+	"log/slog"
 	"net/http"
 	"os"
 	"os/signal"
@@ -17,15 +18,19 @@ import (
 )
 
 func main() {
+	config := bootstrap.Run()
+	logger.Init()
+	defer logger.Close()
+
 	gin.DisableConsoleColor()
 
 	gin.SetMode(gin.ReleaseMode)
 
-	ginEngine := gin.Default()
+	ginEngine := gin.New()
 	ginEngine.RedirectTrailingSlash = true
 	ginEngine.RemoveExtraSlash = true
 
-	app, err := wire.InitializeApplication(bootstrap.Run())
+	app, err := wire.InitializeApplication(config)
 	if err != nil {
 		panic(err)
 	}
@@ -38,21 +43,22 @@ func main() {
 	}
 
 	go func() {
-		log.Println("Server Running ...")
+		slog.Info("server running", "addr", srv.Addr)
 		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-			log.Fatalf("listen: %s\n", err)
+			slog.Error("listen failed", "error", err)
+			os.Exit(1)
 		}
 	}()
 
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
-	log.Println("Shutdown Server ...")
+	slog.Info("shutdown server")
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	if err := srv.Shutdown(ctx); err != nil {
-		log.Println("Server Shutdown:", err)
+		slog.Error("server shutdown failed", "error", err)
 	}
-	log.Println("Server exiting")
+	slog.Info("server exiting")
 }

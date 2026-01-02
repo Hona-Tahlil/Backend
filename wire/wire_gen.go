@@ -112,6 +112,7 @@ func InitializeApplication(container *bootstrap.Config) (*Application, error) {
 	authMiddleware := middleware.NewAuthMiddleware(jwtService)
 	rbacMiddleware := middleware.NewRBACMiddleware(unitOfWork)
 	corsMiddleware := middleware.NewCORSMiddleware()
+	loggingMiddleware := middleware.NewLoggingMiddleware()
 	prometheusMetrics := metrics.NewPrometheusMetrics()
 	prometheusMiddleware := middleware.NewPrometheusMiddleware(prometheusMetrics)
 	middlewares := &Middlewares{
@@ -120,6 +121,7 @@ func InitializeApplication(container *bootstrap.Config) (*Application, error) {
 		AuthMiddleware:         authMiddleware,
 		RBACMiddleware:         rbacMiddleware,
 		CORSMiddleware:         corsMiddleware,
+		LoggingMiddleware:      loggingMiddleware,
 		Prometheus:             prometheusMiddleware,
 	}
 	databaseSeeder := seeder.NewDatabaseSeeder(db)
@@ -151,7 +153,7 @@ var PetSitterControllersProviderSet = wire.NewSet(petsitter.NewPetSitterRegister
 
 var ControllersProviderSet = wire.NewSet(wire.Struct(new(Controllers), "*"))
 
-var MiddlewaresProviderSet = wire.NewSet(metrics.NewPrometheusMetrics, wire.Bind(new(domainmetrics.PrometheusMetrics), new(*metrics.PrometheusMetrics)), middleware.NewLocalizationMiddleware, middleware.NewRecoveryMiddleware, middleware.NewRBACMiddleware, middleware.NewAuthMiddleware, middleware.NewCORSMiddleware, middleware.NewPrometheusMiddleware, wire.Struct(new(Middlewares), "*"))
+var MiddlewaresProviderSet = wire.NewSet(metrics.NewPrometheusMetrics, wire.Bind(new(domainmetrics.PrometheusMetrics), new(*metrics.PrometheusMetrics)), middleware.NewLocalizationMiddleware, middleware.NewRecoveryMiddleware, middleware.NewRBACMiddleware, middleware.NewAuthMiddleware, middleware.NewCORSMiddleware, middleware.NewLoggingMiddleware, middleware.NewPrometheusMiddleware, wire.Struct(new(Middlewares), "*"))
 
 var SeederProviderSet = wire.NewSet(seeder.NewDatabaseSeeder, wire.Struct(new(Seeder), "*"))
 
@@ -210,6 +212,7 @@ type Middlewares struct {
 	AuthMiddleware         *middleware.AuthMiddleware
 	RBACMiddleware         *middleware.RBACMiddleware
 	CORSMiddleware         *middleware.CORSMiddleware
+	LoggingMiddleware      *middleware.LoggingMiddleware
 	Prometheus             *middleware.PrometheusMiddleware
 }
 
