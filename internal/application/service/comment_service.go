@@ -111,20 +111,16 @@ func (cs *CommentService) GetAllPetSitterComments(info comment.GetAllPetSitterCo
 	}
 	r := make([]comment.CommentResponse, len(comments))
 	var averageRating float32 = 0
-	for i, c := range comments {
-		user, err := cs.userService.FindUserByID(c.UserID)
+	for i := range comments {
+		averageRating += float32(comments[i].Rating)
+		response, err := buildCommentResponse(cs.userService, nil, &comments[i])
 		if err != nil {
 			return nil, err
 		}
-		averageRating += float32(c.Rating)
-		r[i] = comment.CommentResponse{
-			UserID:        user.ID,
-			UserFirstName: user.FirstName,
-			UserLastName:  user.LastName,
-			Text:          c.Text,
-			Rating:        c.Rating,
-			UpdatedAt:     c.UpdatedAt,
+		if response == nil {
+			continue
 		}
+		r[i] = *response
 	}
 	if len(r) != 0 {
 		averageRating /= float32(len(r))
@@ -146,6 +142,30 @@ func (cs *CommentService) GetAllPetSitterCommentsForPetSitter(userID uint) (*com
 		PetSitterID: petSitter.ID,
 	}
 	return cs.GetAllPetSitterComments(info)
+}
+
+func buildCommentResponse(userService usecase.UserService, fallbackUser *entities.User, commentEntity *entities.Comment) (*comment.CommentResponse, error) {
+	if commentEntity == nil {
+		return nil, nil
+	}
+
+	user := fallbackUser
+	if user == nil || user.ID != commentEntity.UserID {
+		foundUser, err := userService.FindUserByID(commentEntity.UserID)
+		if err != nil {
+			return nil, err
+		}
+		user = foundUser
+	}
+
+	return &comment.CommentResponse{
+		UserID:        user.ID,
+		UserFirstName: user.FirstName,
+		UserLastName:  user.LastName,
+		Text:          commentEntity.Text,
+		Rating:        commentEntity.Rating,
+		UpdatedAt:     commentEntity.UpdatedAt,
+	}, nil
 }
 
 func (cs *CommentService) updatePetSitterRatingOnCreate(petSitterID uint, rating uint) error {
