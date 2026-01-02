@@ -333,7 +333,7 @@ func (rs *RequestService) CancelRequest(info request.CancelRequestRequest) error
 		return err
 	}
 
-	if foundRequest.UserID != info.UserID || petSitter.UserID == info.UserID {
+	if foundRequest.UserID != info.UserID && petSitter.UserID != info.UserID {
 		err = exceptions.NewAccessDeniedError(bootstrap.Run().Constants.ErrorTags.ForbiddenStatus)
 		return err
 	}
