@@ -13,18 +13,8 @@ type Constants struct {
 	EntityConstants   EntityConstants
 	TemplatesPath     TemplatesPath
 	Pagination        Pagination
-	RabbitMQConstants RabbitMQConstants
-	Context           Context
-	JWTKeysPath       JWTKeysPath
-	ErrorFields       ErrorFields
-	ErrorTags         ErrorTags
-	JWTConstants      JWTConstants
-	SuccessMessages   SuccessMessages
-	RedisKey          RedisKey
-	EntityConstants   EntityConstants
-	TemplatesPath     TemplatesPath
-	Pagination        Pagination
 	Metrics           Metrics
+	RabbitMQConstants RabbitMQConstants
 }
 
 type Metrics struct {
@@ -38,9 +28,8 @@ type Options struct {
 }
 
 type Pagination struct {
-	DefaultPage       int
-	DefaultPageSize   int
-	RabbitMQConstants RabbitMQConstants
+	DefaultPage     int
+	DefaultPageSize int
 }
 
 type RabbitMQConstants struct {
@@ -314,6 +303,16 @@ func NewConstants() *Constants {
 			DefaultPage:     1,
 			DefaultPageSize: 10,
 		},
+		Metrics: Metrics{
+			HTTPRequestsTotal: Options{
+				Name: "http_requests_total",
+				Help: "Total number of HTTP requests",
+			},
+			HTTPRequestDuration: Options{
+				Name: "http_request_duration_seconds",
+				Help: "HTTP request duration in seconds",
+			},
+		},
 		RabbitMQConstants: RabbitMQConstants{
 			Exchanges: Exchanges{
 				General:    "general",
@@ -340,16 +339,6 @@ func NewConstants() *Constants {
 				SendEmail:        "emails",
 				SendNotification: "notifications",
 				FileUpload:       "storage_upload",
-			},
-		},
-		Metrics: Metrics{
-			HTTPRequestsTotal: Options{
-				Name: "http_requests_total",
-				Help: "Total number of HTTP requests",
-			},
-			HTTPRequestDuration: Options{
-				Name: "http_request_duration_seconds",
-				Help: "HTTP request duration in seconds",
 			},
 		},
 	}
