@@ -49,6 +49,8 @@ func handleError(err error) ([]controllers.Message, int) {
 		return handleConflictErrors(conflictErrs)
 	} else if forbiddenErr, ok := err.(*exceptions.ForbiddenError); ok {
 		return handleForbiddenError(forbiddenErr)
+	} else if rateLimitErr, ok := err.(*exceptions.RateLimitError); ok {
+		return handleRateLimitError(rateLimitErr)
 	}
 	return unhandledErrors(err)
 }
@@ -103,6 +105,13 @@ func handleConflictErrors(conflictErrs *exceptions.ConflictErrors) ([]controller
 
 	}
 	return msgs, 409
+}
+
+func handleRateLimitError(rateLimitErr *exceptions.RateLimitError) ([]controllers.Message, int) {
+	msg := controllers.Message{
+		Text: rateLimitErr.Type,
+	}
+	return []controllers.Message{msg}, 429
 }
 
 func unhandledErrors(err error) ([]controllers.Message, int) {

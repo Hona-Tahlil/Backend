@@ -112,6 +112,7 @@ var ControllersProviderSet = wire.NewSet(
 var MiddlewaresProviderSet = wire.NewSet(
 	middleware.NewLocalizationMiddleware,
 	middleware.NewRecoveryMiddleware,
+	middleware.NewRateLimit,
 	middleware.NewRBACMiddleware,
 	middleware.NewAuthMiddleware,
 	middleware.NewCORSMiddleware,
@@ -182,6 +183,7 @@ type Controllers struct {
 type Middlewares struct {
 	LocalizationMiddleware *middleware.LocalizationMiddleware
 	RecoveryMiddleware     *middleware.RecoveryMiddleware
+	RateLimitMiddleware    *middleware.RateLimitMiddleware
 	AuthMiddleware         *middleware.AuthMiddleware
 	RBACMiddleware         *middleware.RBACMiddleware
 	CORSMiddleware         *middleware.CORSMiddleware

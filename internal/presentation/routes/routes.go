@@ -11,6 +11,7 @@ func SetUpRoutes(ginEngine *gin.Engine, app *wire.Application) {
 	ginEngine.Use(app.Middlewares.CORSMiddleware.CORS())
 	ginEngine.Use(app.Middlewares.LocalizationMiddleware.AddTranslator)
 	ginEngine.Use(app.Middlewares.RecoveryMiddleware.Recover)
+	ginEngine.Use(app.Middlewares.RateLimitMiddleware.RateLimit)
 
 	v1 := ginEngine.Group("/v1")
 	httpv1.SetUpGeneralRoutes(v1, app)
