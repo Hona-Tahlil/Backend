@@ -198,7 +198,7 @@ services:
     ports:
       - "9093:9093"
     environment:
-      - EMAIL_PAT=${SMTP_PASSWORD}
+      - SMTP_PASSWORD=${SMTP_PASSWORD}
     volumes:
       - ./monitoring/alertmanager/config.yml:/etc/alertmanager/config.yml
       - alertmanager_data:/alertmanager
