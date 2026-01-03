@@ -44,12 +44,14 @@ type RequestFullDataResponse struct {
 }
 
 type RequestListItemResponse struct {
-	RequestID          uint                           `json:"requestID"`
-	PetSitterUserID    uint                           `json:"petSitterUserID"`
-	PetSitterFirstName string                         `json:"petSitterFirstName"`
-	PetSitterLastName  string                         `json:"petSitterLastName"`
-	Service            servicedto.ServiceInfoResponse `json:"service"`
-	TotalPrice         uint                           `json:"totalPrice"`
-	Status             RequestStatusResponse          `json:"status"`
-	UpdatedAt          time.Time                      `json:"updatedAt"`
+	RequestID          uint                                    `json:"requestID"`
+	PetSitterUserID    uint                                    `json:"petSitterUserID"`
+	PetSitterFirstName string                                  `json:"petSitterFirstName"`
+	PetSitterLastName  string                                  `json:"petSitterLastName"`
+	Service            servicedto.ServiceInfoResponse          `json:"service"`
+	CalendarSlots      []calendarslot.CalendarSlotInfoResponse `json:"calendarSlots"`
+	Address            address.AddressInfoResponse             `json:"address"`
+	TotalPrice         uint                                    `json:"totalPrice"`
+	Status             RequestStatusResponse                   `json:"status"`
+	UpdatedAt          time.Time                               `json:"updatedAt"`
 }
