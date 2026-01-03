@@ -3,7 +3,7 @@ package seeder
 import (
 	"hona/backend/internal/domain/entities"
 	"hona/backend/internal/domain/enums"
-	"log"
+	"log/slog"
 	"math/rand"
 
 	"gorm.io/gorm"
@@ -18,7 +18,7 @@ func ServiceSeeder(db *gorm.DB) error {
 		"Pet training session",
 	}
 	if db.First(&entities.Service{}).Error == nil {
-		log.Println("✓ Services already seeded, skipping...")
+		slog.Info("✓ Services already seeded, skipping...")
 		return nil
 	}
 
@@ -36,7 +36,7 @@ func ServiceSeeder(db *gorm.DB) error {
 		}
 	}
 
-	log.Printf("✓ Successfully seeded %d services", 50)
+	slog.Info("✓ Successfully seeded services", "count", 50)
 
 	return nil
 }

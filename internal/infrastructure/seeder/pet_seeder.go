@@ -5,7 +5,7 @@ import (
 	"hona/backend/bootstrap"
 	"hona/backend/internal/domain/entities"
 	"hona/backend/internal/domain/enums"
-	"log"
+	"log/slog"
 	"math/rand"
 	"time"
 
@@ -23,7 +23,7 @@ func NewPetSeeder(db *gorm.DB) *PetSeeder {
 
 func (s *PetSeeder) Seed(count int) error {
 	if s.db.First(&entities.Pet{}).Error == nil {
-		log.Println("✓ Pets already seeded, skipping...")
+		slog.Info("✓ Pets already seeded, skipping...")
 		return nil
 	}
 	defaultProfileKey := bootstrap.Run().Env.Storage.DefaultPetProfileKey
@@ -119,7 +119,7 @@ func (s *PetSeeder) Seed(count int) error {
 		return fmt.Errorf("failed to batch insert pets: %w", err)
 	}
 
-	log.Printf("✓ Successfully seeded %d pets", count)
+	slog.Info("✓ Successfully seeded pets", "count", count)
 	return nil
 }
 

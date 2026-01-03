@@ -6,7 +6,6 @@ import (
 	"hona/backend/internal/application/usecase"
 	"hona/backend/internal/domain/enums"
 	"hona/backend/internal/presentation/controllers"
-	"log"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -95,8 +94,6 @@ func (uc *UserPetController) UpdatePet(ctx *gin.Context) {
 		AboutPet:   params.AboutPet,
 		ProfilePic: file,
 	}
-
-	log.Println(params.BirthDate)
 
 	err = uc.petService.UpdatePet(UpdatePetInfo)
 	if err != nil {

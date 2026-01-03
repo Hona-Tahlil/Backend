@@ -1,7 +1,6 @@
 package validation
 
 import (
-	"log"
 	"reflect"
 
 	"hona/backend/internal/domain/exceptions"
@@ -11,7 +10,6 @@ import (
 
 func ValidateFields[T any](params T) {
 	val := validator.New()
-	log.Println(val)
 	if err := val.Struct(params); err != nil {
 		validationErrors, _ := err.(validator.ValidationErrors)
 		customValidationError := exceptions.NewValidationErrors()

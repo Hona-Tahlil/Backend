@@ -1,7 +1,7 @@
 package translation
 
 import (
-	"log"
+	"fmt"
 
 	"github.com/go-playground/locales/en"
 	"github.com/go-playground/locales/fa_IR"
@@ -32,7 +32,7 @@ func (t *Translator) GetTranslator(locale string) ut.Translator {
 func addTranslations(key string, translations map[string]interface{}, universalTranslator *ut.UniversalTranslator) {
 	translator, found := universalTranslator.GetTranslator(key)
 	if !found {
-		log.Fatal("translator not found")
+		panic(fmt.Errorf("translator not found"))
 	}
 	flattenedTranslations := loadTranslation(key, translations)
 

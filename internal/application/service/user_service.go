@@ -20,7 +20,7 @@ import (
 	domainstorage "hona/backend/internal/domain/storage"
 	"hona/backend/internal/infrastructure/persistence/repository/postgres"
 	"hona/backend/internal/infrastructure/rabbitmq"
-	"log"
+	"log/slog"
 	"regexp"
 	"time"
 
@@ -304,7 +304,7 @@ func (us *UserService) getUserPictureLink(userEntity *entities.User) (*string, e
 	if err == nil {
 		return &link, nil
 	}
-	log.Println(err)
+	slog.Error("error getting presigned url for this key and error:", "key", key, "err", err.Error())
 
 	defaultKey := us.getDefaultUserProfileKey()
 	if defaultKey == "" || defaultKey == key {
@@ -312,7 +312,7 @@ func (us *UserService) getUserPictureLink(userEntity *entities.User) (*string, e
 	}
 	fallbackLink, fallbackErr := us.storage.GetPresignedURL(enums.UserProfilePic, defaultKey, time.Minute*15)
 	if fallbackErr != nil {
-		log.Println(fallbackErr)
+		slog.Error("error getting presigned url for default key", "default key", defaultKey, "err", fallbackErr.Error())
 		return nil, nil
 	}
 	return &fallbackLink, nil
