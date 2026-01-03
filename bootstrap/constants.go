@@ -150,6 +150,7 @@ type ErrorTags struct {
 	CalendarConflict       string
 	OldInfo                string
 	InsufficientBalance    string
+	RateLimit              string
 }
 
 type JWTKeysPath struct {
@@ -249,6 +250,7 @@ func NewConstants() *Constants {
 			CalendarConflict:       "errors.calendarConflict",
 			OldInfo:                "errors.oldInfo",
 			InsufficientBalance:    "errors.insufficientBalance",
+			RateLimit:              "error.rateLimitExceed",
 		},
 		JWTConstants: JWTConstants{
 			AccessTokenType:  "access",

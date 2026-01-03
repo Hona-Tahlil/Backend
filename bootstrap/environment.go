@@ -17,6 +17,12 @@ type Env struct {
 	URLs              URLs
 	EmailVerification EmailVerification
 	RabbitMQ          RabbitMQ
+	RateLimit         RateLimit
+}
+
+type RateLimit struct {
+	Limit int
+	Burst int
 }
 
 type RabbitMQ struct {
@@ -39,8 +45,8 @@ type Storage struct {
 }
 
 type Buckets struct {
-	PetProfilePic string
-	PetSitterCert string
+	PetProfilePic  string
+	PetSitterCert  string
 	PetSitterFile  string
 	UserProfilePic string
 }
@@ -102,8 +108,8 @@ func NewEnv() *Env {
 			AccessKey: os.Getenv("STORAGE_ACCESS_KEY"),
 			SecretKey: os.Getenv("STORAGE_SECRET_KEY"),
 			Buckets: Buckets{
-				PetProfilePic: os.Getenv("STORAGE_PET_PROFILE_PIC_BUCKET"),
-				PetSitterCert: os.Getenv("STORAGE_PET_SITTER_CERT_BUCKET"),
+				PetProfilePic:  os.Getenv("STORAGE_PET_PROFILE_PIC_BUCKET"),
+				PetSitterCert:  os.Getenv("STORAGE_PET_SITTER_CERT_BUCKET"),
 				PetSitterFile:  os.Getenv("STORAGE_PET_SITTER_FILE_BUCKET"),
 				UserProfilePic: os.Getenv("STORAGE_USER_PROFILE_PIC_BUCKET"),
 			},
@@ -137,6 +143,10 @@ func NewEnv() *Env {
 			VHost:         os.Getenv("AMQP_VHOST"),
 			MaxRetryCount: getEnvInt("AMQP_MAX_RETRY", 3),
 			RetryDelay:    getEnvDuration("AMQP_RETRY_DELAY", 5*time.Second),
+		},
+		RateLimit: RateLimit{
+			Limit: getEnvInt("RATE_LIMIT", 20),
+			Burst: getEnvInt("RATE_lIMIT_BURST", 20),
 		},
 	}
 }
