@@ -192,7 +192,7 @@ services:
         - web
 
   alertmanager:
-    image: prom/alertmanager:main
+    image: prom/alertmanager:latest
     container_name: alertmanager
     restart: unless-stopped
     ports:

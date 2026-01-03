@@ -936,3 +936,190 @@
 {"time":"2026-01-02T20:30:44.296889061Z","level":"INFO","msg":"http_request","service":"backend","env":"development","method":"GET","path":"/metrics","route":"/metrics","status":200,"size":1566,"ip":"172.20.0.4","user_agent":"Prometheus/3.8.1","duration":1636408}
 {"time":"2026-01-02T20:30:45.097386718Z","level":"INFO","msg":"shutdown server","service":"backend","env":"development"}
 {"time":"2026-01-02T20:30:45.097756581Z","level":"INFO","msg":"server exiting","service":"backend","env":"development"}
+{"time":"2026-01-03T21:18:48.054060887+03:30","level":"INFO","msg":"🌱 Starting database seeding...","service":"backend","env":"development"}
+{"time":"2026-01-03T21:18:48.054529215+03:30","level":"INFO","msg":"✓ Users already seeded, skipping...","service":"backend","env":"development"}
+{"time":"2026-01-03T21:18:48.054761466+03:30","level":"INFO","msg":"✓ Pets already seeded, skipping...","service":"backend","env":"development"}
+{"time":"2026-01-03T21:18:48.054927635+03:30","level":"INFO","msg":"✓ Addresses already seeded, skipping...","service":"backend","env":"development"}
+{"time":"2026-01-03T21:18:48.055143007+03:30","level":"INFO","msg":"✓ Pet sitters already seeded, skipping...","service":"backend","env":"development"}
+{"time":"2026-01-03T21:18:48.055314021+03:30","level":"INFO","msg":"✓ Services already seeded, skipping...","service":"backend","env":"development"}
+{"time":"2026-01-03T21:18:48.055462916+03:30","level":"INFO","msg":"✓ Calendar slots already seeded, skipping...","service":"backend","env":"development"}
+{"time":"2026-01-03T21:18:48.055633387+03:30","level":"INFO","msg":"✓ Comments already seeded, skipping...","service":"backend","env":"development"}
+{"time":"2026-01-03T21:18:48.055644451+03:30","level":"INFO","msg":"✅ Database seeding completed!","service":"backend","env":"development"}
+{"time":"2026-01-03T21:18:48.074287001+03:30","level":"INFO","msg":"server running","service":"backend","env":"development","addr":":8080"}
+{"time":"2026-01-03T17:52:41.092060867Z","level":"INFO","msg":"🌱 Starting database seeding...","service":"backend","env":"development"}
+{"time":"2026-01-03T17:52:41.093949646Z","level":"INFO","msg":"✓ Users already seeded, skipping...","service":"backend","env":"development"}
+{"time":"2026-01-03T17:52:41.094166821Z","level":"INFO","msg":"✓ Pets already seeded, skipping...","service":"backend","env":"development"}
+{"time":"2026-01-03T17:52:41.094494707Z","level":"INFO","msg":"✓ Addresses already seeded, skipping...","service":"backend","env":"development"}
+{"time":"2026-01-03T17:52:41.094665611Z","level":"INFO","msg":"✓ Pet sitters already seeded, skipping...","service":"backend","env":"development"}
+{"time":"2026-01-03T17:52:41.094825803Z","level":"INFO","msg":"✓ Services already seeded, skipping...","service":"backend","env":"development"}
+{"time":"2026-01-03T17:52:41.094963731Z","level":"INFO","msg":"✓ Calendar slots already seeded, skipping...","service":"backend","env":"development"}
+{"time":"2026-01-03T17:52:41.095318605Z","level":"INFO","msg":"⚠️  No requests found, skipping comment seeding (comments require valid request_id)","service":"backend","env":"development"}
+{"time":"2026-01-03T17:52:41.095330018Z","level":"INFO","msg":"✅ Database seeding completed!","service":"backend","env":"development"}
+{"time":"2026-01-03T17:52:41.244924314Z","level":"INFO","msg":"Error connecting to Redis:dial tcp: lookup rdb on 127.0.0.11:53: no such host","service":"backend","env":"development"}
+{"time":"2026-01-03T17:52:41.725368515Z","level":"INFO","msg":"🌱 Starting database seeding...","service":"backend","env":"development"}
+{"time":"2026-01-03T17:52:41.726410891Z","level":"INFO","msg":"✓ Users already seeded, skipping...","service":"backend","env":"development"}
+{"time":"2026-01-03T17:52:41.726698903Z","level":"INFO","msg":"✓ Pets already seeded, skipping...","service":"backend","env":"development"}
+{"time":"2026-01-03T17:52:41.72692628Z","level":"INFO","msg":"✓ Addresses already seeded, skipping...","service":"backend","env":"development"}
+{"time":"2026-01-03T17:52:41.727114701Z","level":"INFO","msg":"✓ Pet sitters already seeded, skipping...","service":"backend","env":"development"}
+{"time":"2026-01-03T17:52:41.72726491Z","level":"INFO","msg":"✓ Services already seeded, skipping...","service":"backend","env":"development"}
+{"time":"2026-01-03T17:52:41.727401218Z","level":"INFO","msg":"✓ Calendar slots already seeded, skipping...","service":"backend","env":"development"}
+{"time":"2026-01-03T17:52:41.727956713Z","level":"INFO","msg":"⚠️  No requests found, skipping comment seeding (comments require valid request_id)","service":"backend","env":"development"}
+{"time":"2026-01-03T17:52:41.727969498Z","level":"INFO","msg":"✅ Database seeding completed!","service":"backend","env":"development"}
+{"time":"2026-01-03T17:52:41.819632132Z","level":"INFO","msg":"Error connecting to Redis:dial tcp: lookup rdb on 127.0.0.11:53: no such host","service":"backend","env":"development"}
+{"time":"2026-01-03T17:52:42.340114392Z","level":"INFO","msg":"🌱 Starting database seeding...","service":"backend","env":"development"}
+{"time":"2026-01-03T17:52:42.341037842Z","level":"INFO","msg":"✓ Users already seeded, skipping...","service":"backend","env":"development"}
+{"time":"2026-01-03T17:52:42.341211195Z","level":"INFO","msg":"✓ Pets already seeded, skipping...","service":"backend","env":"development"}
+{"time":"2026-01-03T17:52:42.341354246Z","level":"INFO","msg":"✓ Addresses already seeded, skipping...","service":"backend","env":"development"}
+{"time":"2026-01-03T17:52:42.341528625Z","level":"INFO","msg":"✓ Pet sitters already seeded, skipping...","service":"backend","env":"development"}
+{"time":"2026-01-03T17:52:42.341673646Z","level":"INFO","msg":"✓ Services already seeded, skipping...","service":"backend","env":"development"}
+{"time":"2026-01-03T17:52:42.341813721Z","level":"INFO","msg":"✓ Calendar slots already seeded, skipping...","service":"backend","env":"development"}
+{"time":"2026-01-03T17:52:42.342164574Z","level":"INFO","msg":"⚠️  No requests found, skipping comment seeding (comments require valid request_id)","service":"backend","env":"development"}
+{"time":"2026-01-03T17:52:42.342183802Z","level":"INFO","msg":"✅ Database seeding completed!","service":"backend","env":"development"}
+{"time":"2026-01-03T17:52:42.47963748Z","level":"INFO","msg":"Error connecting to Redis:dial tcp: lookup rdb on 127.0.0.11:53: no such host","service":"backend","env":"development"}
+{"time":"2026-01-03T17:52:43.167839481Z","level":"INFO","msg":"🌱 Starting database seeding...","service":"backend","env":"development"}
+{"time":"2026-01-03T17:52:43.168796378Z","level":"INFO","msg":"✓ Users already seeded, skipping...","service":"backend","env":"development"}
+{"time":"2026-01-03T17:52:43.168975209Z","level":"INFO","msg":"✓ Pets already seeded, skipping...","service":"backend","env":"development"}
+{"time":"2026-01-03T17:52:43.169113741Z","level":"INFO","msg":"✓ Addresses already seeded, skipping...","service":"backend","env":"development"}
+{"time":"2026-01-03T17:52:43.169251218Z","level":"INFO","msg":"✓ Pet sitters already seeded, skipping...","service":"backend","env":"development"}
+{"time":"2026-01-03T17:52:43.169381052Z","level":"INFO","msg":"✓ Services already seeded, skipping...","service":"backend","env":"development"}
+{"time":"2026-01-03T17:52:43.169506157Z","level":"INFO","msg":"✓ Calendar slots already seeded, skipping...","service":"backend","env":"development"}
+{"time":"2026-01-03T17:52:43.169748157Z","level":"INFO","msg":"⚠️  No requests found, skipping comment seeding (comments require valid request_id)","service":"backend","env":"development"}
+{"time":"2026-01-03T17:52:43.169761563Z","level":"INFO","msg":"✅ Database seeding completed!","service":"backend","env":"development"}
+{"time":"2026-01-03T17:52:43.268600795Z","level":"INFO","msg":"Error connecting to Redis:dial tcp: lookup rdb on 127.0.0.11:53: no such host","service":"backend","env":"development"}
+{"time":"2026-01-03T17:52:44.367884721Z","level":"INFO","msg":"🌱 Starting database seeding...","service":"backend","env":"development"}
+{"time":"2026-01-03T17:52:44.368797474Z","level":"INFO","msg":"✓ Users already seeded, skipping...","service":"backend","env":"development"}
+{"time":"2026-01-03T17:52:44.368993409Z","level":"INFO","msg":"✓ Pets already seeded, skipping...","service":"backend","env":"development"}
+{"time":"2026-01-03T17:52:44.369151788Z","level":"INFO","msg":"✓ Addresses already seeded, skipping...","service":"backend","env":"development"}
+{"time":"2026-01-03T17:52:44.369307223Z","level":"INFO","msg":"✓ Pet sitters already seeded, skipping...","service":"backend","env":"development"}
+{"time":"2026-01-03T17:52:44.369470014Z","level":"INFO","msg":"✓ Services already seeded, skipping...","service":"backend","env":"development"}
+{"time":"2026-01-03T17:52:44.369628973Z","level":"INFO","msg":"✓ Calendar slots already seeded, skipping...","service":"backend","env":"development"}
+{"time":"2026-01-03T17:52:44.369978543Z","level":"INFO","msg":"⚠️  No requests found, skipping comment seeding (comments require valid request_id)","service":"backend","env":"development"}
+{"time":"2026-01-03T17:52:44.36998914Z","level":"INFO","msg":"✅ Database seeding completed!","service":"backend","env":"development"}
+{"time":"2026-01-03T17:52:44.462106515Z","level":"INFO","msg":"Error connecting to Redis:dial tcp: lookup rdb on 127.0.0.11:53: no such host","service":"backend","env":"development"}
+{"time":"2026-01-03T17:52:46.368120306Z","level":"INFO","msg":"🌱 Starting database seeding...","service":"backend","env":"development"}
+{"time":"2026-01-03T17:52:46.369132695Z","level":"INFO","msg":"✓ Users already seeded, skipping...","service":"backend","env":"development"}
+{"time":"2026-01-03T17:52:46.369317854Z","level":"INFO","msg":"✓ Pets already seeded, skipping...","service":"backend","env":"development"}
+{"time":"2026-01-03T17:52:46.369512368Z","level":"INFO","msg":"✓ Addresses already seeded, skipping...","service":"backend","env":"development"}
+{"time":"2026-01-03T17:52:46.369684284Z","level":"INFO","msg":"✓ Pet sitters already seeded, skipping...","service":"backend","env":"development"}
+{"time":"2026-01-03T17:52:46.369845789Z","level":"INFO","msg":"✓ Services already seeded, skipping...","service":"backend","env":"development"}
+{"time":"2026-01-03T17:52:46.370035818Z","level":"INFO","msg":"✓ Calendar slots already seeded, skipping...","service":"backend","env":"development"}
+{"time":"2026-01-03T17:52:46.370375034Z","level":"INFO","msg":"⚠️  No requests found, skipping comment seeding (comments require valid request_id)","service":"backend","env":"development"}
+{"time":"2026-01-03T17:52:46.370386494Z","level":"INFO","msg":"✅ Database seeding completed!","service":"backend","env":"development"}
+{"time":"2026-01-03T17:52:46.495698067Z","level":"INFO","msg":"Error connecting to Redis:dial tcp: lookup rdb on 127.0.0.11:53: no such host","service":"backend","env":"development"}
+{"time":"2026-01-03T17:52:49.994333486Z","level":"INFO","msg":"🌱 Starting database seeding...","service":"backend","env":"development"}
+{"time":"2026-01-03T17:52:49.995425163Z","level":"INFO","msg":"✓ Users already seeded, skipping...","service":"backend","env":"development"}
+{"time":"2026-01-03T17:52:49.995730444Z","level":"INFO","msg":"✓ Pets already seeded, skipping...","service":"backend","env":"development"}
+{"time":"2026-01-03T17:52:49.995945432Z","level":"INFO","msg":"✓ Addresses already seeded, skipping...","service":"backend","env":"development"}
+{"time":"2026-01-03T17:52:49.996132399Z","level":"INFO","msg":"✓ Pet sitters already seeded, skipping...","service":"backend","env":"development"}
+{"time":"2026-01-03T17:52:49.99633367Z","level":"INFO","msg":"✓ Services already seeded, skipping...","service":"backend","env":"development"}
+{"time":"2026-01-03T17:52:49.996497878Z","level":"INFO","msg":"✓ Calendar slots already seeded, skipping...","service":"backend","env":"development"}
+{"time":"2026-01-03T17:52:49.996816515Z","level":"INFO","msg":"⚠️  No requests found, skipping comment seeding (comments require valid request_id)","service":"backend","env":"development"}
+{"time":"2026-01-03T17:52:49.996829336Z","level":"INFO","msg":"✅ Database seeding completed!","service":"backend","env":"development"}
+{"time":"2026-01-03T17:52:50.094455275Z","level":"INFO","msg":"Error connecting to Redis:dial tcp: lookup rdb on 127.0.0.11:53: no such host","service":"backend","env":"development"}
+{"time":"2026-01-03T17:52:56.775523305Z","level":"INFO","msg":"🌱 Starting database seeding...","service":"backend","env":"development"}
+{"time":"2026-01-03T17:52:56.775988963Z","level":"INFO","msg":"✓ Users already seeded, skipping...","service":"backend","env":"development"}
+{"time":"2026-01-03T17:52:56.776165753Z","level":"INFO","msg":"✓ Pets already seeded, skipping...","service":"backend","env":"development"}
+{"time":"2026-01-03T17:52:56.776309419Z","level":"INFO","msg":"✓ Addresses already seeded, skipping...","service":"backend","env":"development"}
+{"time":"2026-01-03T17:52:56.77646355Z","level":"INFO","msg":"✓ Pet sitters already seeded, skipping...","service":"backend","env":"development"}
+{"time":"2026-01-03T17:52:56.776601796Z","level":"INFO","msg":"✓ Services already seeded, skipping...","service":"backend","env":"development"}
+{"time":"2026-01-03T17:52:56.776729067Z","level":"INFO","msg":"✓ Calendar slots already seeded, skipping...","service":"backend","env":"development"}
+{"time":"2026-01-03T17:52:56.776982206Z","level":"INFO","msg":"⚠️  No requests found, skipping comment seeding (comments require valid request_id)","service":"backend","env":"development"}
+{"time":"2026-01-03T17:52:56.776998386Z","level":"INFO","msg":"✅ Database seeding completed!","service":"backend","env":"development"}
+{"time":"2026-01-03T17:52:56.872339786Z","level":"INFO","msg":"Error connecting to Redis:dial tcp: lookup rdb on 127.0.0.11:53: no such host","service":"backend","env":"development"}
+{"time":"2026-01-03T17:53:09.956940439Z","level":"INFO","msg":"🌱 Starting database seeding...","service":"backend","env":"development"}
+{"time":"2026-01-03T17:53:09.960375653Z","level":"INFO","msg":"✓ Users already seeded, skipping...","service":"backend","env":"development"}
+{"time":"2026-01-03T17:53:09.960573036Z","level":"INFO","msg":"✓ Pets already seeded, skipping...","service":"backend","env":"development"}
+{"time":"2026-01-03T17:53:09.960728638Z","level":"INFO","msg":"✓ Addresses already seeded, skipping...","service":"backend","env":"development"}
+{"time":"2026-01-03T17:53:09.96088085Z","level":"INFO","msg":"✓ Pet sitters already seeded, skipping...","service":"backend","env":"development"}
+{"time":"2026-01-03T17:53:09.961014761Z","level":"INFO","msg":"✓ Services already seeded, skipping...","service":"backend","env":"development"}
+{"time":"2026-01-03T17:53:09.961144672Z","level":"INFO","msg":"✓ Calendar slots already seeded, skipping...","service":"backend","env":"development"}
+{"time":"2026-01-03T17:53:09.961376996Z","level":"INFO","msg":"⚠️  No requests found, skipping comment seeding (comments require valid request_id)","service":"backend","env":"development"}
+{"time":"2026-01-03T17:53:09.961386795Z","level":"INFO","msg":"✅ Database seeding completed!","service":"backend","env":"development"}
+{"time":"2026-01-03T17:53:10.057251264Z","level":"INFO","msg":"Error connecting to Redis:dial tcp: lookup rdb on 127.0.0.11:53: no such host","service":"backend","env":"development"}
+{"time":"2026-01-03T17:53:35.937894171Z","level":"INFO","msg":"🌱 Starting database seeding...","service":"backend","env":"development"}
+{"time":"2026-01-03T17:53:35.938868115Z","level":"INFO","msg":"✓ Users already seeded, skipping...","service":"backend","env":"development"}
+{"time":"2026-01-03T17:53:35.93906468Z","level":"INFO","msg":"✓ Pets already seeded, skipping...","service":"backend","env":"development"}
+{"time":"2026-01-03T17:53:35.939212263Z","level":"INFO","msg":"✓ Addresses already seeded, skipping...","service":"backend","env":"development"}
+{"time":"2026-01-03T17:53:35.939361035Z","level":"INFO","msg":"✓ Pet sitters already seeded, skipping...","service":"backend","env":"development"}
+{"time":"2026-01-03T17:53:35.939500229Z","level":"INFO","msg":"✓ Services already seeded, skipping...","service":"backend","env":"development"}
+{"time":"2026-01-03T17:53:35.939628134Z","level":"INFO","msg":"✓ Calendar slots already seeded, skipping...","service":"backend","env":"development"}
+{"time":"2026-01-03T17:53:35.939877701Z","level":"INFO","msg":"⚠️  No requests found, skipping comment seeding (comments require valid request_id)","service":"backend","env":"development"}
+{"time":"2026-01-03T17:53:35.939889477Z","level":"INFO","msg":"✅ Database seeding completed!","service":"backend","env":"development"}
+{"time":"2026-01-03T17:53:36.030744872Z","level":"INFO","msg":"Error connecting to Redis:dial tcp: lookup rdb on 127.0.0.11:53: no such host","service":"backend","env":"development"}
+{"time":"2026-01-03T17:55:24.963423867Z","level":"INFO","msg":"🌱 Starting database seeding...","service":"backend","env":"development"}
+{"time":"2026-01-03T17:55:28.258634175Z","level":"INFO","msg":"✓ Successfully seeded users","service":"backend","env":"development","count":50}
+{"time":"2026-01-03T17:55:28.276052299Z","level":"INFO","msg":"✓ Successfully seeded pets","service":"backend","env":"development","count":150}
+{"time":"2026-01-03T17:55:28.280997521Z","level":"INFO","msg":"✓ Successfully seeded addresses","service":"backend","env":"development","count":50}
+{"time":"2026-01-03T17:55:28.288938691Z","level":"INFO","msg":"✓ Successfully seeded pet sitters","service":"backend","env":"development","count":20}
+{"time":"2026-01-03T17:55:28.296430087Z","level":"INFO","msg":"✓ Successfully seeded services","service":"backend","env":"development","count":34}
+{"time":"2026-01-03T17:55:28.310112929Z","level":"INFO","msg":"✓ Successfully seeded calendar slots","service":"backend","env":"development","count":250}
+{"time":"2026-01-03T17:55:28.311810334Z","level":"WARN","msg":"⚠️  No requests found, skipping comment seeding (comments require valid request_id)","service":"backend","env":"development"}
+{"time":"2026-01-03T17:55:28.311843022Z","level":"INFO","msg":"✅ Database seeding completed!","service":"backend","env":"development"}
+{"time":"2026-01-03T17:55:29.432999553Z","level":"INFO","msg":"🌱 Starting database seeding...","service":"backend","env":"development"}
+{"time":"2026-01-03T17:55:29.433563979Z","level":"INFO","msg":"✓ Users already seeded, skipping...","service":"backend","env":"development"}
+{"time":"2026-01-03T17:55:29.433783078Z","level":"INFO","msg":"✓ Pets already seeded, skipping...","service":"backend","env":"development"}
+{"time":"2026-01-03T17:55:29.433939468Z","level":"INFO","msg":"✓ Addresses already seeded, skipping...","service":"backend","env":"development"}
+{"time":"2026-01-03T17:55:29.434108171Z","level":"INFO","msg":"✓ Pet sitters already seeded, skipping...","service":"backend","env":"development"}
+{"time":"2026-01-03T17:55:29.434251066Z","level":"INFO","msg":"✓ Services already seeded, skipping...","service":"backend","env":"development"}
+{"time":"2026-01-03T17:55:29.434420251Z","level":"INFO","msg":"✓ Calendar slots already seeded, skipping...","service":"backend","env":"development"}
+{"time":"2026-01-03T17:55:29.434733335Z","level":"WARN","msg":"⚠️  No requests found, skipping comment seeding (comments require valid request_id)","service":"backend","env":"development"}
+{"time":"2026-01-03T17:55:29.4347592Z","level":"INFO","msg":"✅ Database seeding completed!","service":"backend","env":"development"}
+{"time":"2026-01-03T17:55:31.355405153Z","level":"INFO","msg":"🌱 Starting database seeding...","service":"backend","env":"development"}
+{"time":"2026-01-03T17:55:31.355922381Z","level":"INFO","msg":"✓ Users already seeded, skipping...","service":"backend","env":"development"}
+{"time":"2026-01-03T17:55:31.356161765Z","level":"INFO","msg":"✓ Pets already seeded, skipping...","service":"backend","env":"development"}
+{"time":"2026-01-03T17:55:31.356326583Z","level":"INFO","msg":"✓ Addresses already seeded, skipping...","service":"backend","env":"development"}
+{"time":"2026-01-03T17:55:31.356500229Z","level":"INFO","msg":"✓ Pet sitters already seeded, skipping...","service":"backend","env":"development"}
+{"time":"2026-01-03T17:55:31.356653802Z","level":"INFO","msg":"✓ Services already seeded, skipping...","service":"backend","env":"development"}
+{"time":"2026-01-03T17:55:31.356829517Z","level":"INFO","msg":"✓ Calendar slots already seeded, skipping...","service":"backend","env":"development"}
+{"time":"2026-01-03T17:55:31.357148756Z","level":"WARN","msg":"⚠️  No requests found, skipping comment seeding (comments require valid request_id)","service":"backend","env":"development"}
+{"time":"2026-01-03T17:55:31.357158869Z","level":"INFO","msg":"✅ Database seeding completed!","service":"backend","env":"development"}
+{"time":"2026-01-03T17:55:31.392263564Z","level":"INFO","msg":"server running","service":"backend","env":"development","addr":":8080"}
+{"time":"2026-01-03T17:55:35.254496477Z","level":"INFO","msg":"http_request","service":"backend","env":"development","method":"GET","path":"/metrics","route":"/metrics","status":200,"size":1372,"ip":"172.20.0.2","user_agent":"Prometheus/3.8.1","duration":1178688}
+{"time":"2026-01-03T17:55:50.256141825Z","level":"INFO","msg":"http_request","service":"backend","env":"development","method":"GET","path":"/metrics","route":"/metrics","status":200,"size":1531,"ip":"172.20.0.2","user_agent":"Prometheus/3.8.1","duration":1848908}
+{"time":"2026-01-03T17:56:02.053641589Z","level":"INFO","msg":"shutdown server","service":"backend","env":"development"}
+{"time":"2026-01-03T17:56:02.053936218Z","level":"INFO","msg":"server exiting","service":"backend","env":"development"}
+{"time":"2026-01-03T17:59:49.739308468Z","level":"INFO","msg":"🌱 Starting database seeding...","service":"backend","env":"development"}
+{"time":"2026-01-03T17:59:52.967221883Z","level":"INFO","msg":"✓ Successfully seeded users","service":"backend","env":"development","count":50}
+{"time":"2026-01-03T17:59:52.975561618Z","level":"INFO","msg":"✓ Successfully seeded pets","service":"backend","env":"development","count":150}
+{"time":"2026-01-03T17:59:52.979470877Z","level":"INFO","msg":"✓ Successfully seeded addresses","service":"backend","env":"development","count":50}
+{"time":"2026-01-03T17:59:52.983188124Z","level":"INFO","msg":"✓ Successfully seeded pet sitters","service":"backend","env":"development","count":20}
+{"time":"2026-01-03T17:59:52.98709024Z","level":"INFO","msg":"✓ Successfully seeded services","service":"backend","env":"development","count":38}
+{"time":"2026-01-03T17:59:52.996479463Z","level":"INFO","msg":"✓ Successfully seeded calendar slots","service":"backend","env":"development","count":250}
+{"time":"2026-01-03T17:59:52.997632037Z","level":"WARN","msg":"⚠️  No requests found, skipping comment seeding (comments require valid request_id)","service":"backend","env":"development"}
+{"time":"2026-01-03T17:59:52.997701053Z","level":"INFO","msg":"✅ Database seeding completed!","service":"backend","env":"development"}
+{"time":"2026-01-03T17:59:54.903533469Z","level":"INFO","msg":"🌱 Starting database seeding...","service":"backend","env":"development"}
+{"time":"2026-01-03T17:59:54.904055721Z","level":"INFO","msg":"✓ Users already seeded, skipping...","service":"backend","env":"development"}
+{"time":"2026-01-03T17:59:54.904277896Z","level":"INFO","msg":"✓ Pets already seeded, skipping...","service":"backend","env":"development"}
+{"time":"2026-01-03T17:59:54.904437047Z","level":"INFO","msg":"✓ Addresses already seeded, skipping...","service":"backend","env":"development"}
+{"time":"2026-01-03T17:59:54.904594298Z","level":"INFO","msg":"✓ Pet sitters already seeded, skipping...","service":"backend","env":"development"}
+{"time":"2026-01-03T17:59:54.904745374Z","level":"INFO","msg":"✓ Services already seeded, skipping...","service":"backend","env":"development"}
+{"time":"2026-01-03T17:59:54.904929356Z","level":"INFO","msg":"✓ Calendar slots already seeded, skipping...","service":"backend","env":"development"}
+{"time":"2026-01-03T17:59:54.90521392Z","level":"WARN","msg":"⚠️  No requests found, skipping comment seeding (comments require valid request_id)","service":"backend","env":"development"}
+{"time":"2026-01-03T17:59:54.905222928Z","level":"INFO","msg":"✅ Database seeding completed!","service":"backend","env":"development"}
+{"time":"2026-01-03T17:59:54.931311661Z","level":"INFO","msg":"server running","service":"backend","env":"development","addr":":8080"}
+{"time":"2026-01-03T17:59:55.300149948Z","level":"INFO","msg":"http_request","service":"backend","env":"development","method":"GET","path":"/metrics","route":"/metrics","status":200,"size":1371,"ip":"172.20.0.4","user_agent":"Prometheus/3.8.1","duration":1367399}
+{"time":"2026-01-03T18:00:10.299590008Z","level":"INFO","msg":"http_request","service":"backend","env":"development","method":"GET","path":"/metrics","route":"/metrics","status":200,"size":1531,"ip":"172.20.0.4","user_agent":"Prometheus/3.8.1","duration":1114494}
+{"time":"2026-01-03T18:00:10.374041836Z","level":"INFO","msg":"shutdown server","service":"backend","env":"development"}
+{"time":"2026-01-03T18:00:10.374264767Z","level":"INFO","msg":"server exiting","service":"backend","env":"development"}
+{"time":"2026-01-03T18:01:27.966373051Z","level":"INFO","msg":"🌱 Starting database seeding...","service":"backend","env":"development"}
+{"time":"2026-01-03T18:01:31.198549337Z","level":"INFO","msg":"✓ Successfully seeded users","service":"backend","env":"development","count":50}
+{"time":"2026-01-03T18:01:31.207908939Z","level":"INFO","msg":"✓ Successfully seeded pets","service":"backend","env":"development","count":150}
+{"time":"2026-01-03T18:01:31.211608529Z","level":"INFO","msg":"✓ Successfully seeded addresses","service":"backend","env":"development","count":50}
+{"time":"2026-01-03T18:01:31.216449735Z","level":"INFO","msg":"✓ Successfully seeded pet sitters","service":"backend","env":"development","count":20}
+{"time":"2026-01-03T18:01:31.220166832Z","level":"INFO","msg":"✓ Successfully seeded services","service":"backend","env":"development","count":38}
+{"time":"2026-01-03T18:01:31.232721704Z","level":"INFO","msg":"✓ Successfully seeded calendar slots","service":"backend","env":"development","count":250}
+{"time":"2026-01-03T18:01:31.233903489Z","level":"WARN","msg":"⚠️  No requests found, skipping comment seeding (comments require valid request_id)","service":"backend","env":"development"}
+{"time":"2026-01-03T18:01:31.233927935Z","level":"INFO","msg":"✅ Database seeding completed!","service":"backend","env":"development"}
+{"time":"2026-01-03T18:01:33.129236231Z","level":"INFO","msg":"🌱 Starting database seeding...","service":"backend","env":"development"}
+{"time":"2026-01-03T18:01:33.129726636Z","level":"INFO","msg":"✓ Users already seeded, skipping...","service":"backend","env":"development"}
+{"time":"2026-01-03T18:01:33.129937265Z","level":"INFO","msg":"✓ Pets already seeded, skipping...","service":"backend","env":"development"}
+{"time":"2026-01-03T18:01:33.130079582Z","level":"INFO","msg":"✓ Addresses already seeded, skipping...","service":"backend","env":"development"}
+{"time":"2026-01-03T18:01:33.130224721Z","level":"INFO","msg":"✓ Pet sitters already seeded, skipping...","service":"backend","env":"development"}
+{"time":"2026-01-03T18:01:33.130370063Z","level":"INFO","msg":"✓ Services already seeded, skipping...","service":"backend","env":"development"}
+{"time":"2026-01-03T18:01:33.130528755Z","level":"INFO","msg":"✓ Calendar slots already seeded, skipping...","service":"backend","env":"development"}
+{"time":"2026-01-03T18:01:33.130785556Z","level":"WARN","msg":"⚠️  No requests found, skipping comment seeding (comments require valid request_id)","service":"backend","env":"development"}
+{"time":"2026-01-03T18:01:33.130800539Z","level":"INFO","msg":"✅ Database seeding completed!","service":"backend","env":"development"}
+{"time":"2026-01-03T18:01:33.164785064Z","level":"INFO","msg":"server running","service":"backend","env":"development","addr":":8080"}
+{"time":"2026-01-03T18:01:34.186505817Z","level":"INFO","msg":"http_request","service":"backend","env":"development","method":"GET","path":"/metrics","route":"/metrics","status":200,"size":1380,"ip":"172.20.0.6","user_agent":"Prometheus/3.8.1","duration":1113622}
+{"time":"2026-01-03T18:01:43.493089478Z","level":"INFO","msg":"shutdown server","service":"backend","env":"development"}
+{"time":"2026-01-03T18:01:43.493290873Z","level":"INFO","msg":"server exiting","service":"backend","env":"development"}
