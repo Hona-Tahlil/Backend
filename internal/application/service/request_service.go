@@ -333,7 +333,7 @@ func (rs *RequestService) CancelRequest(info request.CancelRequestRequest) error
 		return err
 	}
 
-	if foundRequest.UserID != info.UserID || petSitter.UserID == info.UserID {
+	if foundRequest.UserID != info.UserID && petSitter.UserID != info.UserID {
 		err = exceptions.NewAccessDeniedError(bootstrap.Run().Constants.ErrorTags.ForbiddenStatus)
 		return err
 	}
@@ -461,7 +461,7 @@ func (rs *RequestService) SearchRequests(info request.SearchRequestsRequest) ([]
 	}
 
 	for i := range requests {
-		if err := rs.PreloadFields(&requests[i], []string{"Service"}); err != nil {
+		if err := rs.PreloadFields(&requests[i], []string{"Service", "CalendarSlots"}); err != nil {
 			return nil, 0, err
 		}
 	}
@@ -477,12 +477,18 @@ func (rs *RequestService) SearchRequests(info request.SearchRequestsRequest) ([]
 		if err != nil {
 			return nil, 0, err
 		}
+		address, err := rs.addressService.FindRequestAddressByID(req.ID)
+		if err != nil {
+			return nil, 0, err
+		}
 		res[i] = request.RequestListItemResponse{
 			RequestID:          req.ID,
 			PetSitterUserID:    petSitter.UserID,
 			PetSitterFirstName: petSitterUser.FirstName,
 			PetSitterLastName:  petSitterUser.LastName,
 			Service:            rs.petSitterService.GetServiceResponse(&req.Service),
+			CalendarSlots:      rs.petSitterService.GetCalendarSlotsResponse(req.CalendarSlots),
+			Address:            rs.addressService.GetUserAddressInfo(address),
 			TotalPrice:         req.TotalPrice,
 			Status:             buildRequestStatusResponse(req.Status),
 			UpdatedAt:          req.UpdatedAt,
@@ -517,7 +523,7 @@ func (rs *RequestService) SearchPetSitterRequests(info request.SearchPetSitterRe
 	}
 
 	for i := range requests {
-		if err := rs.PreloadFields(&requests[i], []string{"Service"}); err != nil {
+		if err := rs.PreloadFields(&requests[i], []string{"Service", "CalendarSlots"}); err != nil {
 			return nil, 0, err
 		}
 	}
@@ -525,12 +531,18 @@ func (rs *RequestService) SearchPetSitterRequests(info request.SearchPetSitterRe
 	res := make([]request.RequestListItemResponse, len(requests))
 	for i := range requests {
 		req := requests[i]
+		address, err := rs.addressService.FindRequestAddressByID(req.ID)
+		if err != nil {
+			return nil, 0, err
+		}
 		res[i] = request.RequestListItemResponse{
 			RequestID:          req.ID,
 			PetSitterUserID:    petSitter.UserID,
 			PetSitterFirstName: petSitterUser.FirstName,
 			PetSitterLastName:  petSitterUser.LastName,
 			Service:            rs.petSitterService.GetServiceResponse(&req.Service),
+			CalendarSlots:      rs.petSitterService.GetCalendarSlotsResponse(req.CalendarSlots),
+			Address:            rs.addressService.GetUserAddressInfo(address),
 			TotalPrice:         req.TotalPrice,
 			Status:             buildRequestStatusResponse(req.Status),
 			UpdatedAt:          req.UpdatedAt,
