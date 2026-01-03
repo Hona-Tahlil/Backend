@@ -460,6 +460,15 @@ func (rs *RequestService) SearchRequests(info request.SearchRequestsRequest) ([]
 		return nil, 0, err
 	}
 
+	requestUser, err := rs.userService.FindUserByID(info.UserID)
+	if err != nil {
+		return nil, 0, err
+	}
+	userPictureLink, err := rs.userService.GetUserPictureLink(requestUser)
+	if err != nil {
+		return nil, 0, err
+	}
+
 	for i := range requests {
 		if err := rs.PreloadFields(&requests[i], []string{"Service", "CalendarSlots"}); err != nil {
 			return nil, 0, err
@@ -477,21 +486,27 @@ func (rs *RequestService) SearchRequests(info request.SearchRequestsRequest) ([]
 		if err != nil {
 			return nil, 0, err
 		}
+		petSitterPictureLink, err := rs.userService.GetUserPictureLink(petSitterUser)
+		if err != nil {
+			return nil, 0, err
+		}
 		address, err := rs.addressService.FindRequestAddressByID(req.ID)
 		if err != nil {
 			return nil, 0, err
 		}
 		res[i] = request.RequestListItemResponse{
-			RequestID:          req.ID,
-			PetSitterUserID:    petSitter.UserID,
-			PetSitterFirstName: petSitterUser.FirstName,
-			PetSitterLastName:  petSitterUser.LastName,
-			Service:            rs.petSitterService.GetServiceResponse(&req.Service),
-			CalendarSlots:      rs.petSitterService.GetCalendarSlotsResponse(req.CalendarSlots),
-			Address:            rs.addressService.GetUserAddressInfo(address),
-			TotalPrice:         req.TotalPrice,
-			Status:             buildRequestStatusResponse(req.Status),
-			UpdatedAt:          req.UpdatedAt,
+			RequestID:            req.ID,
+			PetSitterUserID:      petSitter.UserID,
+			PetSitterFirstName:   petSitterUser.FirstName,
+			PetSitterLastName:    petSitterUser.LastName,
+			PetSitterPictureLink: petSitterPictureLink,
+			UserPictureLink:      userPictureLink,
+			Service:              rs.petSitterService.GetServiceResponse(&req.Service),
+			CalendarSlots:        rs.petSitterService.GetCalendarSlotsResponse(req.CalendarSlots),
+			Address:              rs.addressService.GetUserAddressInfo(address),
+			TotalPrice:           req.TotalPrice,
+			Status:               buildRequestStatusResponse(req.Status),
+			UpdatedAt:            req.UpdatedAt,
 		}
 	}
 
@@ -504,6 +519,10 @@ func (rs *RequestService) SearchPetSitterRequests(info request.SearchPetSitterRe
 		return nil, 0, err
 	}
 	petSitterUser, err := rs.userService.FindUserByID(petSitter.UserID)
+	if err != nil {
+		return nil, 0, err
+	}
+	petSitterPictureLink, err := rs.userService.GetUserPictureLink(petSitterUser)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -535,17 +554,27 @@ func (rs *RequestService) SearchPetSitterRequests(info request.SearchPetSitterRe
 		if err != nil {
 			return nil, 0, err
 		}
+		requestUser, err := rs.userService.FindUserByID(req.UserID)
+		if err != nil {
+			return nil, 0, err
+		}
+		userPictureLink, err := rs.userService.GetUserPictureLink(requestUser)
+		if err != nil {
+			return nil, 0, err
+		}
 		res[i] = request.RequestListItemResponse{
-			RequestID:          req.ID,
-			PetSitterUserID:    petSitter.UserID,
-			PetSitterFirstName: petSitterUser.FirstName,
-			PetSitterLastName:  petSitterUser.LastName,
-			Service:            rs.petSitterService.GetServiceResponse(&req.Service),
-			CalendarSlots:      rs.petSitterService.GetCalendarSlotsResponse(req.CalendarSlots),
-			Address:            rs.addressService.GetUserAddressInfo(address),
-			TotalPrice:         req.TotalPrice,
-			Status:             buildRequestStatusResponse(req.Status),
-			UpdatedAt:          req.UpdatedAt,
+			RequestID:            req.ID,
+			PetSitterUserID:      petSitter.UserID,
+			PetSitterFirstName:   petSitterUser.FirstName,
+			PetSitterLastName:    petSitterUser.LastName,
+			PetSitterPictureLink: petSitterPictureLink,
+			UserPictureLink:      userPictureLink,
+			Service:              rs.petSitterService.GetServiceResponse(&req.Service),
+			CalendarSlots:        rs.petSitterService.GetCalendarSlotsResponse(req.CalendarSlots),
+			Address:              rs.addressService.GetUserAddressInfo(address),
+			TotalPrice:           req.TotalPrice,
+			Status:               buildRequestStatusResponse(req.Status),
+			UpdatedAt:            req.UpdatedAt,
 		}
 	}
 
@@ -592,6 +621,10 @@ func (rs *RequestService) GetRequestFullData(info request.GetRequestFullDataRequ
 	if err != nil {
 		return nil, err
 	}
+	userPictureLink, err := rs.userService.GetUserPictureLink(requestUser)
+	if err != nil {
+		return nil, err
+	}
 
 	commentResponse, err := buildCommentResponse(rs.userService, requestUser, foundRequest.Comment)
 	if err != nil {
@@ -620,6 +653,7 @@ func (rs *RequestService) GetRequestFullData(info request.GetRequestFullDataRequ
 		PetSitterLastName:  petSitterUser.LastName,
 		UserFirstName:      requestUser.FirstName,
 		UserLastName:       requestUser.LastName,
+		UserPictureLink:    userPictureLink,
 		Service:            rs.petSitterService.GetServiceResponse(&foundRequest.Service),
 		Pets:               petsData,
 		Address:            rs.addressService.GetUserAddressInfo(address),
