@@ -294,6 +294,17 @@ func (us *UserService) buildProfileResponse(userEntity *entities.User) (*user.Pr
 	}, nil
 }
 
+func (us *UserService) GetUserPictureLink(userEntity *entities.User) (string, error) {
+	pictureLink, err := us.getUserPictureLink(userEntity)
+	if err != nil {
+		return "", err
+	}
+	if pictureLink == nil {
+		return "", nil
+	}
+	return *pictureLink, nil
+}
+
 func (us *UserService) getUserPictureLink(userEntity *entities.User) (*string, error) {
 	key := us.getUserPictureKey(userEntity)
 	if key == "" {
