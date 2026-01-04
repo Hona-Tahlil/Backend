@@ -19,4 +19,6 @@ type PetSitter struct {
 	Bio             *string
 	Status          enums.PetSitterStatus `gorm:"type:integer;index"`
 	OnboardingStep  enums.OnboardingStep  `gorm:"default:1"`
+	Rating          float32
+	CommentsCount   uint
 }

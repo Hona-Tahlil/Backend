@@ -110,12 +110,12 @@ func (ps *PetService) UpdatePet(info pet.UpdatePetRequest) error {
 		}
 	}
 
-	_, err = ps.findPet(info.Name, foundPet.UserID)
-	if err == nil {
+	oldPet, err := ps.findPet(info.Name, foundPet.UserID)
+	if err == nil && oldPet.ID != info.ID {
 		var ce exceptions.ConflictErrors
 		ce.Add(bootstrap.Run().Constants.ErrorFields.Pet, bootstrap.Run().Constants.ErrorTags.DuplicateName)
 		return &ce
-	} else if _, ok := err.(*exceptions.NotFoundError); !ok {
+	} else if _, ok := err.(*exceptions.NotFoundError); !ok && err != nil {
 		return err
 	}
 
@@ -181,8 +181,8 @@ func (ps *PetService) GetPetFullData(info pet.GetPetFullDataRequest) (*pet.PetFu
 	return &pet.PetFullDataResponse{
 		ID:          foundPet.ID,
 		Name:        foundPet.Name,
-		Kind:        foundPet.Kind.String(),
-		Species:     foundPet.Species.String(),
+		Kind:        foundPet.Kind,
+		Species:     foundPet.Species,
 		Gender:      foundPet.Gender,
 		PictureLink: link,
 		BirthDate:   foundPet.BirthDate,

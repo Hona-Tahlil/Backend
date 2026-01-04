@@ -11,5 +11,6 @@ type CommentService interface {
 	FindUserCommentByID(commentID uint, userID uint) (*entities.Comment, error)
 	DeleteComment(info comment.DeleteCommentRequest) error
 	GetAllPetSitterComments(info comment.GetAllPetSitterCommentsRequest) (*comment.AllCommentsResponse, error)
+	GetAllPetSitterCommentsForPetSitter(userID uint) (*comment.AllCommentsResponse, error)
 	FindCommentByID(id uint) (*entities.Comment, error)
 }

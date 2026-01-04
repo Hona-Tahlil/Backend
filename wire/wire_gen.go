@@ -18,6 +18,8 @@ import (
 	"hona/backend/internal/infrastructure/jwt"
 	"hona/backend/internal/infrastructure/persistence"
 	"hona/backend/internal/infrastructure/persistence/repository/redis"
+	"hona/backend/internal/infrastructure/rabbitmq"
+	"hona/backend/internal/infrastructure/rabbitmq/consumers"
 	"hona/backend/internal/infrastructure/seeder"
 	"hona/backend/internal/infrastructure/storage"
 	"hona/backend/internal/infrastructure/websocket"
@@ -42,7 +44,8 @@ func InitializeApplication(container *bootstrap.Config, hub *websocket.Hub) (*Ap
 	emailService := mail.NewEmailService()
 	addressService := service.NewAddressService(unitOfWork)
 	s3Storage := storage.NewS3Storage()
-	userService := service.NewUserService(jwtService, unitOfWork, userCacheRepository, emailService, addressService, s3Storage)
+	rabbitMQ := rabbitmq.NewRabbitMQ()
+	userService := service.NewUserService(jwtService, unitOfWork, userCacheRepository, emailService, addressService, s3Storage, rabbitMQ)
 	generalUserController := general.NewGeneralUserController(userService)
 	petService := service.NewPetService(unitOfWork, s3Storage, userService)
 	generalPetController := general.NewGeneralPetController(petService)
@@ -76,7 +79,7 @@ func InitializeApplication(container *bootstrap.Config, hub *websocket.Hub) (*Ap
 	requestService := service.NewRequestService(requestServiceDeps)
 	chatService := service.NewChatService(unitOfWork, userService, s3Storage, hub, requestService)
 	userRequestController := user.NewUserRequestController(requestService)
-	commentService := service.NewCommentService(unitOfWork, userService, requestService)
+	commentService := service.NewCommentService(unitOfWork, userService, requestService, petSitterService)
 	userCommentController := user.NewUserCommentController(commentService)
 	userProfileController := user.NewUserProfileController(userService)
 	userWalletController := user.NewUserWalletController(walletService)
@@ -93,6 +96,7 @@ func InitializeApplication(container *bootstrap.Config, hub *websocket.Hub) (*Ap
 	petSitterRequestController := petsitter.NewPetSitterRequestController(requestService)
 	petSitterSkillsController := petsitter.NewPetSitterSkillsController(petSitterService)
 	petSitterCalendarController := petsitter.NewPetSitterCalendarController(petSitterService)
+	petSitterCommentController := petsitter.NewPetSitterCommentController(commentService)
 	petSitterWalletController := petsitter.NewPetSitterWalletController(walletService)
 	petSitterChatController := petsitter.NewPetSitterChatController(chatService, hub, jwtService)
 	petSitterControllers := &PetSitterControllers{
@@ -100,6 +104,7 @@ func InitializeApplication(container *bootstrap.Config, hub *websocket.Hub) (*Ap
 		PetSitterRequestController:  petSitterRequestController,
 		PetSitterSkillsController:   petSitterSkillsController,
 		PetSitterCalendarController: petSitterCalendarController,
+		PetSitterCommentController:  petSitterCommentController,
 		PetSitterWalletController:   petSitterWalletController,
 		PetSitterChatController:     petSitterChatController,
 	}
@@ -128,7 +133,11 @@ func InitializeApplication(container *bootstrap.Config, hub *websocket.Hub) (*Ap
 	wireStorage := &Storage{
 		S3Storage: s3Storage,
 	}
-	application := NewApplication(controllers, middlewares, wireSeeder, wireStorage)
+	emailConsumer := consumers.NewEmailConsumer(rabbitMQ, emailService)
+	wireConsumers := &Consumers{
+		EmailConsumer: emailConsumer,
+	}
+	application := NewApplication(controllers, middlewares, wireSeeder, wireStorage, wireConsumers)
 	return application, nil
 }
 
@@ -146,7 +155,7 @@ var AdminControllersProviderSet = wire.NewSet(admin.NewAdminRBACController, admi
 
 var UserControllersProviderSet = wire.NewSet(user.NewUserPetController, user.NewUserRequestController, user.NewUserCommentController,user.NewUserChatController, user.NewUserProfileController, user.NewUserWalletController, wire.Struct(new(UserControllers), "*"))
 
-var PetSitterControllersProviderSet = wire.NewSet(petsitter.NewPetSitterRegisterController, petsitter.NewPetSitterRequestController, petsitter.NewPetSitterSkillsController, petsitter.NewPetSitterCalendarController, petsitter.NewPetSitterWalletController, petsitter.NewPetSitterChatController, wire.Struct(new(PetSitterControllers), "*"))
+var PetSitterControllersProviderSet = wire.NewSet(petsitter.NewPetSitterRegisterController, petsitter.NewPetSitterRequestController,petsitter.NewPetSitterChatController, petsitter.NewPetSitterSkillsController, petsitter.NewPetSitterCalendarController, petsitter.NewPetSitterCommentController, petsitter.NewPetSitterWalletController, wire.Struct(new(PetSitterControllers), "*"))
 
 var ControllersProviderSet = wire.NewSet(wire.Struct(new(Controllers), "*"))
 
@@ -154,6 +163,7 @@ var MiddlewaresProviderSet = wire.NewSet(middleware.NewLocalizationMiddleware, m
 
 var SeederProviderSet = wire.NewSet(seeder.NewDatabaseSeeder, wire.Struct(new(Seeder), "*"))
 
+var ConsumersProviderSet = wire.NewSet(consumers.NewEmailConsumer, rabbitmq.NewRabbitMQ, wire.Struct(new(Consumers), "*"))
 
 var ProviderSet = wire.NewSet(
 	MiddlewaresProviderSet,
@@ -166,6 +176,7 @@ var ProviderSet = wire.NewSet(
 	RepositoryProviderSet,
 	SeederProviderSet,
 	StorageProviderSet,
+	ConsumersProviderSet,
 )
 
 type GeneralControllers struct {
@@ -195,6 +206,7 @@ type PetSitterControllers struct {
 	PetSitterChatController     *petsitter.PetSitterChatController
 	PetSitterSkillsController   *petsitter.PetSitterSkillsController
 	PetSitterCalendarController *petsitter.PetSitterCalendarController
+	PetSitterCommentController  *petsitter.PetSitterCommentController
 	PetSitterWalletController   *petsitter.PetSitterWalletController
 }
 
@@ -222,18 +234,24 @@ type Storage struct {
 	S3Storage *storage.S3Storage
 }
 
+type Consumers struct {
+	EmailConsumer *consumers.EmailConsumer
+}
+
 type Application struct {
 	Controllers *Controllers
 	Middlewares *Middlewares
 	Seeder      *Seeder
 	Storage     *Storage
+	Consumers   *Consumers
 }
 
-func NewApplication(controllers *Controllers, middlewares *Middlewares, seeder2 *Seeder, storage2 *Storage) *Application {
+func NewApplication(controllers *Controllers, middlewares *Middlewares, seeder2 *Seeder, storage2 *Storage, consumers2 *Consumers) *Application {
 	return &Application{
 		Controllers: controllers,
 		Middlewares: middlewares,
 		Seeder:      seeder2,
 		Storage:     storage2,
+		Consumers:   consumers2,
 	}
 }

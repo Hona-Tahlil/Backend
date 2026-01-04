@@ -28,6 +28,7 @@ func NewS3Storage() *S3Storage {
 	buckets[enums.UserProfilePic] = bootstrap.Run().Env.Storage.Buckets.UserProfilePic
 	buckets[enums.PetSitterFile] = bootstrap.Run().Env.Storage.Buckets.PetSitterFile
 	buckets[enums.ChatMedia] = bootstrap.Run().Env.Storage.Buckets.ChatMedia
+	buckets[enums.PetSitterCert] = bootstrap.Run().Env.Storage.Buckets.PetSitterCert
 	return &S3Storage{
 		buckets: buckets,
 	}
@@ -73,7 +74,6 @@ func (s3Storage *S3Storage) UploadFile(bucketType enums.BucketType, key string, 
 		return err
 	}
 	defer fileReader.Close()
-
 	_, err = s3Storage.client.PutObject(context.TODO(), &s3.PutObjectInput{
 		Bucket: aws.String(bucket),
 		Key:    aws.String(key),

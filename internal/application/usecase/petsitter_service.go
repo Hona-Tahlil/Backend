@@ -7,6 +7,7 @@ import (
 	"hona/backend/internal/application/dto/servicedto"
 	"hona/backend/internal/domain/entities"
 	"hona/backend/internal/domain/enums"
+
 )
 
 type PetSitterService interface {
@@ -16,6 +17,7 @@ type PetSitterService interface {
 	GetServicesResponse(petSitter *entities.PetSitter) ([]servicedto.ServiceInfoResponse, error)
 	GetAvailableServicesResponse(petSitter *entities.PetSitter) ([]servicedto.ServiceInfoResponse, error)
 	GetPetSitterByID(id uint) (*entities.PetSitter, error)
+	UpdateRatingAndCommentsCount(petSitterID uint, rating float32, commentsCount uint) error
 	GetPetSitterByUserID(id uint) (*entities.PetSitter, error)
 	PreloadFields(petSitter *entities.PetSitter, fields []string) error
 	ValidatePets(pets []entities.Pet, petKinds []enums.PetKind) error
@@ -43,7 +45,7 @@ type PetSitterService interface {
 	GetFreeMap(calendarSlots []entities.CalendarSlot) map[string]map[interface{}]bool
 	FindServiceByID(id uint) (*entities.Service, error)
 	GetServiceResponse(serviceEntity *entities.Service) servicedto.ServiceInfoResponse
-	SearchPetSitters(info petsitter.SearchPetSittersRequest) ([]*petsitter.PetSitterInfoResponse, int64, error)
+	SearchPetSitters(info petsitter.SearchPetSittersRequest) ([]*petsitter.SearchPetSitterInfoResponse, int64, error)
 	SearchPetSittersForAdmin(info petsitter.AdminSearchPetSittersRequest) ([]petsitter.PetSitterListItemResponse, int64, error)
 	GetPetSitterDetails(info petsitter.GetPetSitterDetailsRequest) (*petsitter.PetSitterDetailsResponse, error)
 	GetPetSitterProfile(info petsitter.GetPetSitterProfileRequest) (*petsitter.PetSitterProfileResponse, error)

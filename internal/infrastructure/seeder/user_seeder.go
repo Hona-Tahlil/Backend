@@ -31,12 +31,11 @@ func (s *UserSeeder) Seed(count int) error {
 		log.Println("✓ Users already seeded, skipping...")
 		return nil
 	}
-	log.Println("Current user count in database:", userCount)
 	// defaultProfileKey := bootstrap.Run().Env.Storage.DefaultUserProfileKey
 	// if defaultProfileKey == "" {
 	// 	return fmt.Errorf("default user profile key is empty")
 	// }
-	log.Println("Seeding users...")
+
 	for i := 0; i < count; i++ {
 		email := "test" + fmt.Sprintf("%d", i) + "@email.com"
 		firstName := faker.FirstName()

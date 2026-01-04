@@ -2,6 +2,7 @@ package service
 
 import (
 	"hona/backend/bootstrap"
+	"hona/backend/internal/application/dto/pet"
 	"hona/backend/internal/application/dto/request"
 	"hona/backend/internal/application/usecase"
 	"hona/backend/internal/domain/entities"
@@ -165,8 +166,15 @@ func (rs *RequestService) GetCreateRequestInfo(info request.GetCreateRequestInfo
 		return nil, err
 	}
 
+	filteredPetsData := rs.filterPetsByPetSitterKinds(petsData, petSitter)
+
 	if petSitter.Status != enums.PSS_Active {
 		return nil, exceptions.NewNotFoundError(bootstrap.Run().Constants.ErrorFields.PetSitter)
+	}
+
+	petSitterUser, err := rs.userService.FindUserByID(petSitter.UserID)
+	if err != nil {
+		return nil, err
 	}
 
 	err = rs.petSitterService.PreloadFields(petSitter, []string{"Schedule", "Services"})
@@ -193,11 +201,27 @@ func (rs *RequestService) GetCreateRequestInfo(info request.GetCreateRequestInfo
 	}
 
 	return &request.CreateRequestInfoResponse{
-		Services:          servicesData,
-		Addresses:         addresses,
-		Pets:              petsData,
-		FreeCalendarSlots: freeSlots,
+		Services:           servicesData,
+		Addresses:          addresses,
+		Pets:               filteredPetsData,
+		FreeCalendarSlots:  freeSlots,
+		PetSitterFirstName: petSitterUser.FirstName,
+		PetSitterLastName:  petSitterUser.LastName,
 	}, nil
+}
+
+func (rs *RequestService) filterPetsByPetSitterKinds(petsData []pet.PetBasicDataResponse, petSitter *entities.PetSitter) []pet.PetBasicDataResponse {
+	filteredPetsData := make([]pet.PetBasicDataResponse, 0, len(petsData))
+	for _, petData := range petsData {
+		for _, kind := range petSitter.PetKinds {
+			if petData.Kind == kind.String() {
+				filteredPetsData = append(filteredPetsData, petData)
+				break
+			}
+		}
+	}
+
+	return filteredPetsData
 }
 
 func (rs *RequestService) EditRequest(info request.EditRequestRequest) error {
@@ -206,7 +230,7 @@ func (rs *RequestService) EditRequest(info request.EditRequestRequest) error {
 		return err
 	}
 
-	if foundRequest.Status != enums.Pending {
+	if foundRequest.Status != enums.Pending && foundRequest.Status != enums.Conflict {
 		err = exceptions.NewAccessDeniedError(bootstrap.Run().Constants.ErrorTags.ForbiddenStatus)
 		return err
 	}
@@ -222,6 +246,16 @@ func (rs *RequestService) EditRequest(info request.EditRequestRequest) error {
 	}
 
 	user, err := rs.userService.FindVerifiedUserByID(info.UserID)
+	if err != nil {
+		return err
+	}
+
+	user.Pets, err = rs.petService.FindUserPetsByID(user.ID)
+	if err != nil {
+		return err
+	}
+
+	user.Pets, err = rs.petService.FindUserPetsByID(user.ID)
 	if err != nil {
 		return err
 	}
@@ -268,6 +302,14 @@ func (rs *RequestService) EditRequest(info request.EditRequestRequest) error {
 	rs.sendEditRequestEmail(user, petSitter.UserID)
 
 	requestRepo := rs.unitOfWork.Factory().RequestRepository()
+	err = requestRepo.DeletePetsByRequestID(foundRequest.ID)
+	if err != nil {
+		return err
+	}
+	err = requestRepo.DeleteCalendarSlotsByRequestID(foundRequest.ID)
+	if err != nil {
+		return err
+	}
 	err = requestRepo.EditRequest(foundRequest)
 	if err != nil {
 		return err
@@ -291,7 +333,7 @@ func (rs *RequestService) CancelRequest(info request.CancelRequestRequest) error
 		return err
 	}
 
-	if foundRequest.UserID != info.UserID || petSitter.UserID == info.UserID {
+	if foundRequest.UserID != info.UserID && petSitter.UserID != info.UserID {
 		err = exceptions.NewAccessDeniedError(bootstrap.Run().Constants.ErrorTags.ForbiddenStatus)
 		return err
 	}
@@ -396,6 +438,13 @@ func (rs *RequestService) markRequestPaid(requestRepo domainpostgres.RequestRepo
 	return requestRepo.EditRequest(foundRequest)
 }
 
+func buildRequestStatusResponse(status enums.RequestStatus) request.RequestStatusResponse {
+	return request.RequestStatusResponse{
+		Num:  status,
+		Name: status.String(),
+	}
+}
+
 func (rs *RequestService) SearchRequests(info request.SearchRequestsRequest) ([]request.RequestListItemResponse, int64, error) {
 	options := postgres.NewQueryOptions().WithPagination(info.Limit, info.Offset)
 	if len(info.Filters) > 0 {
@@ -411,8 +460,17 @@ func (rs *RequestService) SearchRequests(info request.SearchRequestsRequest) ([]
 		return nil, 0, err
 	}
 
+	requestUser, err := rs.userService.FindUserByID(info.UserID)
+	if err != nil {
+		return nil, 0, err
+	}
+	userPictureLink, err := rs.userService.GetUserPictureLink(requestUser)
+	if err != nil {
+		return nil, 0, err
+	}
+
 	for i := range requests {
-		if err := rs.PreloadFields(&requests[i], []string{"Service"}); err != nil {
+		if err := rs.PreloadFields(&requests[i], []string{"Service", "CalendarSlots"}); err != nil {
 			return nil, 0, err
 		}
 	}
@@ -428,15 +486,29 @@ func (rs *RequestService) SearchRequests(info request.SearchRequestsRequest) ([]
 		if err != nil {
 			return nil, 0, err
 		}
+		petSitterPictureLink, err := rs.userService.GetUserPictureLink(petSitterUser)
+		if err != nil {
+			return nil, 0, err
+		}
+		address, err := rs.addressService.FindRequestAddressByID(req.ID)
+		if err != nil {
+			return nil, 0, err
+		}
 		res[i] = request.RequestListItemResponse{
-			RequestID:          req.ID,
-			PetSitterUserID:    petSitter.UserID,
-			PetSitterFirstName: petSitterUser.FirstName,
-			PetSitterLastName:  petSitterUser.LastName,
-			Service:            rs.petSitterService.GetServiceResponse(&req.Service),
-			TotalPrice:         req.TotalPrice,
-			Status:             req.Status.String(),
-			UpdatedAt:          req.UpdatedAt,
+			RequestID:            req.ID,
+			PetSitterUserID:      petSitter.UserID,
+			PetSitterFirstName:   petSitterUser.FirstName,
+			PetSitterLastName:    petSitterUser.LastName,
+			PetSitterPictureLink: petSitterPictureLink,
+			UserFirstName:        requestUser.FirstName,
+			UserLastName:         requestUser.LastName,
+			UserPictureLink:      userPictureLink,
+			Service:              rs.petSitterService.GetServiceResponse(&req.Service),
+			CalendarSlots:        rs.petSitterService.GetCalendarSlotsResponse(req.CalendarSlots),
+			Address:              rs.addressService.GetUserAddressInfo(address),
+			TotalPrice:           req.TotalPrice,
+			Status:               buildRequestStatusResponse(req.Status),
+			UpdatedAt:            req.UpdatedAt,
 		}
 	}
 
@@ -449,6 +521,10 @@ func (rs *RequestService) SearchPetSitterRequests(info request.SearchPetSitterRe
 		return nil, 0, err
 	}
 	petSitterUser, err := rs.userService.FindUserByID(petSitter.UserID)
+	if err != nil {
+		return nil, 0, err
+	}
+	petSitterPictureLink, err := rs.userService.GetUserPictureLink(petSitterUser)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -468,7 +544,7 @@ func (rs *RequestService) SearchPetSitterRequests(info request.SearchPetSitterRe
 	}
 
 	for i := range requests {
-		if err := rs.PreloadFields(&requests[i], []string{"Service"}); err != nil {
+		if err := rs.PreloadFields(&requests[i], []string{"Service", "CalendarSlots"}); err != nil {
 			return nil, 0, err
 		}
 	}
@@ -476,15 +552,33 @@ func (rs *RequestService) SearchPetSitterRequests(info request.SearchPetSitterRe
 	res := make([]request.RequestListItemResponse, len(requests))
 	for i := range requests {
 		req := requests[i]
+		address, err := rs.addressService.FindRequestAddressByID(req.ID)
+		if err != nil {
+			return nil, 0, err
+		}
+		requestUser, err := rs.userService.FindUserByID(req.UserID)
+		if err != nil {
+			return nil, 0, err
+		}
+		userPictureLink, err := rs.userService.GetUserPictureLink(requestUser)
+		if err != nil {
+			return nil, 0, err
+		}
 		res[i] = request.RequestListItemResponse{
-			RequestID:          req.ID,
-			PetSitterUserID:    petSitter.UserID,
-			PetSitterFirstName: petSitterUser.FirstName,
-			PetSitterLastName:  petSitterUser.LastName,
-			Service:            rs.petSitterService.GetServiceResponse(&req.Service),
-			TotalPrice:         req.TotalPrice,
-			Status:             req.Status.String(),
-			UpdatedAt:          req.UpdatedAt,
+			RequestID:            req.ID,
+			PetSitterUserID:      petSitter.UserID,
+			PetSitterFirstName:   petSitterUser.FirstName,
+			PetSitterLastName:    petSitterUser.LastName,
+			PetSitterPictureLink: petSitterPictureLink,
+			UserFirstName:        requestUser.FirstName,
+			UserLastName:         requestUser.LastName,
+			UserPictureLink:      userPictureLink,
+			Service:              rs.petSitterService.GetServiceResponse(&req.Service),
+			CalendarSlots:        rs.petSitterService.GetCalendarSlotsResponse(req.CalendarSlots),
+			Address:              rs.addressService.GetUserAddressInfo(address),
+			TotalPrice:           req.TotalPrice,
+			Status:               buildRequestStatusResponse(req.Status),
+			UpdatedAt:            req.UpdatedAt,
 		}
 	}
 
@@ -533,7 +627,7 @@ func (rs *RequestService) GetRequestFullData(info request.GetRequestFullDataRequ
 		return nil, err
 	}
 
-	err = rs.PreloadFields(foundRequest, []string{"CalendarSlots", "Service"})
+	err = rs.PreloadFields(foundRequest, []string{"CalendarSlots", "Service", "Comment"})
 	if err != nil {
 		return nil, err
 	}
@@ -567,6 +661,15 @@ func (rs *RequestService) GetRequestFullData(info request.GetRequestFullDataRequ
 	if err != nil {
 		return nil, err
 	}
+	userPictureLink, err := rs.userService.GetUserPictureLink(requestUser)
+	if err != nil {
+		return nil, err
+	}
+
+	commentResponse, err := buildCommentResponse(rs.userService, requestUser, foundRequest.Comment)
+	if err != nil {
+		return nil, err
+	}
 
 	err = rs.petSitterService.PreloadFields(petSitter, []string{"Schedule"})
 	if err != nil {
@@ -590,12 +693,14 @@ func (rs *RequestService) GetRequestFullData(info request.GetRequestFullDataRequ
 		PetSitterLastName:  petSitterUser.LastName,
 		UserFirstName:      requestUser.FirstName,
 		UserLastName:       requestUser.LastName,
+		UserPictureLink:    userPictureLink,
 		Service:            rs.petSitterService.GetServiceResponse(&foundRequest.Service),
 		Pets:               petsData,
 		Address:            rs.addressService.GetUserAddressInfo(address),
 		Notes:              foundRequest.Notes,
 		TotalPrice:         foundRequest.TotalPrice,
-		Status:             foundRequest.Status.String(),
+		Comment:            commentResponse,
+		Status:             buildRequestStatusResponse(foundRequest.Status),
 		TransferID:         foundRequest.TransferID,
 		CalendarSlots:      rs.petSitterService.GetCalendarSlotsResponse(foundRequest.CalendarSlots),
 		UpdatedAt:          foundRequest.UpdatedAt,
@@ -723,7 +828,7 @@ func (rs *RequestService) calculateTotalPrice(servicesEntity *entities.Service, 
 		totalPrice *= slotHours
 	}
 
-	return totalPrice
+	return uint(totalPrice + totalPrice/10)
 }
 
 func (rs *RequestService) makeCalendarSlots(calendarSlots []request.RequestCalendarSlotRequest) []entities.CalendarSlot {

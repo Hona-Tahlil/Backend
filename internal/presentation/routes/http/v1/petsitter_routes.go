@@ -53,7 +53,6 @@ func SetUpPetSitterRoutes(v1 *gin.RouterGroup, app *wire.Application) {
 			chat.DELETE("/room/:roomID/message/:messageID/reaction", app.Controllers.PetSitterControllers.PetSitterChatController.RemoveReaction)
 
 		}
-	}
 
 	petKinds := petsitter.Group("/pet-kinds")
 	{
@@ -78,5 +77,9 @@ func SetUpPetSitterRoutes(v1 *gin.RouterGroup, app *wire.Application) {
 	wallet := petsitter.Group("/wallet")
 	{
 		wallet.PUT("/withdraw", app.Controllers.PetSitterControllers.PetSitterWalletController.Withdraw)
+  }
+  omments := petsitter.Group("/comments")
+	{
+		comments.GET("/", app.Controllers.PetSitterControllers.PetSitterCommentController.GetAllComments)
 	}
 }

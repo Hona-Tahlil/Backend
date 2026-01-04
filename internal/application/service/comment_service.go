@@ -10,16 +10,18 @@ import (
 )
 
 type CommentService struct {
-	unitOfWork     ports.UnitOfWork
-	userService    usecase.UserService
-	requestService usecase.RequestService
+	unitOfWork       ports.UnitOfWork
+	userService      usecase.UserService
+	requestService   usecase.RequestService
+	petSitterService usecase.PetSitterService
 }
 
-func NewCommentService(unitOfWork ports.UnitOfWork, userService usecase.UserService, requestService usecase.RequestService) *CommentService {
+func NewCommentService(unitOfWork ports.UnitOfWork, userService usecase.UserService, requestService usecase.RequestService, petSitterService usecase.PetSitterService) *CommentService {
 	return &CommentService{
-		unitOfWork:     unitOfWork,
-		userService:    userService,
-		requestService: requestService,
+		unitOfWork:       unitOfWork,
+		userService:      userService,
+		requestService:   requestService,
+		petSitterService: petSitterService,
 	}
 }
 
@@ -52,7 +54,7 @@ func (cs *CommentService) CreateComment(info comment.CreateCommentRequest) error
 	if err != nil {
 		return err
 	}
-	return nil
+	return cs.updatePetSitterRatingOnCreate(foundRequest.PetSitterID, info.Rating)
 }
 
 func (cs *CommentService) EditComment(info comment.EditCommentRequest) error {
@@ -61,6 +63,7 @@ func (cs *CommentService) EditComment(info comment.EditCommentRequest) error {
 		return err
 	}
 
+	oldRating := foundComment.Rating
 	foundComment.Text = info.Text
 	foundComment.Rating = info.Rating
 
@@ -70,7 +73,7 @@ func (cs *CommentService) EditComment(info comment.EditCommentRequest) error {
 		return err
 	}
 
-	return nil
+	return cs.updatePetSitterRatingOnEdit(foundComment.PetSitterID, oldRating, info.Rating)
 }
 
 func (cs *CommentService) FindCommentByID(id uint) (*entities.Comment, error) {
@@ -97,7 +100,7 @@ func (cs *CommentService) DeleteComment(info comment.DeleteCommentRequest) error
 		return err
 	}
 
-	return nil
+	return cs.updatePetSitterRatingOnDelete(foundComment.PetSitterID, foundComment.Rating)
 }
 
 func (cs *CommentService) GetAllPetSitterComments(info comment.GetAllPetSitterCommentsRequest) (*comment.AllCommentsResponse, error) {
@@ -108,27 +111,104 @@ func (cs *CommentService) GetAllPetSitterComments(info comment.GetAllPetSitterCo
 	}
 	r := make([]comment.CommentResponse, len(comments))
 	var averageRating float32 = 0
-	for i, c := range comments {
-		user, err := cs.userService.FindUserByID(c.UserID)
+	for i := range comments {
+		averageRating += float32(comments[i].Rating)
+		response, err := buildCommentResponse(cs.userService, nil, &comments[i])
 		if err != nil {
 			return nil, err
 		}
-		averageRating += float32(c.Rating)
-		r[i] = comment.CommentResponse{
-			UserID:        user.ID,
-			UserFirstName: user.FirstName,
-			UserLastName:  user.LastName,
-			Text:          c.Text,
-			Rating:        c.Rating,
-			UpdatedAt:     c.UpdatedAt,
+		if response == nil {
+			continue
 		}
+		r[i] = *response
 	}
-	averageRating /= float32(len(r))
+	if len(r) != 0 {
+		averageRating /= float32(len(r))
+	}
 	return &comment.AllCommentsResponse{
 		CommentCount:  uint(len(r)),
 		AverageRating: averageRating,
 		Comments:      r,
 	}, nil
+}
+
+func (cs *CommentService) GetAllPetSitterCommentsForPetSitter(userID uint) (*comment.AllCommentsResponse, error) {
+	petSitter, err := cs.petSitterService.GetPetSitterByUserID(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	info := comment.GetAllPetSitterCommentsRequest{
+		PetSitterID: petSitter.ID,
+	}
+	return cs.GetAllPetSitterComments(info)
+}
+
+func buildCommentResponse(userService usecase.UserService, fallbackUser *entities.User, commentEntity *entities.Comment) (*comment.CommentResponse, error) {
+	if commentEntity == nil {
+		return nil, nil
+	}
+
+	user := fallbackUser
+	if user == nil || user.ID != commentEntity.UserID {
+		foundUser, err := userService.FindUserByID(commentEntity.UserID)
+		if err != nil {
+			return nil, err
+		}
+		user = foundUser
+	}
+
+	return &comment.CommentResponse{
+		UserID:        user.ID,
+		UserFirstName: user.FirstName,
+		UserLastName:  user.LastName,
+		Text:          commentEntity.Text,
+		Rating:        commentEntity.Rating,
+		UpdatedAt:     commentEntity.UpdatedAt,
+	}, nil
+}
+
+func (cs *CommentService) updatePetSitterRatingOnCreate(petSitterID uint, rating uint) error {
+	petSitter, err := cs.petSitterService.GetPetSitterByID(petSitterID)
+	if err != nil {
+		return err
+	}
+
+	newCount := petSitter.CommentsCount + 1
+	total := petSitter.Rating*float32(petSitter.CommentsCount) + float32(rating)
+	averageRating := total / float32(newCount)
+	return cs.petSitterService.UpdateRatingAndCommentsCount(petSitterID, averageRating, newCount)
+}
+
+func (cs *CommentService) updatePetSitterRatingOnEdit(petSitterID uint, oldRating uint, newRating uint) error {
+	petSitter, err := cs.petSitterService.GetPetSitterByID(petSitterID)
+	if err != nil {
+		return err
+	}
+
+	if petSitter.CommentsCount == 0 {
+		return cs.petSitterService.UpdateRatingAndCommentsCount(petSitterID, 0, 0)
+	}
+
+	total := petSitter.Rating*float32(petSitter.CommentsCount) - float32(oldRating) + float32(newRating)
+	averageRating := total / float32(petSitter.CommentsCount)
+	return cs.petSitterService.UpdateRatingAndCommentsCount(petSitterID, averageRating, petSitter.CommentsCount)
+}
+
+func (cs *CommentService) updatePetSitterRatingOnDelete(petSitterID uint, rating uint) error {
+	petSitter, err := cs.petSitterService.GetPetSitterByID(petSitterID)
+	if err != nil {
+		return err
+	}
+
+	if petSitter.CommentsCount <= 1 {
+		return cs.petSitterService.UpdateRatingAndCommentsCount(petSitterID, 0, 0)
+	}
+
+	newCount := petSitter.CommentsCount - 1
+	total := petSitter.Rating*float32(petSitter.CommentsCount) - float32(rating)
+	averageRating := total / float32(newCount)
+	return cs.petSitterService.UpdateRatingAndCommentsCount(petSitterID, averageRating, newCount)
 }
 
 func (cs *CommentService) FindUserCommentByID(commentID, userID uint) (*entities.Comment, error) {

@@ -36,6 +36,10 @@ func main() {
 
 	routes.SetUpRoutes(ginEngine, app)
 
+	if err := app.Consumers.EmailConsumer.Start(); err != nil {
+		panic(err)
+	}
+
 	srv := &http.Server{
 		Addr:    ":8080",
 		Handler: app.Middlewares.CORSMiddleware.Handler(ginEngine),

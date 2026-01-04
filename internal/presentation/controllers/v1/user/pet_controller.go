@@ -6,6 +6,7 @@ import (
 	"hona/backend/internal/application/usecase"
 	"hona/backend/internal/domain/enums"
 	"hona/backend/internal/presentation/controllers"
+	"log"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -30,7 +31,7 @@ func (uc *UserPetController) AddPet(ctx *gin.Context) {
 		Species   uint       `form:"species" validate:"required,min=1,max=67"`
 		BirthDate *time.Time `form:"birthDate"`
 		IsAdult   bool       `form:"isAdult" validate:"omitempty"`
-		Gender    uint       `form:"gender" validate:"omitempty,min=1,max=3"`
+		Gender    uint       `form:"gender" validate:"required,min=1,max=3"`
 		Weight    *float32   `form:"weight" validate:"omitempty,min=0.1,max=500"`
 		AboutPet  *string    `form:"aboutPet" validate:"omitempty,max=10000"`
 	}
@@ -69,9 +70,9 @@ func (uc *UserPetController) UpdatePet(ctx *gin.Context) {
 		Name      string     `form:"name" validate:"required,min=1,max=100"`
 		Kind      uint       `form:"kind" validate:"required,min=1,max=18"`
 		Species   uint       `form:"species" validate:"required,min=1,max=67"`
-		BirthDate *time.Time `form:"birthDate" validate:"omitempty,datetime"`
+		BirthDate *time.Time `form:"birthDate" validate:"omitempty"`
 		IsAdult   bool       `form:"isAdult" validate:"omitempty"`
-		Gender    uint       `form:"gender" validate:"omitempty,min=1,max=3"`
+		Gender    uint       `form:"gender" validate:"required,min=1,max=3"`
 		Weight    *float32   `form:"weight" validate:"omitempty,min=0.1,max=500"`
 		AboutPet  *string    `form:"aboutPet" validate:"omitempty,max=10000"`
 	}
@@ -94,6 +95,8 @@ func (uc *UserPetController) UpdatePet(ctx *gin.Context) {
 		AboutPet:   params.AboutPet,
 		ProfilePic: file,
 	}
+
+	log.Println(params.BirthDate)
 
 	err = uc.petService.UpdatePet(UpdatePetInfo)
 	if err != nil {

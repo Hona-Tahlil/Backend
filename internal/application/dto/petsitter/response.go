@@ -5,6 +5,7 @@ import (
 	"hona/backend/internal/application/dto/rbac"
 	"hona/backend/internal/application/dto/servicedto"
 	"hona/backend/internal/domain/enums"
+	"time"
 )
 
 type PetSitterStatusResponse struct {
@@ -17,12 +18,14 @@ type PersonalInfoResponse struct {
 	LastName       string                `json:"last_name"`
 	Email          string                `json:"email"`
 	Gender         enums.Gender          `json:"gender"`
+	BirthDate      *time.Time            `json:"birth_date"`
 	PhoneNumber    string                `json:"phone_number"`
 	Province       enums.Province        `json:"province"`
 	City           enums.City            `json:"city"`
 	Address        string                `json:"address"`
 	HouseNumber    uint                  `json:"house_number"`
 	Unit           uint                  `json:"unit"`
+	UserProfilePic *string               `json:"user_profile_pic"`
 	Status         enums.PetSitterStatus `json:"status"`
 	OnboardingStep enums.OnboardingStep  `json:"onboarding_step"`
 }
@@ -80,12 +83,15 @@ type SkillsResponse struct {
 	Services []servicedto.ServiceInfoResponse `json:"services"`
 }
 
-type PetSitterInfoResponse struct {
+type SearchPetSitterInfoResponse struct {
 	ID        uint     `json:"id"`
 	FirstName string   `json:"first_name"`
 	LastName  string   `json:"last_name"`
 	Province  string   `json:"province"`
 	City      string   `json:"city"`
 	Services  []string `json:"services"`
+	MinPrice  uint     `json:"min_price"`
 	PetKinds  []string `json:"pet_kinds"`
+	Rate      float64  `json:"rate"`
+	Comments  uint     `json:"comments"`
 }

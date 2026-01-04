@@ -17,6 +17,17 @@ type Env struct {
 	URLs              URLs
 	EmailVerification EmailVerification
 	WebsocketSetting  WebsocketSetting
+	RabbitMQ          RabbitMQ
+}
+
+type RabbitMQ struct {
+	User          string
+	Password      string
+	Host          string
+	Port          string
+	VHost         string
+	MaxRetryCount int
+	RetryDelay    time.Duration
 }
 
 type Storage struct {
@@ -29,7 +40,9 @@ type Storage struct {
 }
 
 type Buckets struct {
-	PetProfilePic  string
+	PetProfilePic string
+	PetSitterCert string
+	PetSitterFile  string
 	UserProfilePic string
 	PetSitterFile  string
 	ChatMedia      string
@@ -99,7 +112,9 @@ func NewEnv() *Env {
 			AccessKey: os.Getenv("STORAGE_ACCESS_KEY"),
 			SecretKey: os.Getenv("STORAGE_SECRET_KEY"),
 			Buckets: Buckets{
-				PetProfilePic:  os.Getenv("STORAGE_PET_PROFILE_PIC_BUCKET"),
+				PetProfilePic: os.Getenv("STORAGE_PET_PROFILE_PIC_BUCKET"),
+				PetSitterCert: os.Getenv("STORAGE_PET_SITTER_CERT_BUCKET"),
+				PetSitterFile:  os.Getenv("STORAGE_PET_SITTER_FILE_BUCKET"),
 				UserProfilePic: os.Getenv("STORAGE_USER_PROFILE_PIC_BUCKET"),
 				PetSitterFile:  os.Getenv("STORAGE_PET_SITTER_FILE_BUCKET"),
 				ChatMedia:      os.Getenv("STORAGE_CHAT_MEDIA_BUCKET"),
@@ -132,6 +147,15 @@ func NewEnv() *Env {
 			PingPeriod:        getEnvDuration("PING_PERIOD", 54*time.Second),
 			MaxMessageSize:    getEnvInt("MAX_MESSAGE_SIZE", 524288),
 			MessageBufferSize: getEnvInt("MESSAGE_BUFFER_SIZE", 256),
+    },  
+		RabbitMQ: RabbitMQ{
+			User:          os.Getenv("AMQP_USER"),
+			Password:      os.Getenv("AMQP_PASSWORD"),
+			Host:          os.Getenv("AMQP_HOST"),
+			Port:          os.Getenv("AMQP_PORT"),
+			VHost:         os.Getenv("AMQP_VHOST"),
+			MaxRetryCount: getEnvInt("AMQP_MAX_RETRY", 3),
+			RetryDelay:    getEnvDuration("AMQP_RETRY_DELAY", 5*time.Second),
 		},
 	}
 }
