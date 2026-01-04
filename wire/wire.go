@@ -20,6 +20,7 @@ import (
 	"hona/backend/internal/infrastructure/rabbitmq/consumers"
 	"hona/backend/internal/infrastructure/seeder"
 	"hona/backend/internal/infrastructure/storage"
+	"hona/backend/internal/infrastructure/websocket"
 	"hona/backend/internal/presentation/controllers/v1/admin"
 	"hona/backend/internal/presentation/controllers/v1/general"
 	petsitter "hona/backend/internal/presentation/controllers/v1/pet_sitter"
@@ -58,6 +59,7 @@ var ServiceProviderSet = wire.NewSet(
 	service.NewAddressService,
 	service.NewPetSitterService,
 	service.NewCommentService,
+	service.NewChatService,
 	service.NewWalletService,
 	wire.Bind(new(domainjwt.JWTService), new(*jwt.JWTService)),
 	wire.Bind(new(domainjwt.JWTKeyManager), new(*jwt.JWTKeyManager)),
@@ -69,6 +71,7 @@ var ServiceProviderSet = wire.NewSet(
 	wire.Bind(new(usecase.AddressService), new(*service.AddressService)),
 	wire.Bind(new(usecase.PetSitterService), new(*service.PetSitterService)),
 	wire.Bind(new(usecase.CommentService), new(*service.CommentService)),
+	wire.Bind(new(usecase.ChatService), new(*service.ChatService)),
 	wire.Bind(new(usecase.WalletService), new(*service.WalletService)),
 )
 
@@ -90,6 +93,7 @@ var UserControllersProviderSet = wire.NewSet(
 	user.NewUserPetController,
 	user.NewUserRequestController,
 	user.NewUserCommentController,
+	user.NewUserChatController,
 	user.NewUserProfileController,
 	user.NewUserWalletController,
 	wire.Struct(new(UserControllers), "*"),
@@ -98,6 +102,7 @@ var UserControllersProviderSet = wire.NewSet(
 var PetSitterControllersProviderSet = wire.NewSet(
 	petsitter.NewPetSitterRegisterController,
 	petsitter.NewPetSitterRequestController,
+	petsitter.NewPetSitterChatController,
 	petsitter.NewPetSitterSkillsController,
 	petsitter.NewPetSitterCalendarController,
 	petsitter.NewPetSitterCommentController,
@@ -115,6 +120,7 @@ var MiddlewaresProviderSet = wire.NewSet(
 	middleware.NewRBACMiddleware,
 	middleware.NewAuthMiddleware,
 	middleware.NewCORSMiddleware,
+	middleware.NewWebsocketMiddleware,
 	wire.Struct(new(Middlewares), "*"),
 )
 
@@ -144,10 +150,10 @@ var ProviderSet = wire.NewSet(
 )
 
 type GeneralControllers struct {
-	GeneralUserController     *general.GeneralUserController
-	GeneralPetController      *general.GeneralPetController
-	GeneralProvinceController *general.GeneralProvinceController
-	GeneralSearchController   *general.GeneralSearchController
+	GeneralUserController          *general.GeneralUserController
+	GeneralPetController           *general.GeneralPetController
+	GeneralProvinceController      *general.GeneralProvinceController
+	GeneralSearchController        *general.GeneralSearchController
 }
 
 type AdminControllers struct {
@@ -159,6 +165,7 @@ type UserControllers struct {
 	UserPetController     *user.UserPetController
 	UserRequestController *user.UserRequestController
 	UserCommentController *user.UserCommentController
+	UserChatController    *user.UserChatController
 	UserProfileController *user.UserProfileController
 	UserWalletController  *user.UserWalletController
 }
@@ -166,6 +173,7 @@ type UserControllers struct {
 type PetSitterControllers struct {
 	PetSitterRegisterController *petsitter.PetSitterRegisterController
 	PetSitterRequestController  *petsitter.PetSitterRequestController
+	PetSitterChatController     *petsitter.PetSitterChatController
 	PetSitterSkillsController   *petsitter.PetSitterSkillsController
 	PetSitterCalendarController *petsitter.PetSitterCalendarController
 	PetSitterCommentController  *petsitter.PetSitterCommentController
@@ -185,6 +193,7 @@ type Middlewares struct {
 	AuthMiddleware         *middleware.AuthMiddleware
 	RBACMiddleware         *middleware.RBACMiddleware
 	CORSMiddleware         *middleware.CORSMiddleware
+	WebsocketMiddleware    *middleware.WebsocketMiddleware
 }
 
 type Seeder struct {
@@ -217,7 +226,7 @@ func NewApplication(controllers *Controllers, middlewares *Middlewares, seeder *
 	}
 }
 
-func InitializeApplication(container *bootstrap.Config) (*Application, error) {
+func InitializeApplication(container *bootstrap.Config, hub *websocket.Hub) (*Application, error) {
 	wire.Build(
 		ProviderSet,
 		NewApplication,

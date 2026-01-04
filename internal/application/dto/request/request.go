@@ -84,3 +84,8 @@ type SearchPetSitterRequestsRequest struct {
 	Filters         []general.Filter
 	Sorts           []general.Sort
 }
+
+type GetRequestsBetweenRequest struct {
+	UserID          uint
+	PetSitterUserID uint
+}
