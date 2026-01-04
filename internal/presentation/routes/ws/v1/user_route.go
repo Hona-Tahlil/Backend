@@ -8,7 +8,8 @@ import (
 
 func SetUpUserRoutes(v1 *gin.RouterGroup, app *wire.Application) {
 	chat := v1.Group("/chat")
+	// chat.Use(app.Middlewares.WebsocketMiddleware.UpgradeToWebSocket)
 	{
-		chat.GET("/room/:roomID", app.Controllers.UserControllers.UserChatController.HandleWebsocket)
+		chat.GET("/room/:roomID/:token", app.Controllers.UserControllers.UserChatController.HandleWebsocket)
 	}
 }

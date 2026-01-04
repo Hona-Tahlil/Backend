@@ -9,6 +9,7 @@ import (
 type Hub struct {
 	clients map[uint]map[*Client]bool
 	rooms map[uint]map[*Client]bool
+	lastSeen map[uint]time.Time
 
 	Broadcast   chan *Message
 	Register    chan *Client
@@ -20,6 +21,7 @@ func NewHub() *Hub {
 	return &Hub{
 		clients:    make(map[uint]map[*Client]bool),
 		rooms:      make(map[uint]map[*Client]bool),
+		lastSeen:   make(map[uint]time.Time),
 		Broadcast:  make(chan *Message, 256),
 		Register:   make(chan *Client, 256),
 		Unregister: make(chan *Client, 256),
@@ -52,7 +54,7 @@ func (h *Hub) handleRegister(c *Client) {
 	}
 	h.rooms[c.roomID][c] = true
 
-	presenceBytes := h.buildPresenceBytes(c.roomID, c.userID, true)
+	presenceBytes := h.buildPresenceBytes(c.roomID, c.userID, true, nil)
 
 	targets := h.snapshotRoomLocked(c.roomID)
 
@@ -68,7 +70,12 @@ func (h *Hub) handleUnregister(c *Client) {
 		delete(set, c)
 		if len(set) == 0 {
 			delete(h.clients, c.userID)
+			h.lastSeen[c.userID] = time.Now().UTC()
 		}
+	}
+	isOnlineGlobal := false
+	if set, ok := h.clients[c.userID]; ok && len(set) > 0 {
+		isOnlineGlobal = true
 	}
 
 	if set, ok := h.rooms[c.roomID]; ok {
@@ -77,32 +84,52 @@ func (h *Hub) handleUnregister(c *Client) {
 			delete(h.rooms, c.roomID)
 		}
 	}
+	stillInRoom := h.isUserOnlineInRoomLocked(c.roomID, c.userID)
 
-	presenceBytes := h.buildPresenceBytes(c.roomID, c.userID, false)
-	targets := h.snapshotRoomLocked(c.roomID)
+	var presenceBytes []byte
+	var targets []*Client
+	if !stillInRoom {
+		var lastSeen *time.Time
+		if !isOnlineGlobal {
+			ts := h.lastSeen[c.userID]
+			lastSeen = &ts
+		}
+		presenceBytes = h.buildPresenceBytes(c.roomID, c.userID, false, lastSeen)
+		targets = h.snapshotRoomLocked(c.roomID)
+	}
 
 	h.mu.Unlock()
 
 	c.CloseConnection()
 
-	h.sendToClients(targets, presenceBytes)
+	if len(presenceBytes) != 0 {
+		h.sendToClients(targets, presenceBytes)
+	}
 }
 
 func (h *Hub) handleBroadcast(msg *Message) {
-	if msg.Type != MessageTypeChat {
-		return
-	}
-
-	payload, err := json.Marshal(msg)
-	if err != nil {
-		return
-	}
-
 	h.mu.RLock()
 	targets := h.snapshotRoomRLocked(msg.RoomID)
 	h.mu.RUnlock()
 
-	h.sendToClients(targets, payload)
+	switch msg.Type {
+	case MessageTypeChat:
+		h.sendChatToTargets(targets, msg)
+	case MessageTypeRead:
+		fallthrough
+	case MessageTypeEdit:
+		fallthrough
+	case MessageTypeDelete:
+		fallthrough
+	case MessageTypeReaction:
+		payload, err := json.Marshal(msg)
+		if err != nil {
+			return
+		}
+		h.sendToClients(targets, payload)
+	default:
+		return
+	}
 }
 
 func (h *Hub) IsUserOnline(userID uint) bool {
@@ -112,8 +139,17 @@ func (h *Hub) IsUserOnline(userID uint) bool {
 	return ok && len(set) > 0
 }
 
+func (h *Hub) LastSeen(userID uint) *time.Time {
+	h.mu.RLock()
+	defer h.mu.RUnlock()
+	if ts, ok := h.lastSeen[userID]; ok {
+		copy := ts
+		return &copy
+	}
+	return nil
+}
 
-func (h *Hub) buildPresenceBytes(roomID, userID uint, online bool) []byte {
+func (h *Hub) buildPresenceBytes(roomID, userID uint, online bool, lastSeen *time.Time) []byte {
 	wire := struct {
 		Type    string          `json:"type"`
 		RoomID  uint            `json:"room_id"`
@@ -124,6 +160,7 @@ func (h *Hub) buildPresenceBytes(roomID, userID uint, online bool) []byte {
 		Content: PresencePayload{
 			UserID:    userID,
 			IsOnline:  online,
+			LastSeen:  lastSeen,
 			Timestamp: time.Now(),
 		},
 	}
@@ -155,6 +192,19 @@ func (h *Hub) snapshotRoomRLocked(roomID uint) []*Client {
 	return out
 }
 
+func (h *Hub) isUserOnlineInRoomLocked(roomID, userID uint) bool {
+	set, ok := h.rooms[roomID]
+	if !ok || len(set) == 0 {
+		return false
+	}
+	for c := range set {
+		if c.userID == userID {
+			return true
+		}
+	}
+	return false
+}
+
 func (h *Hub) sendToClients(targets []*Client, payload []byte) {
 	if len(targets) == 0 {
 		return
@@ -178,5 +228,49 @@ func (h *Hub) sendToClients(targets []*Client, payload []byte) {
 			default:
 			}
 		}
+	}
+}
+
+func (h *Hub) sendChatToTargets(targets []*Client, msg *Message) {
+	if len(targets) == 0 || msg == nil {
+		return
+	}
+
+	var payload ChatPayload
+	if err := json.Unmarshal(msg.Content, &payload); err != nil {
+		wire, err := json.Marshal(msg)
+		if err != nil {
+			return
+		}
+		h.sendToClients(targets, wire)
+		return
+	}
+
+	for _, c := range targets {
+		outPayload := payload
+		outPayload.IsMine = c.userID == msg.SenderID
+		outPayload.IsUnread = !outPayload.IsMine
+
+		wire := struct {
+			Type      string      `json:"type"`
+			RoomID    uint        `json:"room_id"`
+			SenderID  uint        `json:"sender_id,omitempty"`
+			MessageID uint        `json:"message_id,omitempty"`
+			Timestamp time.Time   `json:"timestamp"`
+			Content   ChatPayload `json:"content,omitempty"`
+		}{
+			Type:      msg.Type,
+			RoomID:    msg.RoomID,
+			SenderID:  msg.SenderID,
+			MessageID: msg.MessageID,
+			Timestamp: msg.Timestamp,
+			Content:   outPayload,
+		}
+
+		b, err := json.Marshal(wire)
+		if err != nil {
+			continue
+		}
+		h.sendToClients([]*Client{c}, b)
 	}
 }

@@ -31,6 +31,8 @@ type Storage struct {
 type Buckets struct {
 	PetProfilePic  string
 	UserProfilePic string
+	PetSitterFile  string
+	ChatMedia      string
 }
 
 type TokenExpires struct {
@@ -99,6 +101,8 @@ func NewEnv() *Env {
 			Buckets: Buckets{
 				PetProfilePic:  os.Getenv("STORAGE_PET_PROFILE_PIC_BUCKET"),
 				UserProfilePic: os.Getenv("STORAGE_USER_PROFILE_PIC_BUCKET"),
+				PetSitterFile:  os.Getenv("STORAGE_PET_SITTER_FILE_BUCKET"),
+				ChatMedia:      os.Getenv("STORAGE_CHAT_MEDIA_BUCKET"),
 			},
 			DefaultPetProfileKey:  os.Getenv("STORAGE_PET_DEFAULT_PROFILE_KEY"),
 			DefaultUserProfileKey: os.Getenv("STORAGE_USER_DEFAULT_PROFILE_KEY"),

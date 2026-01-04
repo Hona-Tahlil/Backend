@@ -13,6 +13,7 @@ type RequestService interface {
 	PayRequest(info request.PayRequestRequest) error
 	SearchRequests(info request.SearchRequestsRequest) ([]request.RequestListItemResponse, int64, error)
 	SearchPetSitterRequests(info request.SearchPetSitterRequestsRequest) ([]request.RequestListItemResponse, int64, error)
+	GetRequestsBetween(info request.GetRequestsBetweenRequest) ([]request.RequestListItemResponse, error)
 	GetRequestFullData(info request.GetRequestFullDataRequest) (*request.RequestFullDataResponse, error)
 	RespondToRequest(info request.RespondToRequestRequest) error
 	PreloadFields(request *entities.Request, fields []string) error

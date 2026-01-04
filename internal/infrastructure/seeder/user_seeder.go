@@ -2,7 +2,6 @@ package seeder
 
 import (
 	"fmt"
-	"hona/backend/bootstrap"
 	"hona/backend/internal/domain/entities"
 	"hona/backend/internal/domain/enums"
 	"log"
@@ -25,15 +24,19 @@ func NewUserSeeder(db *gorm.DB) *UserSeeder {
 func (s *UserSeeder) Seed(count int) error {
 	users := make([]entities.User, 0, count)
 
-	if s.db.First(&entities.User{}).Error == nil {
+	var userCount int64
+	s.db.Model(&entities.User{}).Count(&userCount)
+	log.Println("Current user count in database:", userCount)
+	if userCount > 0 {
 		log.Println("✓ Users already seeded, skipping...")
 		return nil
 	}
-	defaultProfileKey := bootstrap.Run().Env.Storage.DefaultUserProfileKey
-	if defaultProfileKey == "" {
-		return fmt.Errorf("default user profile key is empty")
-	}
-
+	log.Println("Current user count in database:", userCount)
+	// defaultProfileKey := bootstrap.Run().Env.Storage.DefaultUserProfileKey
+	// if defaultProfileKey == "" {
+	// 	return fmt.Errorf("default user profile key is empty")
+	// }
+	log.Println("Seeding users...")
 	for i := 0; i < count; i++ {
 		email := "test" + fmt.Sprintf("%d", i) + "@email.com"
 		firstName := faker.FirstName()
@@ -44,7 +47,7 @@ func (s *UserSeeder) Seed(count int) error {
 		if err != nil {
 			return fmt.Errorf("hash password: %w", err)
 		}
-
+		log.Println("Generated user:", email)
 		var phone *string
 		if rand.Intn(2) == 1 {
 			p := faker.Phonenumber()
@@ -62,7 +65,7 @@ func (s *UserSeeder) Seed(count int) error {
 
 		genders := []enums.Gender{enums.Male, enums.Female}
 		gender := genders[rand.Intn(len(genders))]
-		pictureKey := defaultProfileKey
+		// pictureKey := defaultProfileKey
 
 		user := entities.User{
 			Email:           email,
@@ -74,12 +77,12 @@ func (s *UserSeeder) Seed(count int) error {
 			IsPhoneVerified: i%3 == 0,
 			Gender:          gender,
 			BirthDate:       birthDate,
-			PictureLink:     &pictureKey,
+			// PictureLink:     &pictureKey,
 		}
 
 		users = append(users, user)
 	}
-
+	log.Println("Seeding users...")
 	if err := s.db.CreateInBatches(users, 100).Error; err != nil {
 		return fmt.Errorf("failed to batch insert users: %w", err)
 	}

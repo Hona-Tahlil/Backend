@@ -39,8 +39,7 @@ func SetUpPetSitterRoutes(v1 *gin.RouterGroup, app *wire.Application) {
 		}
 		chat := petsitter.Group("/chat")
 		{
-			//get by status
-			chat.POST("/room/:userID", app.Controllers.UserControllers.UserChatController.CreateOrGetRoom)
+			chat.POST("/rooms/:userID", app.Controllers.UserControllers.UserChatController.CreateOrGetRoom)
 			chat.GET("/rooms", app.Controllers.PetSitterControllers.PetSitterChatController.GetAllRooms)
 			chat.PUT("/room/:roomID/accept", app.Controllers.PetSitterControllers.PetSitterChatController.AcceptRoom)
 			chat.PUT("/room/:roomID/reject", app.Controllers.PetSitterControllers.PetSitterChatController.RejectRoom)
@@ -48,6 +47,10 @@ func SetUpPetSitterRoutes(v1 *gin.RouterGroup, app *wire.Application) {
 			chat.PUT("/room/:roomID/unblock", app.Controllers.PetSitterControllers.PetSitterChatController.UnblockRoom)
 			chat.GET("/room/:roomID/request-info", app.Controllers.PetSitterControllers.PetSitterChatController.GetRoomRequestInfo)
 			chat.GET("/room/:roomID/messages", app.Controllers.PetSitterControllers.PetSitterChatController.GetRoomMessages)
+			chat.PUT("/room/:roomID/message/:messageID", app.Controllers.PetSitterControllers.PetSitterChatController.EditMessage)
+			chat.DELETE("/room/:roomID/message/:messageID", app.Controllers.PetSitterControllers.PetSitterChatController.DeleteMessage)
+			chat.POST("/room/:roomID/message/:messageID/reaction", app.Controllers.PetSitterControllers.PetSitterChatController.AddReaction)
+			chat.DELETE("/room/:roomID/message/:messageID/reaction", app.Controllers.PetSitterControllers.PetSitterChatController.RemoveReaction)
 
 		}
 	}

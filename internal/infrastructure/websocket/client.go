@@ -6,6 +6,7 @@ import (
 	"hona/backend/bootstrap"
 	"hona/backend/internal/application/dto/chat"
 	"hona/backend/internal/application/usecase"
+	"hona/backend/internal/domain/enums"
 	"sync"
 	"time"
 
@@ -52,9 +53,7 @@ func NewClient(
 }
 
 func (c *Client) ReadPump() error {
-	// مهم: وقتی ReadPump تمام شد، کلاینت را از هاب Unregister کن
 	defer func() {
-		// Unregister باعث CloseConnection هم می‌شود
 		c.Hub.Unregister <- c
 	}()
 
@@ -88,13 +87,13 @@ func (c *Client) ReadPump() error {
 		switch msg.Type {
 		case MessageTypeChat:
 			c.processAndSaveChatMessage(&msg)
-			// اگر ذخیره نشد، broadcast نکن
 			if msg.MessageID == 0 {
 				continue
 			}
 			c.Hub.Broadcast <- &msg
+		case MessageTypeRead:
+			c.processAndBroadcastReadReceipt(&msg)
 		default:
-			// پیام‌های ناشناس را ignore کن
 			continue
 		}
 	}
@@ -104,11 +103,9 @@ func (c *Client) WritePump() error {
 	ticker := time.NewTicker(c.websocketSetting.PingPeriod)
 	defer func() {
 		ticker.Stop()
-		// اگر WritePump تمام شد، Unregister کن (اگر قبلاً نشده)
 		select {
 		case c.Hub.Unregister <- c:
 		default:
-			// اگر کانال پر بود/هاب بسته بود، فقط کانکشن را ببند
 			c.CloseConnection()
 		}
 	}()
@@ -133,7 +130,6 @@ func (c *Client) WritePump() error {
 
 			_, _ = w.Write(payload)
 
-			// batch: پیام‌های در صف را هم پشت سر هم بفرست
 			n := len(c.send)
 			for i := 0; i < n; i++ {
 				_, _ = w.Write(bytes.TrimSpace([]byte{'\n'}))
@@ -171,22 +167,80 @@ func (c *Client) CloseConnection() {
 }
 
 func (c *Client) processAndSaveChatMessage(msg *Message) {
-	var content string
-	if err := json.Unmarshal(msg.Content, &content); err != nil {
-		return
+	var payload ChatPayload
+	if err := json.Unmarshal(msg.Content, &payload); err != nil {
+		var legacyContent string
+		if err := json.Unmarshal(msg.Content, &legacyContent); err != nil {
+			return
+		}
+		payload.MessageType = "TEXT"
+		payload.Text = legacyContent
+	}
+	if payload.MessageType == "" {
+		payload.MessageType = "TEXT"
 	}
 	req := chat.SaveMessageRequest{
-		RoomID:  c.roomID,
-		SenderID:  c.userID,
-		Content: content,
-		ReplyToMessageID: nil,
+		RoomID:      c.roomID,
+		SenderID:    c.userID,
+		Content:     payload.Text,
+		MessageType: enums.ChatMessageType(payload.MessageType),
+		MediaBase64: payload.ImageBase64,
+		MediaMime:   payload.ImageMime,
+		ReplyToMessageID: payload.ReplyToMessageID,
 	}
 	saved, err := c.chatService.SaveMessage(req)
 	if err != nil {
 		return
 	}
 
+	responsePayload := ChatPayload{
+		MessageType: string(saved.MessageType),
+		Text:        saved.Content,
+		ReplyToMessageID: payload.ReplyToMessageID,
+	}
+	if saved.MediaURL != nil {
+		responsePayload.ImageURL = *saved.MediaURL
+	}
+	encoded, err := json.Marshal(responsePayload)
+	if err != nil {
+		return
+	}
+
 	msg.MessageID = saved.ID
+	msg.SenderID = c.userID
+	msg.Content = encoded
+}
+
+func (c *Client) processAndBroadcastReadReceipt(msg *Message) {
+	var payload ReadPayload
+	if err := json.Unmarshal(msg.Content, &payload); err != nil {
+		return
+	}
+	if payload.LastReadMessageID == 0 {
+		return
+	}
+
+	req := chat.MarkRoomReadRequest{
+		RoomID:            c.roomID,
+		SenderID:          c.userID,
+		LastReadMessageID: payload.LastReadMessageID,
+	}
+	if err := c.chatService.MarkAsRead(req); err != nil {
+		return
+	}
+
+	payload.ReaderID = c.userID
+	payload.Timestamp = time.Now()
+	encoded, err := json.Marshal(payload)
+	if err != nil {
+		return
+	}
+
+	msg.RoomID = c.roomID
+	msg.SenderID = c.userID
+	msg.Timestamp = payload.Timestamp
+	msg.Content = encoded
+	c.Hub.Broadcast <- msg
 }
 
 func (c *Client) IsReady() bool {

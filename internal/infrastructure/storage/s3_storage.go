@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"hona/backend/bootstrap"
@@ -25,6 +26,8 @@ func NewS3Storage() *S3Storage {
 	buckets := make(map[enums.BucketType]string)
 	buckets[enums.PetProfilePic] = bootstrap.Run().Env.Storage.Buckets.PetProfilePic
 	buckets[enums.UserProfilePic] = bootstrap.Run().Env.Storage.Buckets.UserProfilePic
+	buckets[enums.PetSitterFile] = bootstrap.Run().Env.Storage.Buckets.PetSitterFile
+	buckets[enums.ChatMedia] = bootstrap.Run().Env.Storage.Buckets.ChatMedia
 	return &S3Storage{
 		buckets: buckets,
 	}
@@ -75,6 +78,26 @@ func (s3Storage *S3Storage) UploadFile(bucketType enums.BucketType, key string, 
 		Bucket: aws.String(bucket),
 		Key:    aws.String(key),
 		Body:   fileReader,
+	})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s3Storage *S3Storage) UploadBytes(bucketType enums.BucketType, key string, contentType string, data []byte) error {
+	err := s3Storage.setS3Client(bucketType)
+	if err != nil {
+		return err
+	}
+	bucket := s3Storage.buckets[bucketType]
+
+	_, err = s3Storage.client.PutObject(context.TODO(), &s3.PutObjectInput{
+		Bucket:      aws.String(bucket),
+		Key:         aws.String(key),
+		Body:        bytes.NewReader(data),
+		ContentType: aws.String(contentType),
 	})
 	if err != nil {
 		return err

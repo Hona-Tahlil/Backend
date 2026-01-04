@@ -50,6 +50,7 @@ func NewPostgresDatabase() *gorm.DB {
 			&entities.Comment{},
 			&entities.Address{},
 			&entities.ChatMessage{},
+			&entities.ChatMessageReaction{},
 			&entities.Transaction{},
 			&entities.Transfer{},
 		); err != nil {

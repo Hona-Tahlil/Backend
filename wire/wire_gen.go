@@ -44,7 +44,6 @@ func InitializeApplication(container *bootstrap.Config, hub *websocket.Hub) (*Ap
 	s3Storage := storage.NewS3Storage()
 	userService := service.NewUserService(jwtService, unitOfWork, userCacheRepository, emailService, addressService, s3Storage)
 	generalUserController := general.NewGeneralUserController(userService)
-	chatService := service.NewChatService(unitOfWork, userService)
 	petService := service.NewPetService(unitOfWork, s3Storage, userService)
 	generalPetController := general.NewGeneralPetController(petService)
 	generalProvinceController := general.NewGeneralProvinceController(addressService)
@@ -75,12 +74,13 @@ func InitializeApplication(container *bootstrap.Config, hub *websocket.Hub) (*Ap
 		EmailService:     emailService,
 	}
 	requestService := service.NewRequestService(requestServiceDeps)
+	chatService := service.NewChatService(unitOfWork, userService, s3Storage, hub, requestService)
 	userRequestController := user.NewUserRequestController(requestService)
 	commentService := service.NewCommentService(unitOfWork, userService, requestService)
 	userCommentController := user.NewUserCommentController(commentService)
 	userProfileController := user.NewUserProfileController(userService)
 	userWalletController := user.NewUserWalletController(walletService)
-	userChatController := user.NewUserChatController(chatService, hub)
+	userChatController := user.NewUserChatController(chatService, hub, jwtService)
 	userControllers := &UserControllers{
 		UserPetController:     userPetController,
 		UserRequestController: userRequestController,
@@ -94,7 +94,7 @@ func InitializeApplication(container *bootstrap.Config, hub *websocket.Hub) (*Ap
 	petSitterSkillsController := petsitter.NewPetSitterSkillsController(petSitterService)
 	petSitterCalendarController := petsitter.NewPetSitterCalendarController(petSitterService)
 	petSitterWalletController := petsitter.NewPetSitterWalletController(walletService)
-	petSitterChatController := petsitter.NewPetSitterChatController(chatService, hub)
+	petSitterChatController := petsitter.NewPetSitterChatController(chatService, hub, jwtService)
 	petSitterControllers := &PetSitterControllers{
 		PetSitterRegisterController: petSitterRegisterController,
 		PetSitterRequestController:  petSitterRequestController,
