@@ -250,7 +250,7 @@ func NewConstants() *Constants {
 			CalendarConflict:       "errors.calendarConflict",
 			OldInfo:                "errors.oldInfo",
 			InsufficientBalance:    "errors.insufficientBalance",
-			RateLimit:              "error.rateLimitExceed",
+			RateLimit:              "errors.rateLimitExceed",
 		},
 		JWTConstants: JWTConstants{
 			AccessTokenType:  "access",

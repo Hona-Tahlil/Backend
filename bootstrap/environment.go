@@ -145,8 +145,8 @@ func NewEnv() *Env {
 			RetryDelay:    getEnvDuration("AMQP_RETRY_DELAY", 5*time.Second),
 		},
 		RateLimit: RateLimit{
-			Limit: getEnvInt("RATE_LIMIT", 20),
-			Burst: getEnvInt("RATE_lIMIT_BURST", 20),
+			Limit: getEnvInt("RATE_LIMIT", 5),
+			Burst: getEnvInt("RATE_lIMIT_BURST", 10),
 		},
 	}
 }
