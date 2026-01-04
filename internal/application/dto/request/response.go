@@ -50,6 +50,8 @@ type RequestListItemResponse struct {
 	PetSitterFirstName   string                                  `json:"petSitterFirstName"`
 	PetSitterLastName    string                                  `json:"petSitterLastName"`
 	PetSitterPictureLink string                                  `json:"petSitterPictureLink"`
+	UserFirstName        string                                  `json:"userFirstName"`
+	UserLastName         string                                  `json:"userLastName"`
 	UserPictureLink      string                                  `json:"userPictureLink"`
 	Service              servicedto.ServiceInfoResponse          `json:"service"`
 	CalendarSlots        []calendarslot.CalendarSlotInfoResponse `json:"calendarSlots"`
