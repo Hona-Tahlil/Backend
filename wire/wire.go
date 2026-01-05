@@ -99,6 +99,7 @@ var PetSitterControllersProviderSet = wire.NewSet(
 	petsitter.NewPetSitterRegisterController,
 	petsitter.NewPetSitterRequestController,
 	petsitter.NewPetSitterSkillsController,
+	petsitter.NewPetSitterProfileController,
 	petsitter.NewPetSitterCalendarController,
 	petsitter.NewPetSitterCommentController,
 	petsitter.NewPetSitterWalletController,
@@ -167,6 +168,7 @@ type PetSitterControllers struct {
 	PetSitterRegisterController *petsitter.PetSitterRegisterController
 	PetSitterRequestController  *petsitter.PetSitterRequestController
 	PetSitterSkillsController   *petsitter.PetSitterSkillsController
+	PetSitterProfileController  *petsitter.PetSitterProfileController
 	PetSitterCalendarController *petsitter.PetSitterCalendarController
 	PetSitterCommentController  *petsitter.PetSitterCommentController
 	PetSitterWalletController   *petsitter.PetSitterWalletController

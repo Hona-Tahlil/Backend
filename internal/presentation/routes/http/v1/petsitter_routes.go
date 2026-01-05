@@ -30,6 +30,11 @@ func SetUpPetSitterRoutes(v1 *gin.RouterGroup, app *wire.Application) {
 			// Optional: Get current status
 			register.GET("/status", app.Controllers.PetSitterControllers.PetSitterRegisterController.GetPetsitterStatus)
 		}
+		profile := petsitter.Group("/profile")
+		{
+			profile.GET("/", app.Controllers.PetSitterControllers.PetSitterProfileController.GetProfile)
+			profile.PUT("/", app.Controllers.PetSitterControllers.PetSitterProfileController.UpdateProfile)
+		}
 		requests := petsitter.Group("/requests")
 		{
 			requests.POST("/search", app.Controllers.PetSitterControllers.PetSitterRequestController.SearchRequests)

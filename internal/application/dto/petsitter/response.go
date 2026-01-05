@@ -1,6 +1,7 @@
 package petsitter
 
 import (
+	"hona/backend/internal/application/dto/address"
 	"hona/backend/internal/application/dto/pet"
 	"hona/backend/internal/application/dto/rbac"
 	"hona/backend/internal/application/dto/servicedto"
@@ -61,6 +62,24 @@ type PetSitterDetailsResponse struct {
 	Status         enums.PetSitterStatus `json:"status"`
 	OnboardingStep enums.OnboardingStep  `json:"onboarding_step"`
 	CreatedAt      string                `json:"created_at"`
+}
+
+type PetSitterSelfProfileResponse struct {
+	ID              uint                             `json:"id"`
+	PetSitterID     uint                             `json:"petSitterID"`
+	Email           string                           `json:"email"`
+	IsEmailVerified bool                             `json:"isEmailVerified"`
+	FirstName       string                           `json:"firstName"`
+	LastName        string                           `json:"lastName"`
+	Address         *address.AddressInfoResponse     `json:"address"`
+	Phone           *string                          `json:"phone"`
+	IsPhoneVerified bool                             `json:"isPhoneVerified"`
+	Gender          string                           `json:"gender"`
+	BirthDate       *time.Time                       `json:"birthDate"`
+	PictureLink     *string                          `json:"pictureLink"`
+	Bio             *string                          `json:"bio"`
+	Services        []servicedto.ServiceInfoResponse `json:"services"`
+	PetKinds        []pet.PetKindResponse            `json:"petKinds"`
 }
 
 type PetSitterProfileResponse struct {

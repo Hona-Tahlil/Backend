@@ -49,5 +49,7 @@ type PetSitterService interface {
 	SearchPetSittersForAdmin(info petsitter.AdminSearchPetSittersRequest) ([]petsitter.PetSitterListItemResponse, int64, error)
 	GetPetSitterDetails(info petsitter.GetPetSitterDetailsRequest) (*petsitter.PetSitterDetailsResponse, error)
 	GetPetSitterProfile(info petsitter.GetPetSitterProfileRequest) (*petsitter.PetSitterProfileResponse, error)
+	GetPetSitterSelfProfile(info petsitter.GetPetSitterSelfProfileRequest) (*petsitter.PetSitterSelfProfileResponse, error)
+	UpdatePetSitterProfile(info petsitter.UpdatePetSitterProfileRequest) error
 	ChangePetSitterStatus(info petsitter.ChangePetSitterStatusRequest) error
 }
