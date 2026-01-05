@@ -159,6 +159,7 @@ func buildCommentResponse(userService usecase.UserService, fallbackUser *entitie
 	}
 
 	return &comment.CommentResponse{
+		CommentID:     commentEntity.ID,
 		UserID:        user.ID,
 		UserFirstName: user.FirstName,
 		UserLastName:  user.LastName,

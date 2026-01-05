@@ -9,6 +9,7 @@ type AllCommentsResponse struct {
 }
 
 type CommentResponse struct {
+	CommentID     uint      `json:"commentID"`
 	UserID        uint      `json:"userID"`
 	UserFirstName string    `json:"userFirstName"`
 	UserLastName  string    `json:"userLastName"`
