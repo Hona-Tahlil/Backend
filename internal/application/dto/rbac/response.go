@@ -71,6 +71,7 @@ type UserResponse struct {
 	Gender          string                       `json:"gender"`
 	BirthDate       *time.Time                   `json:"birthDate"`
 	PictureLink     *string                      `json:"pictureLink"`
+	Bio             *string                      `json:"bio"`
 	Wallet          WalletResponse               `json:"wallet"`
 	Roles           []RoleResponse               `json:"roles"`
 }
