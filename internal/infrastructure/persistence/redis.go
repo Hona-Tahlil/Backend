@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"hona/backend/bootstrap"
-	"log"
 	"strconv"
 	"sync"
 
@@ -35,7 +34,7 @@ func NewRedisDatabase() *RedisDatabase {
 		})
 		_, err := rdb.Ping(context.Background()).Result()
 		if err != nil {
-			log.Fatal("Error connecting to Redis:", err)
+			panic(fmt.Errorf("Error connecting to Redis: %s", err))
 		}
 		rdbInstance = &RedisDatabase{RDB: rdb}
 	})

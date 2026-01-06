@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"hona/backend/internal/domain/entities"
 	"hona/backend/internal/domain/enums"
-	"log"
+	"log/slog"
 
 	"github.com/go-faker/faker/v4"
 	"gorm.io/gorm"
@@ -22,7 +22,7 @@ func NewPetSitterSeeder(db *gorm.DB) *PetSitterSeeder {
 
 func (s *PetSitterSeeder) Seed(count int) error {
 	if s.db.First(&entities.PetSitter{}).Error == nil {
-		log.Println("✓ Pet sitters already seeded, skipping...")
+		slog.Info("✓ Pet sitters already seeded, skipping...")
 		return nil
 	}
 
@@ -59,6 +59,6 @@ func (s *PetSitterSeeder) Seed(count int) error {
 		return fmt.Errorf("failed to batch insert pet sitters: %w", err)
 	}
 
-	log.Printf("✓ Successfully seeded %d pet sitters", count)
+	slog.Info("✓ Successfully seeded pet sitters", "count", count)
 	return nil
 }

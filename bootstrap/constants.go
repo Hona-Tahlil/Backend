@@ -13,13 +13,23 @@ type Constants struct {
 	EntityConstants   EntityConstants
 	TemplatesPath     TemplatesPath
 	Pagination        Pagination
+	Metrics           Metrics
 	RabbitMQConstants RabbitMQConstants
 }
 
+type Metrics struct {
+	HTTPRequestsTotal   Options
+	HTTPRequestDuration Options
+}
+
+type Options struct {
+	Name string
+	Help string
+}
+
 type Pagination struct {
-	DefaultPage       int
-	DefaultPageSize   int
-	RabbitMQConstants RabbitMQConstants
+	DefaultPage     int
+	DefaultPageSize int
 }
 
 type RabbitMQConstants struct {
@@ -294,6 +304,16 @@ func NewConstants() *Constants {
 		Pagination: Pagination{
 			DefaultPage:     1,
 			DefaultPageSize: 10,
+		},
+		Metrics: Metrics{
+			HTTPRequestsTotal: Options{
+				Name: "http_requests_total",
+				Help: "Total number of HTTP requests",
+			},
+			HTTPRequestDuration: Options{
+				Name: "http_request_duration_seconds",
+				Help: "HTTP request duration in seconds",
+			},
 		},
 		RabbitMQConstants: RabbitMQConstants{
 			Exchanges: Exchanges{

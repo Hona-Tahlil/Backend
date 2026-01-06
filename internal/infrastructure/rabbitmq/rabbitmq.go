@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"hona/backend/bootstrap"
-	"log"
+	"log/slog"
 	"sync"
 	"time"
 
@@ -51,7 +51,6 @@ func NewRabbitMQ() *RabbitMQ {
 		if err2 != nil {
 			panic(err2)
 		}
-		log.Printf("error during declare exchange: %v", err)
 		panic(err)
 	}
 
@@ -60,7 +59,6 @@ func NewRabbitMQ() *RabbitMQ {
 		if err2 != nil {
 			panic(err2)
 		}
-		log.Printf("error during declare DLQ: %v", err)
 		panic(err)
 	}
 
@@ -94,7 +92,6 @@ func (rmq *RabbitMQ) MakeQueues(channelNames ...string) {
 				if err2 != nil {
 					panic(err2)
 				}
-				log.Printf("error during declare Queue: %v", err)
 				panic(err)
 			}
 			if err := rmq.bindQueue(queue, constants.Exchanges.General, queue, channelNames[i]); err != nil {
@@ -102,7 +99,6 @@ func (rmq *RabbitMQ) MakeQueues(channelNames ...string) {
 				if err2 != nil {
 					panic(err2)
 				}
-				log.Printf("error during bind Queue: %v", err)
 				panic(err)
 			}
 		}
@@ -186,7 +182,7 @@ func (rmq *RabbitMQ) monitorConnection() {
 				rmq.isConnected = false
 				rmq.mu.Unlock()
 
-				log.Printf("RabbitMQ connection lost: %v, attempting to reconnect...", err)
+				slog.Warn("RabbitMQ connection lost, attempting to reconnect...", "err", err)
 
 				for {
 					rmq.mu.RLock()
@@ -198,10 +194,10 @@ func (rmq *RabbitMQ) monitorConnection() {
 					}
 
 					if err := rmq.reconnect(); err != nil {
-						log.Printf("Failed to reconnect to RabbitMQ: %v, retrying in %s", err, config.RetryDelay)
+						slog.Error("Failed to reconnect to RabbitMQ, retrying", "err", err, "retry_delay", config.RetryDelay)
 						time.Sleep(config.RetryDelay)
 					} else {
-						log.Println("Successfully reconnected to RabbitMQ")
+						slog.Info("Successfully reconnected to RabbitMQ")
 						connCloseChan = rmq.conn.NotifyClose(make(chan *amqp.Error))
 						break
 					}
@@ -270,7 +266,7 @@ func (rmq *RabbitMQ) reconnect() error {
 		if err2 != nil {
 			panic(err2)
 		}
-		log.Printf("error during declare exchange: %v", err)
+		slog.Error("error during declare exchange", "err", err)
 		panic(err)
 	}
 
@@ -279,7 +275,7 @@ func (rmq *RabbitMQ) reconnect() error {
 		if err2 != nil {
 			panic(err2)
 		}
-		log.Printf("error during declare DLQ: %v", err)
+		slog.Error("error during declare DLQ", "err", err)
 		panic(err)
 	}
 
@@ -357,7 +353,7 @@ func (rmq *RabbitMQ) ConsumeMessages(queue string, handler func([]byte) error) e
 	go func() {
 		for d := range msgs {
 			if err := handler(d.Body); err != nil {
-				log.Printf("Error processing message: %v", err)
+				slog.Error("Error processing message", "err", err)
 				rmq.handleRetry(&d, err)
 			} else {
 				d.Ack(false)

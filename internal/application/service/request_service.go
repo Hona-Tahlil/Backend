@@ -12,7 +12,7 @@ import (
 	domainpostgres "hona/backend/internal/domain/ports/postgres"
 	"hona/backend/internal/infrastructure/communication/mail"
 	"hona/backend/internal/infrastructure/persistence/repository/postgres"
-	"log"
+	"log/slog"
 	"sort"
 	"time"
 )
@@ -867,7 +867,7 @@ func (rs *RequestService) PreloadFields(request *entities.Request, fields []stri
 func (rs *RequestService) sendNewRequestEmail(id uint) {
 	petSitterUser, err := rs.userService.FindUserByID(id)
 	if err != nil {
-		log.Println(err)
+		slog.Error("failed to load pet sitter user for new request email", "pet_sitter_user_id", id, "err", err)
 	}
 	data := struct {
 		Year int
@@ -876,14 +876,14 @@ func (rs *RequestService) sendNewRequestEmail(id uint) {
 	}
 	err = rs.emailService.SendEmail(petSitterUser.Email, "New Request Received", bootstrap.Run().Constants.TemplatesPath.NewRequest, data)
 	if err != nil {
-		log.Println(err)
+		slog.Error("failed to send new request email", "pet_sitter_user_id", id, "err", err)
 	}
 }
 
 func (rs *RequestService) sendEditRequestEmail(user *entities.User, id uint) {
 	petSitterUser, err := rs.userService.FindUserByID(id)
 	if err != nil {
-		log.Println(err)
+		slog.Error("failed to load pet sitter user for request edit email", "pet_sitter_user_id", id, "requester_user_id", user.ID, "err", err)
 	}
 	data := struct {
 		RequesterName string
@@ -894,18 +894,18 @@ func (rs *RequestService) sendEditRequestEmail(user *entities.User, id uint) {
 	}
 	err = rs.emailService.SendEmail(petSitterUser.Email, "Request Edited", bootstrap.Run().Constants.TemplatesPath.RequestEdited, data)
 	if err != nil {
-		log.Println(err)
+		slog.Error("failed to send request edit email", "pet_sitter_user_id", id, "requester_user_id", user.ID, "err", err)
 	}
 }
 
 func (rs *RequestService) SendPetOwnerRequestCancelEmail(userID, petSitterUserID uint) {
 	user, err := rs.userService.FindUserByID(userID)
 	if err != nil {
-		log.Println(err)
+		slog.Error("failed to load pet owner user for request cancel email", "pet_owner_user_id", userID, "pet_sitter_user_id", petSitterUserID, "err", err)
 	}
 	petSitterUser, err := rs.userService.FindUserByID(petSitterUserID)
 	if err != nil {
-		log.Println(err)
+		slog.Error("failed to load pet sitter user for request cancel email", "pet_owner_user_id", userID, "pet_sitter_user_id", petSitterUserID, "err", err)
 	}
 	data := struct {
 		RequesterName string
@@ -918,18 +918,18 @@ func (rs *RequestService) SendPetOwnerRequestCancelEmail(userID, petSitterUserID
 	}
 	err = rs.emailService.SendEmail(user.Email, "Request Canceled", bootstrap.Run().Constants.TemplatesPath.PetOwnerRequestCancel, data)
 	if err != nil {
-		log.Println(err)
+		slog.Error("failed to send pet owner request cancel email", "pet_owner_user_id", userID, "pet_sitter_user_id", petSitterUserID, "err", err)
 	}
 }
 
 func (rs *RequestService) SendPetSitterRequestCancelEmail(userID, petSitterUserID uint) {
 	user, err := rs.userService.FindUserByID(userID)
 	if err != nil {
-		log.Println(err)
+		slog.Error("failed to load pet owner user for pet sitter cancel email", "pet_owner_user_id", userID, "pet_sitter_user_id", petSitterUserID, "err", err)
 	}
 	petSitterUser, err := rs.userService.FindUserByID(petSitterUserID)
 	if err != nil {
-		log.Println(err)
+		slog.Error("failed to load pet sitter user for cancel email", "pet_owner_user_id", userID, "pet_sitter_user_id", petSitterUserID, "err", err)
 	}
 	data := struct {
 		RequesterName string
@@ -940,14 +940,14 @@ func (rs *RequestService) SendPetSitterRequestCancelEmail(userID, petSitterUserI
 	}
 	err = rs.emailService.SendEmail(petSitterUser.Email, "Request Canceled", bootstrap.Run().Constants.TemplatesPath.PetSitterRequestCancel, data)
 	if err != nil {
-		log.Println(err)
+		slog.Error("failed to send pet sitter request cancel email", "pet_owner_user_id", userID, "pet_sitter_user_id", petSitterUserID, "err", err)
 	}
 }
 
 func (rs *RequestService) sendAcceptRequestEmail(id uint) {
 	user, err := rs.userService.FindUserByID(id)
 	if err != nil {
-		log.Println(err)
+		slog.Error("failed to load user for request acceptance email", "user_id", id, "err", err)
 	}
 	data := struct {
 		RequesterName string
@@ -958,14 +958,14 @@ func (rs *RequestService) sendAcceptRequestEmail(id uint) {
 	}
 	err = rs.emailService.SendEmail(user.Email, "Request Accepted", bootstrap.Run().Constants.TemplatesPath.RequestAccepted, data)
 	if err != nil {
-		log.Println(err)
+		slog.Error("failed to send request acceptance email", "user_id", id, "err", err)
 	}
 }
 
 func (rs *RequestService) sendDeclineRequestEmail(id uint) {
 	user, err := rs.userService.FindUserByID(id)
 	if err != nil {
-		log.Println(err)
+		slog.Error("failed to load user for request decline email", "user_id", id, "err", err)
 	}
 	data := struct {
 		RequesterName string
@@ -976,7 +976,7 @@ func (rs *RequestService) sendDeclineRequestEmail(id uint) {
 	}
 	err = rs.emailService.SendEmail(user.Email, "Request Declined", bootstrap.Run().Constants.TemplatesPath.RequestDeclined, data)
 	if err != nil {
-		log.Println(err)
+		slog.Error("failed to send request decline email", "user_id", id, "err", err)
 	}
 }
 

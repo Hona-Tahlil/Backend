@@ -13,11 +13,13 @@ import (
 	"hona/backend/internal/application/usecase"
 	"hona/backend/internal/domain/jwt"
 	"hona/backend/internal/domain/mail"
+	"hona/backend/internal/domain/metrics"
 	"hona/backend/internal/domain/ports"
 	"hona/backend/internal/domain/ports/redis"
 	"hona/backend/internal/domain/storage"
 	"hona/backend/internal/infrastructure/communication/mail"
 	"hona/backend/internal/infrastructure/jwt"
+	"hona/backend/internal/infrastructure/metrics"
 	"hona/backend/internal/infrastructure/persistence"
 	"hona/backend/internal/infrastructure/persistence/repository/redis"
 	"hona/backend/internal/infrastructure/rabbitmq"
@@ -121,6 +123,9 @@ func InitializeApplication(container *bootstrap.Config, hub *websocket.Hub) (*Ap
 	authMiddleware := middleware.NewAuthMiddleware(jwtService)
 	rbacMiddleware := middleware.NewRBACMiddleware(unitOfWork)
 	corsMiddleware := middleware.NewCORSMiddleware()
+	loggingMiddleware := middleware.NewLoggingMiddleware()
+	prometheusMetrics := metrics.NewPrometheusMetrics()
+	prometheusMiddleware := middleware.NewPrometheusMiddleware(prometheusMetrics)
 	websocketMiddleware := middleware.NewWebsocketMiddleware()
 	middlewares := &Middlewares{
 		LocalizationMiddleware: localizationMiddleware,
@@ -128,6 +133,8 @@ func InitializeApplication(container *bootstrap.Config, hub *websocket.Hub) (*Ap
 		AuthMiddleware:         authMiddleware,
 		RBACMiddleware:         rbacMiddleware,
 		CORSMiddleware:         corsMiddleware,
+		LoggingMiddleware:      loggingMiddleware,
+		Prometheus:             prometheusMiddleware,
 		WebsocketMiddleware:    websocketMiddleware,
 	}
 	databaseSeeder := seeder.NewDatabaseSeeder(db)
@@ -163,7 +170,7 @@ var PetSitterControllersProviderSet = wire.NewSet(petsitter.NewPetSitterRegister
 
 var ControllersProviderSet = wire.NewSet(wire.Struct(new(Controllers), "*"))
 
-var MiddlewaresProviderSet = wire.NewSet(middleware.NewLocalizationMiddleware, middleware.NewRecoveryMiddleware, middleware.NewRBACMiddleware, middleware.NewAuthMiddleware, middleware.NewCORSMiddleware, middleware.NewWebsocketMiddleware, wire.Struct(new(Middlewares), "*"))
+var MiddlewaresProviderSet = wire.NewSet(metrics.NewPrometheusMetrics, wire.Bind(new(domainmetrics.PrometheusMetrics), new(*metrics.PrometheusMetrics)), middleware.NewLocalizationMiddleware, middleware.NewRecoveryMiddleware, middleware.NewRBACMiddleware, middleware.NewAuthMiddleware, middleware.NewCORSMiddleware, middleware.NewLoggingMiddleware, middleware.NewPrometheusMiddleware, middleware.NewWebsocketMiddleware, wire.Struct(new(Middlewares), "*"))
 
 var SeederProviderSet = wire.NewSet(seeder.NewDatabaseSeeder, wire.Struct(new(Seeder), "*"))
 
@@ -228,6 +235,8 @@ type Middlewares struct {
 	AuthMiddleware         *middleware.AuthMiddleware
 	RBACMiddleware         *middleware.RBACMiddleware
 	CORSMiddleware         *middleware.CORSMiddleware
+	LoggingMiddleware      *middleware.LoggingMiddleware
+	Prometheus             *middleware.PrometheusMiddleware
 	WebsocketMiddleware    *middleware.WebsocketMiddleware
 }
 

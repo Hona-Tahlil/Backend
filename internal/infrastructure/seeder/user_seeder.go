@@ -5,6 +5,7 @@ import (
 	"hona/backend/internal/domain/entities"
 	"hona/backend/internal/domain/enums"
 	"log"
+	"log/slog"
 	"math/rand"
 	"time"
 
@@ -24,11 +25,8 @@ func NewUserSeeder(db *gorm.DB) *UserSeeder {
 func (s *UserSeeder) Seed(count int) error {
 	users := make([]entities.User, 0, count)
 
-	var userCount int64
-	s.db.Model(&entities.User{}).Count(&userCount)
-	log.Println("Current user count in database:", userCount)
-	if userCount > 0 {
-		log.Println("✓ Users already seeded, skipping...")
+	if s.db.First(&entities.User{}).Error == nil {
+		slog.Info("✓ Users already seeded, skipping...")
 		return nil
 	}
 	// defaultProfileKey := bootstrap.Run().Env.Storage.DefaultUserProfileKey
@@ -86,6 +84,6 @@ func (s *UserSeeder) Seed(count int) error {
 		return fmt.Errorf("failed to batch insert users: %w", err)
 	}
 
-	log.Printf("✓ Successfully seeded %d users", count)
+	slog.Info("✓ Successfully seeded users", "count", count)
 	return nil
 }
