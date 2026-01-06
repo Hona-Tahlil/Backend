@@ -42,7 +42,6 @@ type Storage struct {
 type Buckets struct {
 	PetProfilePic string
 	PetSitterCert string
-	PetSitterFile  string
 	UserProfilePic string
 	PetSitterFile  string
 	ChatMedia      string
@@ -116,7 +115,6 @@ func NewEnv() *Env {
 				PetSitterCert: os.Getenv("STORAGE_PET_SITTER_CERT_BUCKET"),
 				PetSitterFile:  os.Getenv("STORAGE_PET_SITTER_FILE_BUCKET"),
 				UserProfilePic: os.Getenv("STORAGE_USER_PROFILE_PIC_BUCKET"),
-				PetSitterFile:  os.Getenv("STORAGE_PET_SITTER_FILE_BUCKET"),
 				ChatMedia:      os.Getenv("STORAGE_CHAT_MEDIA_BUCKET"),
 			},
 			DefaultPetProfileKey:  os.Getenv("STORAGE_PET_DEFAULT_PROFILE_KEY"),
