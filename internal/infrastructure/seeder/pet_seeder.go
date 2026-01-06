@@ -2,7 +2,7 @@ package seeder
 
 import (
 	"fmt"
-	"hona/backend/bootstrap"
+	// "hona/backend/bootstrap"
 	"hona/backend/internal/domain/entities"
 	"hona/backend/internal/domain/enums"
 	"log/slog"
@@ -26,10 +26,10 @@ func (s *PetSeeder) Seed(count int) error {
 		slog.Info("✓ Pets already seeded, skipping...")
 		return nil
 	}
-	defaultProfileKey := bootstrap.Run().Env.Storage.DefaultPetProfileKey
-	if defaultProfileKey == "" {
-		return fmt.Errorf("default pet profile key is empty")
-	}
+	// defaultProfileKey := bootstrap.Run().Env.Storage.DefaultPetProfileKey
+	// if defaultProfileKey == "" {
+	// 	return fmt.Errorf("default pet profile key is empty")
+	// }
 	var users []entities.User
 	if err := s.db.Limit(100).Find(&users).Error; err != nil {
 		return fmt.Errorf("failed to fetch users: %w", err)
@@ -97,7 +97,7 @@ func (s *PetSeeder) Seed(count int) error {
 		}
 
 		name := generatePetName(kind)
-		pictureKey := defaultProfileKey
+		// pictureKey := defaultProfileKey
 
 		pet := entities.Pet{
 			UserID:     user.ID,
@@ -109,7 +109,7 @@ func (s *PetSeeder) Seed(count int) error {
 			Gender:     gender,
 			Weight:     weight,
 			AboutPet:   aboutPet,
-			PictureKey: &pictureKey,
+			// PictureKey: &pictureKey,
 		}
 
 		pets = append(pets, pet)

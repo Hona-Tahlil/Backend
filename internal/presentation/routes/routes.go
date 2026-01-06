@@ -2,6 +2,7 @@ package routes
 
 import (
 	httpv1 "hona/backend/internal/presentation/routes/http/v1"
+	wsv1 "hona/backend/internal/presentation/routes/ws/v1"
 	"hona/backend/wire"
 
 	"github.com/gin-gonic/gin"
@@ -22,4 +23,6 @@ func SetUpRoutes(ginEngine *gin.Engine, app *wire.Application) {
 	httpv1.SetUpAdminRoutes(v1, app)
 	httpv1.SetUpUserRoutes(v1, app)
 	httpv1.SetUpPetSitterRoutes(v1, app)
+	wsv1.SetUpUserRoutes(v1, app)
+	wsv1.SetUpPetSitterRoutes(v1, app)
 }

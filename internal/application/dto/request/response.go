@@ -31,6 +31,7 @@ type RequestFullDataResponse struct {
 	PetSitterLastName  string                                  `json:"petSitterLastName"`
 	UserFirstName      string                                  `json:"userFirstName"`
 	UserLastName       string                                  `json:"userLastName"`
+	UserPictureLink    string                                  `json:"userPictureLink"`
 	Service            servicedto.ServiceInfoResponse          `json:"service"`
 	Pets               []pet.PetBasicDataResponse              `json:"pets"`
 	CalendarSlots      []calendarslot.CalendarSlotInfoResponse `json:"calendarSlots"`
@@ -44,12 +45,18 @@ type RequestFullDataResponse struct {
 }
 
 type RequestListItemResponse struct {
-	RequestID          uint                           `json:"requestID"`
-	PetSitterUserID    uint                           `json:"petSitterUserID"`
-	PetSitterFirstName string                         `json:"petSitterFirstName"`
-	PetSitterLastName  string                         `json:"petSitterLastName"`
-	Service            servicedto.ServiceInfoResponse `json:"service"`
-	TotalPrice         uint                           `json:"totalPrice"`
-	Status             RequestStatusResponse          `json:"status"`
-	UpdatedAt          time.Time                      `json:"updatedAt"`
+	RequestID            uint                                    `json:"requestID"`
+	PetSitterUserID      uint                                    `json:"petSitterUserID"`
+	PetSitterFirstName   string                                  `json:"petSitterFirstName"`
+	PetSitterLastName    string                                  `json:"petSitterLastName"`
+	PetSitterPictureLink string                                  `json:"petSitterPictureLink"`
+	UserFirstName        string                                  `json:"userFirstName"`
+	UserLastName         string                                  `json:"userLastName"`
+	UserPictureLink      string                                  `json:"userPictureLink"`
+	Service              servicedto.ServiceInfoResponse          `json:"service"`
+	CalendarSlots        []calendarslot.CalendarSlotInfoResponse `json:"calendarSlots"`
+	Address              address.AddressInfoResponse             `json:"address"`
+	TotalPrice           uint                                    `json:"totalPrice"`
+	Status               RequestStatusResponse                   `json:"status"`
+	UpdatedAt            time.Time                               `json:"updatedAt"`
 }

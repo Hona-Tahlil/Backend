@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"hona/backend/internal/domain/entities"
 	"hona/backend/internal/domain/enums"
+	"log"
 	"log/slog"
 	"math/rand"
 	"time"
@@ -43,7 +44,7 @@ func (s *UserSeeder) Seed(count int) error {
 		if err != nil {
 			return fmt.Errorf("hash password: %w", err)
 		}
-
+		log.Println("Generated user:", email)
 		var phone *string
 		if rand.Intn(2) == 1 {
 			p := faker.Phonenumber()
@@ -78,7 +79,7 @@ func (s *UserSeeder) Seed(count int) error {
 
 		users = append(users, user)
 	}
-
+	log.Println("Seeding users...")
 	if err := s.db.CreateInBatches(users, 100).Error; err != nil {
 		return fmt.Errorf("failed to batch insert users: %w", err)
 	}

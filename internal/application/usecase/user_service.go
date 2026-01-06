@@ -18,6 +18,7 @@ type UserService interface {
 	GetRoleUsersByID(roleID uint, options *postgres.QueryOptions) ([]entities.User, int64, error)
 	GetUserInfosResponse(users []entities.User) ([]rbac.UserResponse, error)
 	GetUserInfoResponse(userEntity *entities.User) (*rbac.UserResponse, error)
+	GetUserPictureLink(userEntity *entities.User) (string, error)
 	GetProfile(info user.GetProfileRequest) (*user.ProfileResponse, error)
 	GetIdentity(info user.GetIdentityRequest) (*user.IdentityResponse, error)
 	UpdateProfile(info user.UpdateProfileRequest) error

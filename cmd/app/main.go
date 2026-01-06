@@ -5,6 +5,7 @@ import (
 	"errors"
 	"hona/backend/bootstrap"
 	"hona/backend/internal/infrastructure/logger"
+	"hona/backend/internal/infrastructure/websocket"
 	"hona/backend/internal/presentation/routes"
 	"hona/backend/wire"
 	"log/slog"
@@ -34,6 +35,8 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	hub := websocket.NewHub()
+	go hub.Run()
 
 	routes.SetUpRoutes(ginEngine, app)
 

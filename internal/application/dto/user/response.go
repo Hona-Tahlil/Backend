@@ -27,6 +27,7 @@ type ProfileResponse struct {
 	Gender          string                       `json:"gender"`
 	BirthDate       *time.Time                   `json:"birthDate"`
 	PictureLink     *string                      `json:"pictureLink"`
+	Bio             *string                      `json:"bio"`
 }
 
 type IdentityResponse struct {

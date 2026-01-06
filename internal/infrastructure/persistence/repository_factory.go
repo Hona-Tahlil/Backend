@@ -56,3 +56,7 @@ func (f *RepositoryFactory) TransferRepository() domainpostgres.TransferReposito
 func (f *RepositoryFactory) TransactionRepository() domainpostgres.TransactionRepository {
 	return postgres.NewTransactionRepository(f.db)
 }
+
+func (f *RepositoryFactory) ChatRepository() domainpostgres.ChatRepository {
+	return postgres.NewChatRepository(f.db)
+}

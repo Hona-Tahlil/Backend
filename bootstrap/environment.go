@@ -19,6 +19,7 @@ type Env struct {
 	URLs              URLs
 	EmailVerification EmailVerification
 	Logger            LoggerConfig
+	WebsocketSetting  WebsocketSetting
 	RabbitMQ          RabbitMQ
 }
 
@@ -46,6 +47,7 @@ type Buckets struct {
 	PetSitterCert  string
 	PetSitterFile  string
 	UserProfilePic string
+	ChatMedia      string
 }
 
 type TokenExpires struct {
@@ -83,6 +85,13 @@ type EmailConfig struct {
 	Password string
 	From     string
 }
+type WebsocketSetting struct {
+	WriteTimeout      time.Duration
+	ReadTimeout       time.Duration
+	PingPeriod        time.Duration
+	MaxMessageSize    int
+	MessageBufferSize int
+}
 
 type LoggerConfig struct {
 	Level        slog.Level
@@ -119,6 +128,7 @@ func NewEnv() *Env {
 				PetSitterCert:  os.Getenv("STORAGE_PET_SITTER_CERT_BUCKET"),
 				PetSitterFile:  os.Getenv("STORAGE_PET_SITTER_FILE_BUCKET"),
 				UserProfilePic: os.Getenv("STORAGE_USER_PROFILE_PIC_BUCKET"),
+				ChatMedia:      os.Getenv("STORAGE_CHAT_MEDIA_BUCKET"),
 			},
 			DefaultPetProfileKey:  os.Getenv("STORAGE_PET_DEFAULT_PROFILE_KEY"),
 			DefaultUserProfileKey: os.Getenv("STORAGE_USER_DEFAULT_PROFILE_KEY"),
@@ -143,6 +153,13 @@ func NewEnv() *Env {
 			ExpireMinutes: expireMinutes,
 		},
 		Logger: loadLoggerConfig(),
+		WebsocketSetting: WebsocketSetting{
+			WriteTimeout:      getEnvDuration("WRITE_TIMEOUT", 10*time.Second),
+			ReadTimeout:       getEnvDuration("READ_TIMEOUT", 60*time.Second),
+			PingPeriod:        getEnvDuration("PING_PERIOD", 54*time.Second),
+			MaxMessageSize:    getEnvInt("MAX_MESSAGE_SIZE", 524288),
+			MessageBufferSize: getEnvInt("MESSAGE_BUFFER_SIZE", 256),
+		},
 		RabbitMQ: RabbitMQ{
 			User:          os.Getenv("AMQP_USER"),
 			Password:      os.Getenv("AMQP_PASSWORD"),

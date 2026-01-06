@@ -72,3 +72,15 @@ func (rp *RequestRepository) SearchRequestsByPetSitterID(petSitterID uint, optio
 
 	return requests, total, nil
 }
+
+func (rp *RequestRepository) FindRequestsByUserAndPetSitter(userID uint, petSitterID uint) ([]entities.Request, error) {
+	var requests []entities.Request
+	err := rp.db.
+		Where("user_id = ? AND pet_sitter_id = ?", userID, petSitterID).
+		Order("updated_at DESC").
+		Find(&requests).Error
+	if err != nil {
+		return nil, err
+	}
+	return requests, nil
+}
