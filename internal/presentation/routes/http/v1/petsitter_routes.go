@@ -53,33 +53,33 @@ func SetUpPetSitterRoutes(v1 *gin.RouterGroup, app *wire.Application) {
 			chat.DELETE("/room/:roomID/message/:messageID/reaction", app.Controllers.PetSitterControllers.PetSitterChatController.RemoveReaction)
 
 		}
+		petKinds := petsitter.Group("/pet-kinds")
+		{
+			petKinds.GET("/", app.Controllers.PetSitterControllers.PetSitterSkillsController.GetPetKinds)
+			petKinds.PUT("/", app.Controllers.PetSitterControllers.PetSitterSkillsController.UpdatePetKinds)
+		}
 
-	petKinds := petsitter.Group("/pet-kinds")
-	{
-		petKinds.GET("/", app.Controllers.PetSitterControllers.PetSitterSkillsController.GetPetKinds)
-		petKinds.PUT("/", app.Controllers.PetSitterControllers.PetSitterSkillsController.UpdatePetKinds)
-	}
+		services := petsitter.Group("/services")
+		{
+			services.GET("/", app.Controllers.PetSitterControllers.PetSitterSkillsController.GetServices)
+			services.POST("/", app.Controllers.PetSitterControllers.PetSitterSkillsController.CreateService)
+			services.PUT("/", app.Controllers.PetSitterControllers.PetSitterSkillsController.UpdateService)
+			services.DELETE("/:serviceID", app.Controllers.PetSitterControllers.PetSitterSkillsController.DeleteService)
+		}
 
-	services := petsitter.Group("/services")
-	{
-		services.GET("/", app.Controllers.PetSitterControllers.PetSitterSkillsController.GetServices)
-		services.POST("/", app.Controllers.PetSitterControllers.PetSitterSkillsController.CreateService)
-		services.PUT("/", app.Controllers.PetSitterControllers.PetSitterSkillsController.UpdateService)
-		services.DELETE("/:serviceID", app.Controllers.PetSitterControllers.PetSitterSkillsController.DeleteService)
-	}
+		calendar := petsitter.Group("/calendar")
+		{
+			calendar.GET("/", app.Controllers.PetSitterControllers.PetSitterCalendarController.GetCalendarSlots)
+			calendar.PATCH("/", app.Controllers.PetSitterControllers.PetSitterCalendarController.UpdateFreeCalendarSlots)
+		}
 
-	calendar := petsitter.Group("/calendar")
-	{
-		calendar.GET("/", app.Controllers.PetSitterControllers.PetSitterCalendarController.GetCalendarSlots)
-		calendar.PATCH("/", app.Controllers.PetSitterControllers.PetSitterCalendarController.UpdateFreeCalendarSlots)
-	}
-
-	wallet := petsitter.Group("/wallet")
-	{
-		wallet.PUT("/withdraw", app.Controllers.PetSitterControllers.PetSitterWalletController.Withdraw)
-  }
-  omments := petsitter.Group("/comments")
-	{
-		comments.GET("/", app.Controllers.PetSitterControllers.PetSitterCommentController.GetAllComments)
+		wallet := petsitter.Group("/wallet")
+		{
+			wallet.PUT("/withdraw", app.Controllers.PetSitterControllers.PetSitterWalletController.Withdraw)
+		}
+		comments := petsitter.Group("/comments")
+		{
+			comments.GET("/", app.Controllers.PetSitterControllers.PetSitterCommentController.GetAllComments)
+		}
 	}
 }
