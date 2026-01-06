@@ -159,6 +159,7 @@ func (us *UserService) GetUserInfoResponse(userEntity *entities.User) (*rbac.Use
 		Gender:          userEntity.Gender.String(),
 		BirthDate:       userEntity.BirthDate,
 		PictureLink:     pictureLink,
+		Bio:             userEntity.Bio,
 		Wallet:          walletResponse,
 		Roles:           us.GetRolesResponse(userEntity),
 	}, nil
@@ -265,6 +266,7 @@ func (us *UserService) applyProfileFields(foundUser *entities.User, info user.Up
 	foundUser.Phone = info.Phone
 	foundUser.Gender = info.Gender
 	foundUser.BirthDate = info.BirthDate
+	foundUser.Bio = info.Bio
 }
 
 func (us *UserService) buildProfileResponse(userEntity *entities.User) (*user.ProfileResponse, error) {
@@ -291,6 +293,7 @@ func (us *UserService) buildProfileResponse(userEntity *entities.User) (*user.Pr
 		Gender:          userEntity.Gender.String(),
 		BirthDate:       userEntity.BirthDate,
 		PictureLink:     pictureLink,
+		Bio:             userEntity.Bio,
 	}, nil
 }
 

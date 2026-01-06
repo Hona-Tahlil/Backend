@@ -57,6 +57,7 @@ func (pc *UserProfileController) UpdateProfile(ctx *gin.Context) {
 		Phone         *string        `form:"phone"`
 		Gender        enums.Gender   `form:"gender" validate:"required"`
 		BirthDate     *time.Time     `form:"birthDate"`
+		Bio           *string        `form:"bio"`
 		Province      enums.Province `form:"province"`
 		City          enums.City     `form:"city"`
 		StreetAddress string         `form:"streetAddress"`
@@ -82,6 +83,7 @@ func (pc *UserProfileController) UpdateProfile(ctx *gin.Context) {
 		Phone:         params.Phone,
 		Gender:        params.Gender,
 		BirthDate:     params.BirthDate,
+		Bio:           params.Bio,
 		Province:      params.Province,
 		City:          params.City,
 		StreetAddress: params.StreetAddress,

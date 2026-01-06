@@ -9,13 +9,10 @@ import (
 )
 
 type WebsocketMiddleware struct {
-	constants *bootstrap.Constants
 }
 
-func NewWebsocketMiddleware(constants *bootstrap.Constants) *WebsocketMiddleware {
-	return &WebsocketMiddleware{
-		constants: constants,
-	}
+func NewWebsocketMiddleware() *WebsocketMiddleware {
+	return &WebsocketMiddleware{}
 }
 
 func (wsMiddleware *WebsocketMiddleware) UpgradeToWebSocket(c *gin.Context) {
@@ -31,7 +28,7 @@ func (wsMiddleware *WebsocketMiddleware) UpgradeToWebSocket(c *gin.Context) {
 		c.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
-	c.Set(wsMiddleware.constants.Context.WebsocketConnection, conn)
+	c.Set(bootstrap.Run().Constants.Context.WebsocketConnection, conn)
 	c.Abort()
 }
 
