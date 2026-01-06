@@ -47,10 +47,11 @@ func NewPostgresDatabase() *gorm.DB {
 			&entities.Service{},
 			&entities.Request{},
 			&entities.CalendarSlot{},
-			&entities.Chat{},
+			&entities.ChatRoom{},
 			&entities.Comment{},
 			&entities.Address{},
-			&entities.TextMessage{},
+			&entities.ChatMessage{},
+			&entities.ChatMessageReaction{},
 			&entities.Transaction{},
 			&entities.Transfer{},
 		); err != nil {

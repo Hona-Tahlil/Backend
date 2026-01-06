@@ -37,6 +37,20 @@ func SetUpUserRoutes(v1 *gin.RouterGroup, app *wire.Application) {
 		comments.DELETE("/:commentID", app.Controllers.UserControllers.UserCommentController.DeleteComment)
 		comments.GET("/petsitters/:petSitterID", app.Controllers.UserControllers.UserCommentController.GetAllPetSitterComments)
 	}
+	chat := v1.Group("/chat")
+	chat.Use(app.Middlewares.AuthMiddleware.AuthRequired)
+	{
+		chat.POST("/rooms/:petSitterID", app.Controllers.UserControllers.UserChatController.CreateOrGetRoom)
+		chat.GET("/rooms", app.Controllers.UserControllers.UserChatController.GetAllRooms)
+		chat.PUT("/room/:roomID/block", app.Controllers.UserControllers.UserChatController.BlockRoom)
+		chat.PUT("/room/:roomID/unblock", app.Controllers.UserControllers.UserChatController.UnblockRoom)
+		chat.GET("/room/:roomID/request-info", app.Controllers.UserControllers.UserChatController.GetRoomRequestInfo)
+		chat.GET("/room/:roomID/messages", app.Controllers.UserControllers.UserChatController.GetRoomMessages)
+		chat.PUT("/room/:roomID/message/:messageID", app.Controllers.UserControllers.UserChatController.EditMessage)
+		chat.DELETE("/room/:roomID/message/:messageID", app.Controllers.UserControllers.UserChatController.DeleteMessage)
+		chat.POST("/room/:roomID/message/:messageID/reaction", app.Controllers.UserControllers.UserChatController.AddReaction)
+		chat.DELETE("/room/:roomID/message/:messageID/reaction", app.Controllers.UserControllers.UserChatController.RemoveReaction)
+	}
 
 	profile := v1.Group("/profile")
 	profile.Use(app.Middlewares.AuthMiddleware.AuthRequired)

@@ -114,7 +114,7 @@ func (rs *RequestService) CreateRequest(info request.CreateRequestRequest) error
 		UserID:        info.UserID,
 		PetSitterID:   petSitter.ID,
 		Status:        enums.Pending,
-		Chat:          entities.Chat{},
+		Chat:          entities.ChatRoom{},
 		TransferID:    nil,
 		CalendarSlots: calendarSlots,
 		Pets:          pets,
@@ -583,6 +583,42 @@ func (rs *RequestService) SearchPetSitterRequests(info request.SearchPetSitterRe
 	}
 
 	return res, total, nil
+}
+
+func (rs *RequestService) GetRequestsBetween(info request.GetRequestsBetweenRequest) ([]request.RequestListItemResponse, error) {
+	petSitter, err := rs.petSitterService.GetPetSitterByUserID(info.PetSitterUserID)
+	if err != nil {
+		return nil, err
+	}
+	petSitterUser, err := rs.userService.FindUserByID(petSitter.UserID)
+	if err != nil {
+		return nil, err
+	}
+	requestRepo := rs.unitOfWork.Factory().RequestRepository()
+	requests, err := requestRepo.FindRequestsByUserAndPetSitter(info.UserID, petSitter.ID)
+	if err != nil {
+		return nil, err
+	}
+	for i := range requests {
+		if err := rs.PreloadFields(&requests[i], []string{"Service"}); err != nil {
+			return nil, err
+		}
+	}
+	res := make([]request.RequestListItemResponse, len(requests))
+	for i := range requests {
+		req := requests[i]
+		res[i] = request.RequestListItemResponse{
+			RequestID:          req.ID,
+			PetSitterUserID:    petSitter.UserID,
+			PetSitterFirstName: petSitterUser.FirstName,
+			PetSitterLastName:  petSitterUser.LastName,
+			Service:            rs.petSitterService.GetServiceResponse(&req.Service),
+			TotalPrice:         req.TotalPrice,
+			Status:             buildRequestStatusResponse(req.Status),
+			UpdatedAt:          req.UpdatedAt,
+		}
+	}
+	return res, nil
 }
 
 func (rs *RequestService) GetRequestFullData(info request.GetRequestFullDataRequest) (*request.RequestFullDataResponse, error) {

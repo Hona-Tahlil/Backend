@@ -6,6 +6,7 @@ const (
 	PetProfilePic BucketType = iota + 1
 	UserProfilePic
 	PetSitterFile
+	ChatMedia
 	PetSitterCert
 )
 
@@ -17,6 +18,8 @@ func (bucketType BucketType) String() string {
 		return "user-profile-pic"
 	case BucketType(PetSitterFile):
 		return "pet-sitter-file"
+	case BucketType(ChatMedia):
+		return "chat-media"
 	case BucketType(PetSitterCert):
 		return "pet-sitter-cert"
 	}
@@ -28,6 +31,7 @@ func GetAllBucketTypes() []BucketType {
 		PetProfilePic,
 		UserProfilePic,
 		PetSitterFile,
+		ChatMedia,
 		PetSitterCert,
 	}
 }
