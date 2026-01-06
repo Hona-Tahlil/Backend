@@ -614,7 +614,7 @@ func (rs *RequestService) GetRequestsBetween(info request.GetRequestsBetweenRequ
 			PetSitterLastName:  petSitterUser.LastName,
 			Service:            rs.petSitterService.GetServiceResponse(&req.Service),
 			TotalPrice:         req.TotalPrice,
-			Status:             req.Status.String(),
+			Status:             buildRequestStatusResponse(req.Status),
 			UpdatedAt:          req.UpdatedAt,
 		}
 	}
