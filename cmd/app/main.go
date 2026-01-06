@@ -31,12 +31,12 @@ func main() {
 	ginEngine.RedirectTrailingSlash = true
 	ginEngine.RemoveExtraSlash = true
 
-	app, err := wire.InitializeApplication(config)
+	hub := websocket.NewHub()
+	go hub.Run()
+	app, err := wire.InitializeApplication(config, hub)
 	if err != nil {
 		panic(err)
 	}
-	hub := websocket.NewHub()
-	go hub.Run()
 
 	routes.SetUpRoutes(ginEngine, app)
 

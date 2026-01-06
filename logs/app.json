@@ -1123,3 +1123,13 @@
 {"time":"2026-01-03T18:01:34.186505817Z","level":"INFO","msg":"http_request","service":"backend","env":"development","method":"GET","path":"/metrics","route":"/metrics","status":200,"size":1380,"ip":"172.20.0.6","user_agent":"Prometheus/3.8.1","duration":1113622}
 {"time":"2026-01-03T18:01:43.493089478Z","level":"INFO","msg":"shutdown server","service":"backend","env":"development"}
 {"time":"2026-01-03T18:01:43.493290873Z","level":"INFO","msg":"server exiting","service":"backend","env":"development"}
+{"time":"2026-01-06T22:52:59.876587359+03:30","level":"INFO","msg":"🌱 Starting database seeding...","service":"backend","env":"development"}
+{"time":"2026-01-06T22:52:59.877051077+03:30","level":"INFO","msg":"✓ Users already seeded, skipping...","service":"backend","env":"development"}
+{"time":"2026-01-06T22:52:59.877274742+03:30","level":"INFO","msg":"✓ Pets already seeded, skipping...","service":"backend","env":"development"}
+{"time":"2026-01-06T22:52:59.877491579+03:30","level":"INFO","msg":"✓ Addresses already seeded, skipping...","service":"backend","env":"development"}
+{"time":"2026-01-06T22:52:59.877731783+03:30","level":"INFO","msg":"✓ Pet sitters already seeded, skipping...","service":"backend","env":"development"}
+{"time":"2026-01-06T22:52:59.877930838+03:30","level":"INFO","msg":"✓ Services already seeded, skipping...","service":"backend","env":"development"}
+{"time":"2026-01-06T22:52:59.878131527+03:30","level":"INFO","msg":"✓ Calendar slots already seeded, skipping...","service":"backend","env":"development"}
+{"time":"2026-01-06T22:52:59.878459335+03:30","level":"WARN","msg":"⚠️  No requests found, skipping comment seeding (comments require valid request_id)","service":"backend","env":"development"}
+{"time":"2026-01-06T22:52:59.878477871+03:30","level":"INFO","msg":"✅ Database seeding completed!","service":"backend","env":"development"}
+{"time":"2026-01-06T22:52:59.897990114+03:30","level":"INFO","msg":"server running","service":"backend","env":"development","addr":":8080"}
