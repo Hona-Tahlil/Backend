@@ -14,4 +14,5 @@ type RequestRepository interface {
 	PreloadFields(request *entities.Request, fields []string) error
 	SearchRequests(userID uint, options *postgres.QueryOptions) ([]entities.Request, int64, error)
 	SearchRequestsByPetSitterID(petSitterID uint, options *postgres.QueryOptions) ([]entities.Request, int64, error)
+	FindRequestsByUserAndPetSitter(userID uint, petSitterID uint) ([]entities.Request, error)
 }

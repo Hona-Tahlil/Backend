@@ -5,6 +5,7 @@ import (
 	"hona/backend/internal/domain/entities"
 	"hona/backend/internal/domain/enums"
 	"log"
+	"log/slog"
 	"math/rand"
 	"time"
 
@@ -25,7 +26,7 @@ func (s *UserSeeder) Seed(count int) error {
 	users := make([]entities.User, 0, count)
 
 	if s.db.First(&entities.User{}).Error == nil {
-		log.Println("✓ Users already seeded, skipping...")
+		slog.Info("✓ Users already seeded, skipping...")
 		return nil
 	}
 	// defaultProfileKey := bootstrap.Run().Env.Storage.DefaultUserProfileKey
@@ -43,7 +44,7 @@ func (s *UserSeeder) Seed(count int) error {
 		if err != nil {
 			return fmt.Errorf("hash password: %w", err)
 		}
-
+		log.Println("Generated user:", email)
 		var phone *string
 		if rand.Intn(2) == 1 {
 			p := faker.Phonenumber()
@@ -78,11 +79,11 @@ func (s *UserSeeder) Seed(count int) error {
 
 		users = append(users, user)
 	}
-
+	log.Println("Seeding users...")
 	if err := s.db.CreateInBatches(users, 100).Error; err != nil {
 		return fmt.Errorf("failed to batch insert users: %w", err)
 	}
 
-	log.Printf("✓ Successfully seeded %d users", count)
+	slog.Info("✓ Successfully seeded users", "count", count)
 	return nil
 }

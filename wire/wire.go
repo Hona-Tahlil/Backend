@@ -9,17 +9,20 @@ import (
 	"hona/backend/internal/application/usecase"
 	domainjwt "hona/backend/internal/domain/jwt"
 	domainmail "hona/backend/internal/domain/mail"
+	domainmetrics "hona/backend/internal/domain/metrics"
 	"hona/backend/internal/domain/ports"
 	domainredis "hona/backend/internal/domain/ports/redis"
 	domainstorage "hona/backend/internal/domain/storage"
 	"hona/backend/internal/infrastructure/communication/mail"
 	"hona/backend/internal/infrastructure/jwt"
+	"hona/backend/internal/infrastructure/metrics"
 	"hona/backend/internal/infrastructure/persistence"
 	"hona/backend/internal/infrastructure/persistence/repository/redis"
 	"hona/backend/internal/infrastructure/rabbitmq"
 	"hona/backend/internal/infrastructure/rabbitmq/consumers"
 	"hona/backend/internal/infrastructure/seeder"
 	"hona/backend/internal/infrastructure/storage"
+	"hona/backend/internal/infrastructure/websocket"
 	"hona/backend/internal/presentation/controllers/v1/admin"
 	"hona/backend/internal/presentation/controllers/v1/general"
 	petsitter "hona/backend/internal/presentation/controllers/v1/pet_sitter"
@@ -58,6 +61,7 @@ var ServiceProviderSet = wire.NewSet(
 	service.NewAddressService,
 	service.NewPetSitterService,
 	service.NewCommentService,
+	service.NewChatService,
 	service.NewWalletService,
 	wire.Bind(new(domainjwt.JWTService), new(*jwt.JWTService)),
 	wire.Bind(new(domainjwt.JWTKeyManager), new(*jwt.JWTKeyManager)),
@@ -69,6 +73,7 @@ var ServiceProviderSet = wire.NewSet(
 	wire.Bind(new(usecase.AddressService), new(*service.AddressService)),
 	wire.Bind(new(usecase.PetSitterService), new(*service.PetSitterService)),
 	wire.Bind(new(usecase.CommentService), new(*service.CommentService)),
+	wire.Bind(new(usecase.ChatService), new(*service.ChatService)),
 	wire.Bind(new(usecase.WalletService), new(*service.WalletService)),
 )
 
@@ -90,6 +95,7 @@ var UserControllersProviderSet = wire.NewSet(
 	user.NewUserPetController,
 	user.NewUserRequestController,
 	user.NewUserCommentController,
+	user.NewUserChatController,
 	user.NewUserProfileController,
 	user.NewUserWalletController,
 	wire.Struct(new(UserControllers), "*"),
@@ -98,7 +104,9 @@ var UserControllersProviderSet = wire.NewSet(
 var PetSitterControllersProviderSet = wire.NewSet(
 	petsitter.NewPetSitterRegisterController,
 	petsitter.NewPetSitterRequestController,
+	petsitter.NewPetSitterChatController,
 	petsitter.NewPetSitterSkillsController,
+	petsitter.NewPetSitterProfileController,
 	petsitter.NewPetSitterCalendarController,
 	petsitter.NewPetSitterCommentController,
 	petsitter.NewPetSitterWalletController,
@@ -110,12 +118,17 @@ var ControllersProviderSet = wire.NewSet(
 )
 
 var MiddlewaresProviderSet = wire.NewSet(
+	metrics.NewPrometheusMetrics,
+	wire.Bind(new(domainmetrics.PrometheusMetrics), new(*metrics.PrometheusMetrics)),
 	middleware.NewLocalizationMiddleware,
 	middleware.NewRecoveryMiddleware,
 	middleware.NewRateLimit,
 	middleware.NewRBACMiddleware,
 	middleware.NewAuthMiddleware,
 	middleware.NewCORSMiddleware,
+	middleware.NewLoggingMiddleware,
+	middleware.NewPrometheusMiddleware,
+	middleware.NewWebsocketMiddleware,
 	wire.Struct(new(Middlewares), "*"),
 )
 
@@ -160,6 +173,7 @@ type UserControllers struct {
 	UserPetController     *user.UserPetController
 	UserRequestController *user.UserRequestController
 	UserCommentController *user.UserCommentController
+	UserChatController    *user.UserChatController
 	UserProfileController *user.UserProfileController
 	UserWalletController  *user.UserWalletController
 }
@@ -167,7 +181,9 @@ type UserControllers struct {
 type PetSitterControllers struct {
 	PetSitterRegisterController *petsitter.PetSitterRegisterController
 	PetSitterRequestController  *petsitter.PetSitterRequestController
+	PetSitterChatController     *petsitter.PetSitterChatController
 	PetSitterSkillsController   *petsitter.PetSitterSkillsController
+	PetSitterProfileController  *petsitter.PetSitterProfileController
 	PetSitterCalendarController *petsitter.PetSitterCalendarController
 	PetSitterCommentController  *petsitter.PetSitterCommentController
 	PetSitterWalletController   *petsitter.PetSitterWalletController
@@ -187,6 +203,9 @@ type Middlewares struct {
 	AuthMiddleware         *middleware.AuthMiddleware
 	RBACMiddleware         *middleware.RBACMiddleware
 	CORSMiddleware         *middleware.CORSMiddleware
+	LoggingMiddleware      *middleware.LoggingMiddleware
+	Prometheus             *middleware.PrometheusMiddleware
+	WebsocketMiddleware    *middleware.WebsocketMiddleware
 }
 
 type Seeder struct {
@@ -219,7 +238,7 @@ func NewApplication(controllers *Controllers, middlewares *Middlewares, seeder *
 	}
 }
 
-func InitializeApplication(container *bootstrap.Config) (*Application, error) {
+func InitializeApplication(container *bootstrap.Config, hub *websocket.Hub) (*Application, error) {
 	wire.Build(
 		ProviderSet,
 		NewApplication,

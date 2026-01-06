@@ -6,7 +6,6 @@ import (
 	"hona/backend/internal/application/usecase"
 	"hona/backend/internal/domain/enums"
 	"hona/backend/internal/presentation/controllers"
-	"log"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -57,6 +56,7 @@ func (pc *UserProfileController) UpdateProfile(ctx *gin.Context) {
 		Phone         *string        `form:"phone"`
 		Gender        enums.Gender   `form:"gender" validate:"required"`
 		BirthDate     *time.Time     `form:"birthDate"`
+		Bio           *string        `form:"bio"`
 		Province      enums.Province `form:"province"`
 		City          enums.City     `form:"city"`
 		StreetAddress string         `form:"streetAddress"`
@@ -65,14 +65,7 @@ func (pc *UserProfileController) UpdateProfile(ctx *gin.Context) {
 		PostalCode    *string        `form:"postalCode"`
 	}
 
-	file, err := ctx.FormFile(bootstrap.Run().Env.Storage.Buckets.UserProfilePic)
-	if err != nil {
-		// ve := exceptions.NewValidationErrors()
-		// ve.AddError(bootstrap.Run().Env.Storage.Buckets.UserProfilePic, bootstrap.Run().Constants.ErrorTags.Required)
-		// panic(ve)
-		log.Println("no file")
-	}
-
+	file, _ := ctx.FormFile(bootstrap.Run().Env.Storage.Buckets.UserProfilePic)
 	params := controllers.Receive[UpdateProfileParams](ctx)
 	UserID := controllers.GetID(ctx)
 	info := user.UpdateProfileRequest{
@@ -82,6 +75,7 @@ func (pc *UserProfileController) UpdateProfile(ctx *gin.Context) {
 		Phone:         params.Phone,
 		Gender:        params.Gender,
 		BirthDate:     params.BirthDate,
+		Bio:           params.Bio,
 		Province:      params.Province,
 		City:          params.City,
 		StreetAddress: params.StreetAddress,

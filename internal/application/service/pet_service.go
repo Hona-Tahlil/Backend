@@ -10,7 +10,7 @@ import (
 	"hona/backend/internal/domain/exceptions"
 	"hona/backend/internal/domain/ports"
 	domainstorage "hona/backend/internal/domain/storage"
-	"log"
+	"log/slog"
 	"time"
 )
 
@@ -51,7 +51,6 @@ func (ps *PetService) AddPet(info pet.AddPetRequest) error {
 
 	var profileKey *string
 	if info.ProfilePic != nil {
-		log.Println()
 		profileKeyValue := ps.getStorageKey(info.Name, info.UserID)
 		profileKey = &profileKeyValue
 		if err := ps.storage.UploadFile(enums.PetProfilePic, *profileKey, info.ProfilePic); err != nil {
@@ -148,7 +147,7 @@ func (ps *PetService) RemovePet(info pet.RemovePetRequest) error {
 	}
 	profileKeyValue := ps.getStorageKey(foundPet.Name, foundPet.UserID)
 	if err = ps.storage.DeleteObject(enums.PetProfilePic, profileKeyValue); err != nil {
-		log.Println(err)
+		slog.Error("error deleting pet's profile picture", "err", err.Error())
 	}
 	petRepo := ps.unitOfWork.Factory().PetRepository()
 	err = petRepo.RemovePet(foundPet)
@@ -216,7 +215,7 @@ func (ps *PetService) getPetPictureLink(petEntity *entities.Pet) string {
 	if err == nil {
 		return link
 	}
-	log.Println(err)
+	slog.Error("error getting presigned url for this key and error:", "key", key, "err", err.Error())
 
 	defaultKey := ps.getDefaultPetProfileKey()
 	if defaultKey == "" || defaultKey == key {
@@ -224,7 +223,7 @@ func (ps *PetService) getPetPictureLink(petEntity *entities.Pet) string {
 	}
 	fallbackLink, fallbackErr := ps.storage.GetPresignedURL(enums.PetProfilePic, defaultKey, time.Minute*15)
 	if fallbackErr != nil {
-		log.Println(fallbackErr)
+		slog.Error("error getting presigned url for default key", "default key", defaultKey, "err", fallbackErr.Error())
 		return ""
 	}
 	return fallbackLink

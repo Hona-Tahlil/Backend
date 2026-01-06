@@ -5,7 +5,6 @@ import (
 	"hona/backend/bootstrap"
 	"hona/backend/internal/domain/entities"
 	"hona/backend/internal/infrastructure/seeder"
-	"log"
 	"sync"
 
 	"gorm.io/driver/postgres"
@@ -47,10 +46,11 @@ func NewPostgresDatabase() *gorm.DB {
 			&entities.Service{},
 			&entities.Request{},
 			&entities.CalendarSlot{},
-			&entities.Chat{},
+			&entities.ChatRoom{},
 			&entities.Comment{},
 			&entities.Address{},
-			&entities.TextMessage{},
+			&entities.ChatMessage{},
+			&entities.ChatMessageReaction{},
 			&entities.Transaction{},
 			&entities.Transfer{},
 		); err != nil {
@@ -58,9 +58,9 @@ func NewPostgresDatabase() *gorm.DB {
 		}
 
 		if err := seeder.SeedAll(); err != nil {
-			log.Fatalf("seeding failed: %v", err)
+			panic(fmt.Errorf("failed to seed database, error: %s", err.Error()))
 		}
-		
+
 	})
 
 	return dbInstance

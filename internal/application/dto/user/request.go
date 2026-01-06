@@ -53,6 +53,7 @@ type UpdateProfileRequest struct {
 	Phone         *string
 	Gender        enums.Gender
 	BirthDate     *time.Time
+	Bio           *string
 	Province      enums.Province
 	City          enums.City
 	StreetAddress string

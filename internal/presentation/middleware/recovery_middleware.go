@@ -4,7 +4,7 @@ import (
 	"hona/backend/bootstrap"
 	"hona/backend/internal/domain/exceptions"
 	"hona/backend/internal/presentation/controllers"
-	"log"
+	"log/slog"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -115,7 +115,7 @@ func handleRateLimitError(rateLimitErr *exceptions.RateLimitError) ([]controller
 }
 
 func unhandledErrors(err error) ([]controllers.Message, int) {
-	log.Println("an unhandled error occurred", err.Error())
+	slog.Error("an unhandled error occurred", "err", err)
 
 	msg := controllers.Message{
 		Text:   errTags.Generic,

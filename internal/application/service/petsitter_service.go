@@ -16,6 +16,7 @@ import (
 	"hona/backend/internal/domain/ports"
 	domainstorage "hona/backend/internal/domain/storage"
 	"hona/backend/internal/infrastructure/persistence/repository/postgres"
+	"mime/multipart"
 	"sort"
 	"time"
 
@@ -1316,6 +1317,156 @@ func (ps *PetSitterService) GetPetSitterProfile(info petsitter.GetPetSitterProfi
 		PetKinds:    petKinds,
 		CreatedAt:   foundPetSitter.CreatedAt.String(),
 	}, nil
+}
+
+func (ps *PetSitterService) GetPetSitterSelfProfile(info petsitter.GetPetSitterSelfProfileRequest) (*petsitter.PetSitterSelfProfileResponse, error) {
+	foundUser, err := ps.userService.FindUserByID(info.UserID)
+	if err != nil {
+		return nil, err
+	}
+	if err := ps.userService.PreloadFields(foundUser, []string{"Address", "PetSitter"}); err != nil {
+		return nil, err
+	}
+	if foundUser.PetSitter == nil {
+		return nil, exceptions.NewNotFoundError(bootstrap.Run().Constants.ErrorFields.PetSitter)
+	}
+
+	foundPetSitter := foundUser.PetSitter
+	if err := ps.PreloadFields(foundPetSitter, []string{"Services"}); err != nil {
+		return nil, err
+	}
+
+	var addressInfo *address.AddressInfoResponse
+	if foundUser.Address != nil {
+		address := ps.addressService.GetUserAddressInfo(foundUser.Address)
+		addressInfo = &address
+	}
+
+	pictureLink, err := ps.userService.GetUserPictureLink(foundUser)
+	if err != nil {
+		return nil, err
+	}
+	var picturePtr *string
+	if pictureLink != "" {
+		picturePtr = &pictureLink
+	}
+
+	services, err := ps.GetServicesResponse(foundPetSitter)
+	if err != nil {
+		return nil, err
+	}
+	petKinds := ps.buildPetKindsResponse([]enums.PetKind(foundPetSitter.PetKinds))
+
+	return &petsitter.PetSitterSelfProfileResponse{
+		ID:              foundUser.ID,
+		PetSitterID:     foundPetSitter.ID,
+		Email:           foundUser.Email,
+		IsEmailVerified: foundUser.IsEmailVerified,
+		FirstName:       foundUser.FirstName,
+		LastName:        foundUser.LastName,
+		Address:         addressInfo,
+		Phone:           foundUser.Phone,
+		IsPhoneVerified: foundUser.IsPhoneVerified,
+		Gender:          foundUser.Gender.String(),
+		BirthDate:       foundUser.BirthDate,
+		PictureLink:     picturePtr,
+		Bio:             foundPetSitter.Bio,
+		Services:        services,
+		PetKinds:        petKinds,
+	}, nil
+}
+
+func (ps *PetSitterService) UpdatePetSitterProfile(info petsitter.UpdatePetSitterProfileRequest) error {
+	return ps.unitOfWork.WithTransaction(func(rf ports.RepositoryFactory) error {
+		userRepo := rf.UserRepository()
+		petSitterRepo := rf.PetSitterRepository()
+
+		foundUser, err := ps.userService.FindUserByID(info.UserID)
+		if err != nil {
+			return err
+		}
+		if err := userRepo.PreloadPetSitter(foundUser); err != nil {
+			return err
+		}
+		if foundUser.PetSitter == nil {
+			return exceptions.NewNotFoundError(bootstrap.Run().Constants.ErrorFields.PetSitter)
+		}
+		if err := ps.userService.PreloadFields(foundUser, []string{"Address"}); err != nil {
+			return err
+		}
+
+		if info.Province != 0 && info.City != 0 && info.HouseNumber != 0 && info.StreetAddress != "" && info.Unit != 0 {
+			addressInfo := ps.buildUserAddressInfo(info)
+			if err := ps.persistUserAddress(foundUser, addressInfo); err != nil {
+				return err
+			}
+		}
+
+		foundUser.FirstName = info.FirstName
+		foundUser.LastName = info.LastName
+		foundUser.Phone = info.Phone
+		foundUser.Gender = info.Gender
+		foundUser.BirthDate = info.BirthDate
+
+		if err := ps.updateProfilePicture(foundUser, info.ProfilePic); err != nil {
+			return err
+		}
+
+		if err := userRepo.SaveUser(foundUser); err != nil {
+			return err
+		}
+
+		foundPetSitter := foundUser.PetSitter
+		if info.Bio != nil {
+			foundPetSitter.Bio = info.Bio
+		}
+		return petSitterRepo.UpdatePetSitter(foundPetSitter)
+	})
+}
+
+func (ps *PetSitterService) updateProfilePicture(foundUser *entities.User, file *multipart.FileHeader) error {
+	if file == nil {
+		return nil
+	}
+	profileKey := ps.getUserProfileKey(foundUser.ID)
+	if err := ps.storage.UploadFile(enums.UserProfilePic, profileKey, file); err != nil {
+		return err
+	}
+	foundUser.PictureLink = &profileKey
+	return nil
+}
+
+func (ps *PetSitterService) getUserProfileKey(userID uint) string {
+	return fmt.Sprintf("user-profile-%d", userID)
+}
+
+func (ps *PetSitterService) buildUserAddressInfo(info petsitter.UpdatePetSitterProfileRequest) address.AddressInfo {
+	return address.AddressInfo{
+		ProvinceName:  info.Province,
+		CityName:      info.City,
+		StreetAddress: info.StreetAddress,
+		HouseNumber:   info.HouseNumber,
+		Unit:          info.Unit,
+		PostalCode:    info.PostalCode,
+	}
+}
+
+func (ps *PetSitterService) persistUserAddress(foundUser *entities.User, addressInfo address.AddressInfo) error {
+	if foundUser.Address != nil {
+		updatedAddress, err := ps.addressService.UpdateAddressEntity(foundUser.Address, addressInfo)
+		if err != nil {
+			return err
+		}
+		foundUser.Address = updatedAddress
+		return nil
+	}
+
+	createdAddress, err := ps.addressService.CreateAddressEntity(addressInfo)
+	if err != nil {
+		return err
+	}
+	foundUser.Address = createdAddress
+	return nil
 }
 
 func (ps *PetSitterService) buildPetKindsResponse(petKinds []enums.PetKind) []pet.PetKindResponse {

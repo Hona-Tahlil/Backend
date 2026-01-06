@@ -1,8 +1,10 @@
 package bootstrap
 
 import (
+	"log/slog"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/joho/godotenv"
@@ -16,6 +18,8 @@ type Env struct {
 	EmailConfig       EmailConfig
 	URLs              URLs
 	EmailVerification EmailVerification
+	Logger            LoggerConfig
+	WebsocketSetting  WebsocketSetting
 	RabbitMQ          RabbitMQ
 	RateLimit         RateLimit
 }
@@ -49,6 +53,7 @@ type Buckets struct {
 	PetSitterCert  string
 	PetSitterFile  string
 	UserProfilePic string
+	ChatMedia      string
 }
 
 type TokenExpires struct {
@@ -86,6 +91,23 @@ type EmailConfig struct {
 	Password string
 	From     string
 }
+type WebsocketSetting struct {
+	WriteTimeout      time.Duration
+	ReadTimeout       time.Duration
+	PingPeriod        time.Duration
+	MaxMessageSize    int
+	MessageBufferSize int
+}
+
+type LoggerConfig struct {
+	Level        slog.Level
+	TextStdout   bool
+	JSONStdout   bool
+	JSONFilePath string
+	AddSource    bool
+	ServiceName  string
+	Environment  string
+}
 
 func NewEnv() *Env {
 	godotenv.Load(".env")
@@ -112,6 +134,7 @@ func NewEnv() *Env {
 				PetSitterCert:  os.Getenv("STORAGE_PET_SITTER_CERT_BUCKET"),
 				PetSitterFile:  os.Getenv("STORAGE_PET_SITTER_FILE_BUCKET"),
 				UserProfilePic: os.Getenv("STORAGE_USER_PROFILE_PIC_BUCKET"),
+				ChatMedia:      os.Getenv("STORAGE_CHAT_MEDIA_BUCKET"),
 			},
 			DefaultPetProfileKey:  os.Getenv("STORAGE_PET_DEFAULT_PROFILE_KEY"),
 			DefaultUserProfileKey: os.Getenv("STORAGE_USER_DEFAULT_PROFILE_KEY"),
@@ -134,6 +157,14 @@ func NewEnv() *Env {
 		},
 		EmailVerification: EmailVerification{
 			ExpireMinutes: expireMinutes,
+		},
+		Logger: loadLoggerConfig(),
+		WebsocketSetting: WebsocketSetting{
+			WriteTimeout:      getEnvDuration("WRITE_TIMEOUT", 10*time.Second),
+			ReadTimeout:       getEnvDuration("READ_TIMEOUT", 60*time.Second),
+			PingPeriod:        getEnvDuration("PING_PERIOD", 54*time.Second),
+			MaxMessageSize:    getEnvInt("MAX_MESSAGE_SIZE", 524288),
+			MessageBufferSize: getEnvInt("MESSAGE_BUFFER_SIZE", 256),
 		},
 		RabbitMQ: RabbitMQ{
 			User:          os.Getenv("AMQP_USER"),
@@ -158,6 +189,81 @@ func getEnvInt(key string, defaultVal int) int {
 		}
 	}
 	return defaultVal
+}
+
+func loadLoggerConfig() LoggerConfig {
+	const (
+		defaultLogFile    = "logs/app.json"
+		defaultService    = "backend"
+		defaultEnv        = "development"
+		defaultTextStdout = true
+	)
+
+	level := parseLogLevel(os.Getenv("LOG_LEVEL"))
+	textStdout := parseBool(os.Getenv("LOG_TEXT_STDOUT"), defaultTextStdout)
+	jsonStdout := parseBool(os.Getenv("LOG_JSON_STDOUT"), false)
+	jsonFilePath := os.Getenv("LOG_FILE_PATH")
+	if jsonFilePath == "" && parseBool(os.Getenv("LOG_JSON_FILE"), true) {
+		jsonFilePath = defaultLogFile
+	}
+	if !parseBool(os.Getenv("LOG_JSON_FILE"), true) {
+		jsonFilePath = ""
+	}
+	addSource := parseBool(os.Getenv("LOG_ADD_SOURCE"), false)
+	serviceName := strings.TrimSpace(os.Getenv("LOG_SERVICE_NAME"))
+	if serviceName == "" {
+		serviceName = defaultService
+	}
+	environment := strings.TrimSpace(os.Getenv("LOG_ENV"))
+	if environment == "" {
+		environment = strings.TrimSpace(os.Getenv("APP_ENV"))
+	}
+	if environment == "" {
+		environment = defaultEnv
+	}
+
+	return LoggerConfig{
+		Level:        level,
+		TextStdout:   textStdout,
+		JSONStdout:   jsonStdout,
+		JSONFilePath: jsonFilePath,
+		AddSource:    addSource,
+		ServiceName:  serviceName,
+		Environment:  environment,
+	}
+}
+
+func parseBool(value string, defaultVal bool) bool {
+	if value == "" {
+		return defaultVal
+	}
+	switch strings.ToLower(strings.TrimSpace(value)) {
+	case "1", "true", "yes", "y", "on":
+		return true
+	case "0", "false", "no", "n", "off":
+		return false
+	default:
+		return defaultVal
+	}
+}
+
+func parseLogLevel(value string) slog.Level {
+	if value == "" {
+		return slog.LevelInfo
+	}
+	switch strings.ToLower(strings.TrimSpace(value)) {
+	case "debug":
+		return slog.LevelDebug
+	case "warn", "warning":
+		return slog.LevelWarn
+	case "error":
+		return slog.LevelError
+	default:
+		if parsed, err := strconv.Atoi(value); err == nil {
+			return slog.Level(parsed)
+		}
+		return slog.LevelInfo
+	}
 }
 
 func getEnvDuration(key string, defaultVal time.Duration) time.Duration {

@@ -91,6 +91,27 @@ type GetPetSitterProfileRequest struct {
 	PetSitterID uint
 }
 
+type GetPetSitterSelfProfileRequest struct {
+	UserID uint
+}
+
+type UpdatePetSitterProfileRequest struct {
+	UserID        uint
+	FirstName     string
+	LastName      string
+	Phone         *string
+	Gender        enums.Gender
+	BirthDate     *time.Time
+	ProfilePic    *multipart.FileHeader
+	Province      enums.Province
+	City          enums.City
+	StreetAddress string
+	HouseNumber   uint
+	Unit          uint
+	PostalCode    *string
+	Bio           *string
+}
+
 type ChangePetSitterStatusRequest struct {
 	PetSitterUserID uint
 	Status          enums.PetSitterStatus

@@ -5,7 +5,7 @@ import (
 	"hona/backend/bootstrap"
 	domainmail "hona/backend/internal/domain/mail"
 	"hona/backend/internal/infrastructure/rabbitmq"
-	"log"
+	"log/slog"
 )
 
 var constants = bootstrap.Run().Constants.RabbitMQConstants
@@ -37,11 +37,11 @@ func (consumer *EmailConsumer) handleMessage(body []byte) error {
 		Data         interface{} `json:"data"`
 	}
 	if err := json.Unmarshal(body, &msg); err != nil {
-		log.Printf("Failed to unmarshal email notification message: %v", err)
+		slog.Error("Failed to unmarshal email notification message", "err", err)
 	}
 
 	if err := consumer.emailService.SendEmail(msg.ToEmail, msg.Subject, msg.TemplateFile, msg.Data); err != nil {
-		log.Printf("Failed to send email: %v", err)
+		slog.Error("Failed to send email", "err", err)
 	}
 	return nil
 }

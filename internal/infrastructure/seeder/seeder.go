@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"hona/backend/internal/domain/entities"
 	"hona/backend/internal/domain/enums"
-	"log"
+	"log/slog"
 	"math/rand"
 	"time"
 
@@ -23,13 +23,13 @@ func NewDatabaseSeeder(db *gorm.DB) *DatabaseSeeder {
 
 // SeedAll runs all seeders in correct order with default counts
 func (s *DatabaseSeeder) SeedAll() error {
-	log.Println("🌱 Starting database seeding...")
+	slog.Info("🌱 Starting database seeding...")
 
 	// if err := s.SeedUsers(50); err != nil {
 	// 	return err
 	// }
 	if err := s.SeedUsers(50); err != nil {
-		log.Println("SeedUsers error:", err)
+		slog.Error("SeedUsers error:", "err", err)
 		return err
 	}
 
@@ -61,7 +61,7 @@ func (s *DatabaseSeeder) SeedAll() error {
 		return err
 	}
 
-	log.Println("✅ Database seeding completed!")
+	slog.Info("✅ Database seeding completed!")
 	return nil
 }
 
@@ -97,27 +97,27 @@ func (s *DatabaseSeeder) SeedRequests(count int) error {
 
 // SeedWallets seeds wallet data
 func (s *DatabaseSeeder) SeedWallets(count int) error {
-	log.Printf("💰 Seeding %d wallets...", count)
-	log.Println("⚠️  Wallet seeding not implemented yet")
+	slog.Info("💰 Seeding wallets...", "count", count)
+	slog.Warn("⚠️  Wallet seeding not implemented yet")
 	return nil
 }
 
 // SeedAddresses seeds address data
 func (s *DatabaseSeeder) SeedAddresses(count int) error {
-	log.Printf("📍 Seeding %d addresses...", count)
-	log.Println("⚠️  Address seeding not implemented yet")
+	slog.Info("📍 Seeding addresses...", "count", count)
+	slog.Warn("⚠️  Address seeding not implemented yet")
 	return nil
 }
 
 // SeedChats seeds chat data
 func (s *DatabaseSeeder) SeedChats(count int) error {
-	log.Printf("💬 Seeding %d chats...", count)
-	log.Println("⚠️  Chat seeding not implemented yet")
+	slog.Info("💬 Seeding chats...", "count", count)
+	slog.Warn("⚠️  Chat seeding not implemented yet")
 	return nil
 }
 
 func (s *DatabaseSeeder) ClearAll() {
-	log.Println("🗑️  Clearing all tables...")
+	slog.Info("🗑️  Clearing all tables...")
 
 	s.db.Migrator().DropTable(
 		"user_roles",
@@ -130,10 +130,10 @@ func (s *DatabaseSeeder) ClearAll() {
 		&entities.Pet{},
 		&entities.PetSitter{},
 		&entities.Service{},
-		&entities.Chat{},
+		&entities.ChatRoom{},
 		&entities.Comment{},
 		&entities.Address{},
-		&entities.TextMessage{},
+		&entities.ChatMessage{},
 		&entities.Transaction{},
 		&entities.Transfer{},
 	)
@@ -143,7 +143,7 @@ func (s *DatabaseSeeder) ClearAll() {
 func (s *DatabaseSeeder) SeedServicesForPetSitters() error {
 	// اگر service وجود دارد، skip
 	if s.db.First(&entities.Service{}).Error == nil {
-		log.Println("✓ Services already seeded, skipping...")
+		slog.Info("✓ Services already seeded, skipping...")
 		return nil
 	}
 
@@ -179,13 +179,13 @@ func (s *DatabaseSeeder) SeedServicesForPetSitters() error {
 		return fmt.Errorf("seed services: %w", err)
 	}
 
-	log.Printf("✓ Successfully seeded %d services", len(services))
+	slog.Info("✓ Successfully seeded services", "count", len(services))
 	return nil
 }
 
 func (s *DatabaseSeeder) SeedAddressesForUsers() error {
 	if s.db.First(&entities.Address{}).Error == nil {
-		log.Println("✓ Addresses already seeded, skipping...")
+		slog.Info("✓ Addresses already seeded, skipping...")
 		return nil
 	}
 
@@ -217,13 +217,13 @@ func (s *DatabaseSeeder) SeedAddressesForUsers() error {
 		return fmt.Errorf("seed addresses: %w", err)
 	}
 
-	log.Printf("✓ Successfully seeded %d addresses", len(addresses))
+	slog.Info("✓ Successfully seeded addresses", "count", len(addresses))
 	return nil
 }
 
 func (s *DatabaseSeeder) SeedCalendarSlotsForPetSitters(count int) error {
 	if s.db.First(&entities.CalendarSlot{}).Error == nil {
-		log.Println("✓ Calendar slots already seeded, skipping...")
+		slog.Info("✓ Calendar slots already seeded, skipping...")
 		return nil
 	}
 
@@ -260,13 +260,13 @@ func (s *DatabaseSeeder) SeedCalendarSlotsForPetSitters(count int) error {
 		return fmt.Errorf("seed calendar slots: %w", err)
 	}
 
-	log.Printf("✓ Successfully seeded %d calendar slots", len(slots))
+	slog.Info("✓ Successfully seeded calendar slots", "count", len(slots))
 	return nil
 }
 
 func (s *DatabaseSeeder) SeedCommentsForPetSitters(count int) error {
 	if s.db.First(&entities.Comment{}).Error == nil {
-		log.Println("✓ Comments already seeded, skipping...")
+		slog.Info("✓ Comments already seeded, skipping...")
 		return nil
 	}
 
@@ -276,7 +276,7 @@ func (s *DatabaseSeeder) SeedCommentsForPetSitters(count int) error {
 		return fmt.Errorf("fetch requests: %w", err)
 	}
 	if len(requests) == 0 {
-		log.Println("⚠️  No requests found, skipping comment seeding (comments require valid request_id)")
+		slog.Warn("⚠️  No requests found, skipping comment seeding (comments require valid request_id)")
 		return nil
 	}
 
@@ -318,7 +318,7 @@ func (s *DatabaseSeeder) SeedCommentsForPetSitters(count int) error {
 		return fmt.Errorf("seed comments: %w", err)
 	}
 
-	log.Printf("✓ Successfully seeded %d comments", len(comments))
+	slog.Info("✓ Successfully seeded comments", "count", len(comments))
 	return nil
 }
 
