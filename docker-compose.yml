@@ -168,7 +168,7 @@ services:
         - web
 
   cadvisor:
-    image: gcr.io/cadvisor/cadvisor
+    image: registry.k8s.io/cadvisor/cadvisor:v0.47.2
     container_name: cadvisor
     restart: unless-stopped
     ports:
