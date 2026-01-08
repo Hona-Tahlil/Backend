@@ -147,7 +147,7 @@ services:
         - web
 
   postgres-exporter:
-    image: ghcr.io/bitnami/postgres-exporter:latest
+    image: prometheuscommunity/postgres-exporter:latest
     container_name: postgres-exporter
     restart: unless-stopped
     ports:
