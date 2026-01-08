@@ -21,6 +21,12 @@ type Env struct {
 	Logger            LoggerConfig
 	WebsocketSetting  WebsocketSetting
 	RabbitMQ          RabbitMQ
+	RateLimit         RateLimit
+}
+
+type RateLimit struct {
+	Limit int
+	Burst int
 }
 
 type RabbitMQ struct {
@@ -168,6 +174,10 @@ func NewEnv() *Env {
 			VHost:         os.Getenv("AMQP_VHOST"),
 			MaxRetryCount: getEnvInt("AMQP_MAX_RETRY", 3),
 			RetryDelay:    getEnvDuration("AMQP_RETRY_DELAY", 5*time.Second),
+		},
+		RateLimit: RateLimit{
+			Limit: getEnvInt("RATE_LIMIT", 5),
+			Burst: getEnvInt("RATE_lIMIT_BURST", 10),
 		},
 	}
 }
