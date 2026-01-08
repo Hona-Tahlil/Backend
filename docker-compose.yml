@@ -147,7 +147,7 @@ services:
         - web
 
   postgres-exporter:
-    image: bitnami/postgres-exporter:latest
+    image: ghcr.io/bitnami/postgres-exporter:latest
     container_name: postgres-exporter
     restart: unless-stopped
     ports:
